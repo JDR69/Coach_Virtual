@@ -78,7 +78,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'coachvirtual',
         'USER': 'postgres',
-        'PASSWORD': '9775137', 
+        'PASSWORD': '9775137', #pass
         'HOST': 'localhost',
         'PORT': '5432',
         'OPTIONS': {
