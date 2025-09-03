@@ -19,7 +19,7 @@ function App() {
         </div>
         
         <h1 className="text-6xl font-bold text-white text-center mb-8 bg-gradient-to-r from-pink-400 to-purple-600 bg-clip-text text-transparent">
-          Vite + React + Tailwind
+          Vite + React  Tailwind
         </h1>
         
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20">
