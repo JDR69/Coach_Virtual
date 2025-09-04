@@ -1,17 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-class Usuario(models.Model):
-    nombre = models.CharField(max_length=100)
-    email = models.EmailField(max_length=40, unique=True)
-    contraseña = models.CharField(max_length=100)  # En producción usar hash
-    fecha_nacimiento = models.DateField()
-    genero = models.CharField(max_length=10)
-    altura = models.CharField(max_length=10)
-    peso = models.CharField(max_length=10)
-    
+class Usuario(AbstractUser):
+    fecha_nacimiento = models.DateField(null=True, blank=True)
+    genero = models.CharField(max_length=10, null=True, blank=True)
+    altura = models.CharField(max_length=10, null=True, blank=True)
+    peso = models.CharField(max_length=10, null=True, blank=True)
+
+    email = models.EmailField(unique=True)
     def __str__(self):
-        return self.nombre
+        return self.username
 
 class Plan(models.Model):
     nombre = models.CharField(max_length=15)

@@ -8,9 +8,9 @@ from .models import (
 
 @admin.register(Usuario)
 class UsuarioAdmin(admin.ModelAdmin):
-    list_display = ['nombre', 'email', 'genero', 'fecha_nacimiento']
-    list_filter = ['genero', 'fecha_nacimiento']
-    search_fields = ['nombre', 'email']
+    list_display = ['username', 'first_name', 'last_name', 'email']
+    list_filter = ['is_staff', 'is_active']
+    search_fields = ['username', 'first_name', 'last_name', 'email']
 
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
