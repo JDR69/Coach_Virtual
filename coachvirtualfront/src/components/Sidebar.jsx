@@ -1,4 +1,6 @@
+
 import React from "react";
+import { Link } from "react-router-dom";
 
 export default function Sidebar({ open, onClose }) {
   return (
@@ -13,9 +15,9 @@ export default function Sidebar({ open, onClose }) {
         <a href="#inicio" className="block px-4 py-2 rounded hover:bg-gray-700" onClick={onClose}>
           Inicio
         </a>
-        <a href="#perfil" className="block px-4 py-2 rounded hover:bg-gray-700" onClick={onClose}>
+        <Link to="/perfil" className="block px-4 py-2 rounded hover:bg-gray-700" onClick={onClose}>
           Perfil
-        </a>
+        </Link>
         <a href="#ajustes" className="block px-4 py-2 rounded hover:bg-gray-700" onClick={onClose}>
           Ajustes
         </a>
