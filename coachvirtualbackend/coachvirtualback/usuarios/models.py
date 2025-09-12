@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+
 class Usuario(AbstractUser):
     fecha_nacimiento = models.DateField(null=True, blank=True)
     genero = models.CharField(max_length=10, null=True, blank=True)
@@ -9,9 +10,11 @@ class Usuario(AbstractUser):
 
     email = models.EmailField(unique=True)
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS =['username']
+    REQUIRED_FIELDS = ['username']
+
     def __str__(self):
         return self.email
+
 
 class Plan(models.Model):
     nombre = models.CharField(max_length=15)
@@ -21,14 +24,16 @@ class Plan(models.Model):
     def __str__(self):
         return self.nombre
 
+
 class Alertas(models.Model):
     mensaje = models.CharField(max_length=100)
-    fecha = models.DateField()
-    estado = models.BooleanField()
+    fecha = models.DateField()    
+    estado = models.BooleanField(default=True)        
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
     
     def __str__(self):
-        return f"Alerta para {self.usuario.nombre}: {self.mensaje}"
+        return f"Alerta para {self.usuario.username}: {self.mensaje}"
+
 
 class DetallePlan(models.Model):
     fecha_inicio = models.DateField()
@@ -37,7 +42,8 @@ class DetallePlan(models.Model):
     plan = models.ForeignKey(Plan, on_delete=models.CASCADE)
     
     def __str__(self):
-        return f"{self.usuario.nombre} - {self.plan.nombre}"
+        return f"{self.usuario.username} - {self.plan.nombre}"
+
 
 class Objetivo(models.Model):
     nombre = models.CharField(max_length=50)
@@ -45,11 +51,13 @@ class Objetivo(models.Model):
     def __str__(self):
         return self.nombre
 
+
 class TipoPrograma(models.Model):
     nombre = models.CharField(max_length=20)
     
     def __str__(self):
         return self.nombre
+
 
 class ProgramaEntrenamiento(models.Model):
     nombre = models.CharField(max_length=30)
@@ -62,17 +70,20 @@ class ProgramaEntrenamiento(models.Model):
     def __str__(self):
         return self.nombre
 
+
 class Dia(models.Model):
     nombre = models.CharField(max_length=20)
     
     def __str__(self):
         return self.nombre
 
+
 class TipoEntrenamiento(models.Model):
     nombre = models.CharField(max_length=20)
     
     def __str__(self):
         return self.nombre
+
 
 class DiasEntrenamiento(models.Model):
     descripcion = models.CharField(max_length=100)
@@ -82,12 +93,14 @@ class DiasEntrenamiento(models.Model):
     def __str__(self):
         return f"{self.dia.nombre} - {self.tipo_entrenamiento.nombre}"
 
+
 class Mediciones(models.Model):
     calorias = models.IntegerField()
     cronometrio = models.CharField(max_length=12)
     
     def __str__(self):
         return f"Calorías: {self.calorias}, Tiempo: {self.cronometrio}"
+
 
 class Sesion(models.Model):
     fecha = models.DateField()
@@ -99,11 +112,13 @@ class Sesion(models.Model):
     def __str__(self):
         return f"Sesión {self.fecha} - {self.dias_entrenamiento}"
 
+
 class Musculo(models.Model):
     nombre = models.CharField(max_length=50)
     
     def __str__(self):
         return self.nombre
+
 
 class Ejercicios(models.Model):
     nombre = models.CharField(max_length=50)
@@ -112,6 +127,7 @@ class Ejercicios(models.Model):
     def __str__(self):
         return self.nombre
 
+
 class DetalleMusculo(models.Model):
     porcentaje = models.CharField(max_length=5)
     musculo = models.ForeignKey(Musculo, on_delete=models.CASCADE)
@@ -119,6 +135,7 @@ class DetalleMusculo(models.Model):
     
     def __str__(self):
         return f"{self.ejercicio.nombre} - {self.musculo.nombre} ({self.porcentaje}%)"
+
 
 class EjerciciosAsignados(models.Model):
     series = models.IntegerField()
