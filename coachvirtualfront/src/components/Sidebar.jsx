@@ -19,26 +19,11 @@ export default function Sidebar({ open, onClose }) {
           Inicio
         </a>
         <Link
-          to="/login"
-          className="block px-4 py-2 rounded hover:bg-gray-700"
-          onClick={onClose}
-        >
-          Login
-        </Link>
-        <Link
           to="/perfil"
           className="block px-4 py-2 rounded hover:bg-gray-700"
           onClick={onClose}
         >
           Perfil
-        </Link>
-       
-        <Link
-          to="/register"
-          className="block px-4 py-2 rounded hover:bg-gray-700"
-          onClick={onClose}
-        >
-          Registrar
         </Link>
 
         <Link
@@ -48,7 +33,7 @@ export default function Sidebar({ open, onClose }) {
         >
           Gestionar Usuario
         </Link>
-     
+
         <Link
           to="/alertas"
           className="block px-4 py-2 rounded hover:bg-gray-700"
