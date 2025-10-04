@@ -35,6 +35,14 @@ export default function Sidebar({ open, onClose }) {
         </Link>
 
         <Link
+          to="/ia"
+          className="block px-4 py-2 rounded hover:bg-gray-700"
+          onClick={onClose}
+        >
+          IA
+        </Link>
+
+        <Link
           to="/alertas"
           className="block px-4 py-2 rounded hover:bg-gray-700"
           onClick={onClose}
