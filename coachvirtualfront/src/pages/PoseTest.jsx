@@ -17,10 +17,6 @@ export default function PoseTest() {
   const [ejercicioActual, setEjercicioActual] = useState('flexion');
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
-  // Secuencia de poses grabadas
-  const [grabando, setGrabando] = useState(false);
-  const [secuenciaDePoses, setSecuenciaDePoses] = useState([]);
-  const [etiquetaSecuencia, setEtiquetaSecuencia] = useState('correcto');
   
   const lastAnalysisTime = useRef(0);
   const analysisInterval = 10000; 
@@ -54,19 +50,7 @@ export default function PoseTest() {
   const handlePoseDetected = (landmarks) => {
     // Guardar landmarks completos para el modo entrenamiento
     setCurrentLandmarks(landmarks);
-
-    // Si está grabando, agregar el frame a la secuencia
-    if (trainingMode && grabando) {
-      setSecuenciaDePoses(prev => [
-        ...prev,
-        {
-          landmarks: landmarks.map(l => ({ x: l.x, y: l.y, z: l.z, visibility: l.visibility })),
-          angulos: calculateBodyAngles(landmarks),
-          timestamp: Date.now()
-        }
-      ]);
-    }
-
+    
     // Update pose data (only show first few landmarks to avoid clutter)
     setPoseData({
       nose: landmarks[0],
@@ -120,30 +104,46 @@ export default function PoseTest() {
   };
 
   // Función para guardar datos de entrenamiento
-  // Guardar secuencia de poses
-  const handleSaveSecuencia = async () => {
-    if (secuenciaDePoses.length === 0) {
-      setSaveMessage('❌ No hay secuencia grabada para guardar');
+  const handleSaveTrainingData = async (etiqueta) => {
+    if (!currentLandmarks) {
+      setSaveMessage('❌ No hay datos de pose para guardar');
       return;
     }
+
     setIsSaving(true);
     setSaveMessage('');
+
     try {
+      // Calcular ángulos
+      const angulos = calculateBodyAngles(currentLandmarks);
+
+      // Preparar datos
       const trainingData = {
         ejercicio: ejercicioActual,
-        secuencia: secuenciaDePoses,
-        etiqueta: etiquetaSecuencia
+        landmarks: currentLandmarks.map(l => ({
+          x: l.x,
+          y: l.y,
+          z: l.z,
+          visibility: l.visibility
+        })),
+        angulos: angulos,
+        etiqueta: etiqueta
       };
+
+      // Guardar en backend
       await savePoseTrainingData(trainingData);
-      setSaveMessage(`✅ Secuencia guardada como "${etiquetaSecuencia}" (${secuenciaDePoses.length} frames)`);
-      setSecuenciaDePoses([]);
-      setGrabando(false);
+      
+      setSaveMessage(`✅ Dato guardado como "${etiqueta}"`);
+      
+      // Opcional: dar feedback por voz
       if (supported) {
-        speak(`Secuencia guardada como ${etiquetaSecuencia}`);
+        speak(`Dato guardado como ${etiqueta}`);
       }
+
+      // Limpiar mensaje después de 3 segundos
       setTimeout(() => setSaveMessage(''), 3000);
     } catch (error) {
-      console.error('Error al guardar secuencia:', error);
+      console.error('Error al guardar:', error);
       setSaveMessage('❌ Error al guardar: ' + error.message);
     } finally {
       setIsSaving(false);
@@ -187,7 +187,9 @@ export default function PoseTest() {
                 <>
                   {/* Selector de ejercicio */}
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Ejercicio:</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ejercicio:
+                    </label>
                     <select 
                       value={ejercicioActual} 
                       onChange={e => setEjercicioActual(e.target.value)}
@@ -196,108 +198,42 @@ export default function PoseTest() {
                       <option value="flexion">Flexión</option>
                       <option value="sentadilla">Sentadilla</option>
                       <option value="plancha">Plancha</option>
-                    </select>
-                  </div>
-
-                  {/* Controles de grabación */}
-                  <div className="mb-4 flex gap-2">
-                    {!grabando ? (
-                      <button
-                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                        onClick={() => { setGrabando(true); setSecuenciaDePoses([]); }}
-                        disabled={grabando}
-                      >
-                        Iniciar grabación
-                      </button>
-                    <div>
-                      {/* Selector de ejercicio */}
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Ejercicio:</label>
-                        <select 
-                          value={ejercicioActual} 
-                          onChange={e => setEjercicioActual(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                        >
-                          <option value="flexion">Flexión</option>
-                          <option value="sentadilla">Sentadilla</option>
-                          <option value="plancha">Plancha</option>
-                          <option value="curl_biceps">Curl de Bíceps</option>
-                          <option value="press_hombros">Press de Hombros</option>
-                        </select>
-                      </div>
-
-                      {/* Controles de grabación */}
-                      <div className="mb-4 flex gap-2">
-                        {!grabando ? (
-                          <button
-                            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                            onClick={() => { setGrabando(true); setSecuenciaDePoses([]); }}
-                            disabled={grabando}
-                          >
-                            Iniciar grabación
-                          </button>
-                        ) : (
-                          <button
-                            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                            onClick={() => setGrabando(false)}
-                          >
-                            Detener grabación
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Guardar secuencia */}
-                      {!grabando && secuenciaDePoses.length > 0 && (
-                        <div className="mb-4">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Etiqueta de la secuencia:</label>
-                          <select
-                            value={etiquetaSecuencia}
-                            onChange={e => setEtiquetaSecuencia(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 mb-2"
-                          >
-                            <option value="correcto">Correcto</option>
-                            <option value="incorrecto">Incorrecto</option>
-                          </select>
-                          <button
-                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full"
-                            onClick={handleSaveSecuencia}
-                            disabled={isSaving}
-                          >
-                            Guardar secuencia ({secuenciaDePoses.length} frames)
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Mensaje de guardado */}
-                      {saveMessage && (
-                        <div className="text-sm mt-2 font-semibold text-green-700">{saveMessage}</div>
-                      )}
-                    </div>
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 mb-2"
-                      >
-                        <option value="correcto">Correcto</option>
-                        <option value="incorrecto">Incorrecto</option>
-                      </select>
-                      <button
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full"
-                        onClick={handleSaveSecuencia}
-                        disabled={isSaving}
-                      >
-                        Guardar secuencia ({secuenciaDePoses.length} frames)
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Mensaje de guardado */}
-                  {saveMessage && (
-                    <div className="text-sm mt-2 font-semibold text-green-700">{saveMessage}</div>
-                  )}
-                </>
-              )}
                       <option value="curl_biceps">Curl de Bíceps</option>
                       <option value="press_hombros">Press de Hombros</option>
                     </select>
-                  {/* ...existing code... (ya corregido arriba) */}
+                  </div>
+
+                  {/* Botones para etiquetar */}
+                  <div className="space-y-2">
+                    <button 
+                      onClick={() => handleSaveTrainingData('correcto')}
+                      disabled={isSaving || !currentLandmarks}
+                      className="w-full bg-green-500 text-white px-4 py-3 rounded-lg font-semibold hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    >
+                      {isSaving ? '⏳ Guardando...' : '✅ Guardar como CORRECTO'}
+                    </button>
+
+                    <button 
+                      onClick={() => handleSaveTrainingData('incorrecto')}
+                      disabled={isSaving || !currentLandmarks}
+                      className="w-full bg-red-500 text-white px-4 py-3 rounded-lg font-semibold hover:bg-red-600 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    >
+                      {isSaving ? '⏳ Guardando...' : '❌ Guardar como INCORRECTO'}
+                    </button>
+                  </div>
+
+                  {/* Mensaje de guardado */}
+                  {saveMessage && (
+                    <div className={`mt-4 p-3 rounded-lg text-sm ${
+                      saveMessage.includes('✅') ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+                    }`}>
+                      {saveMessage}
+                    </div>
+                  )}
+
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-800">
+                    <p>💡 Colócate en la posición del ejercicio y presiona el botón correspondiente para etiquetar la postura.</p>
+                  </div>
                 </>
               )}
             </div>
@@ -339,82 +275,77 @@ export default function PoseTest() {
                     <span className="mr-2">✨</span>
                     Analizar ahora
                   </>
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                          {/* Camera view */}
-                          <div className="lg:col-span-2">
-                            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-                              <PoseDetector onPoseDetected={handlePoseDetected} />
-                            </div>
-                          </div>
-                          {/* Control and data panel */}
-                          <div className="lg:col-span-1 space-y-6">
-                            {/* Modo Entrenamiento */}
-                            <div className="bg-white rounded-lg shadow-lg p-6">
-                              <h2 className="text-xl font-semibold mb-4">🎯 Modo Entrenamiento</h2>
-                              {trainingMode && (
-                                <div>
-                                  {/* Selector de ejercicio */}
-                                  <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Ejercicio:</label>
-                                    <select 
-                                      value={ejercicioActual} 
-                                      onChange={e => setEjercicioActual(e.target.value)}
-                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                    >
-                                      <option value="flexion">Flexión</option>
-                                      <option value="sentadilla">Sentadilla</option>
-                                      <option value="plancha">Plancha</option>
-                                      <option value="curl_biceps">Curl de Bíceps</option>
-                                      <option value="press_hombros">Press de Hombros</option>
-                                    </select>
-                                  </div>
-                                  {/* Controles de grabación */}
-                                  <div className="mb-4 flex gap-2">
-                                    {!grabando ? (
-                                      <button
-                                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                                        onClick={() => { setGrabando(true); setSecuenciaDePoses([]); }}
-                                        disabled={grabando}
-                                      >
-                                        Iniciar grabación
-                                      </button>
-                                    ) : (
-                                      <button
-                                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                                        onClick={() => setGrabando(false)}
-                                      >
-                                        Detener grabación
-                                      </button>
-                                    )}
-                                  </div>
-                                  {/* Guardar secuencia */}
-                                  {!grabando && secuenciaDePoses.length > 0 && (
-                                    <div className="mb-4">
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">Etiqueta de la secuencia:</label>
-                                      <select
-                                        value={etiquetaSecuencia}
-                                        onChange={e => setEtiquetaSecuencia(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 mb-2"
-                                      >
-                                        <option value="correcto">Correcto</option>
-                                        <option value="incorrecto">Incorrecto</option>
-                                      </select>
-                                      <button
-                                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full"
-                                        onClick={handleSaveSecuencia}
-                                        disabled={isSaving}
-                                      >
-                                        Guardar secuencia ({secuenciaDePoses.length} frames)
-                                      </button>
-                                    </div>
-                                  )}
-                                  {/* Mensaje de guardado */}
-                                  {saveMessage && (
-                                    <div className="text-sm mt-2 font-semibold text-green-700">{saveMessage}</div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                            {/* ...otros paneles... */}
-                          </div>
-                        </div>
+                )}
+              </button>
+
+              {/* Botón detener voz */}
+              {speaking && (
+                <button 
+                  onClick={stop}
+                  className="w-full mt-3 bg-red-500 text-white px-4 py-3 rounded-lg font-semibold hover:bg-red-600 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors flex items-center justify-center"
+                >
+                  <span className="mr-2">⏹️</span>
+                  Detener voz
+                </button>
+              )}
+
+              {/* Respuesta de la IA */}
+              {aiResponse && (
+                <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <span className="text-blue-500 mr-2 text-xl">🤖</span>
+                    <div className="flex-1">
+                      <p className="text-sm text-blue-900 font-medium">Asistente:</p>
+                      <p className="text-sm text-blue-800 mt-1">{aiResponse}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Pose data display */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">📊 Datos de Pose</h2>
+              {poseData ? (
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <strong>Nariz:</strong>
+                    <div className="ml-2 text-gray-600">
+                      x: {poseData.nose.x.toFixed(3)}<br />
+                      y: {poseData.nose.y.toFixed(3)}<br />
+                      z: {poseData.nose.z.toFixed(3)}
+                    </div>
+                  </div>
+                  <div>
+                    <strong>Muñeca Izq:</strong>
+                    <div className="ml-2 text-gray-600">
+                      y: {poseData.leftWrist.y.toFixed(3)}
+                    </div>
+                  </div>
+                  <div>
+                    <strong>Muñeca Der:</strong>
+                    <div className="ml-2 text-gray-600">
+                      y: {poseData.rightWrist.y.toFixed(3)}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-500">Esperando detección...</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="font-semibold text-blue-900 mb-2">💡 Instrucciones:</h3>
+          <ul className="list-disc list-inside text-blue-800 space-y-1">
+            <li>Permita el acceso a la cámara cuando se solicite</li>
+            <li>Colóquese frente a la cámara con buena iluminación</li>
+            <li>Activa el análisis automático o presiona "Analizar ahora" manualmente</li>
+            <li>El asistente describirá tu postura y te dará retroalimentación por voz</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
