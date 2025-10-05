@@ -6,6 +6,7 @@ import Perfil from "../pages/GestionarUsuario/Perfil";
 import Usuario from "../pages/GestionarUsuario/Usuario";
 import Alerta from "../pages/GestionarAlerta/Alerta";
 import LoginPage from "../pages/Login/LoginPage";
+import PoseTest from "../pages/PoseTest";
 
 function RequireAuth() {
   const { isAuthenticated, initializing } = useAuth();
@@ -49,6 +50,7 @@ export default function AppRoutes() {
         <Route path="/usuario" element={<Usuario />} />
         <Route path="/alertas" element={<Alerta />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/pose-test" element={<PoseTest />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
