@@ -13,6 +13,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Dumbbell, // ⬅️ para "Poses (IA)"
 } from "lucide-react";
 
 const cx = (...c) => c.filter(Boolean).join(" ");
@@ -21,7 +22,7 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
   const { isSuper } = useAuth();
   const location = useLocation();
 
-  // Modo compacto con persistencia
+  // Modo compacto con persistencia en localStorage
   const [compact, setCompact] = useState(() => {
     const v = localStorage.getItem("sidebar_compact");
     return v ? v === "1" : false;
@@ -30,24 +31,26 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
     localStorage.setItem("sidebar_compact", compact ? "1" : "0");
   }, [compact]);
 
-  // Cerrar en mobile si se desea
+  // Cerrar en mobile al navegar (si se pide)
   useEffect(() => {
     if (closeOnNavigate && onClose) onClose();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
-  // Menús
+  // Menú principal
   const principal = useMemo(
     () => [
       { to: "/home", label: "Inicio", icon: Home },
       { to: "/perfil", label: "Perfil", icon: UserCircle2 },
       { to: "/mis-alertas", label: "Mis Alertas", icon: Bell },
       { to: "/ia", label: "IA", icon: Cpu },
+      { to: "/pose-test", label: "Entrenar con (IA)", icon: Dumbbell }, // ⬅️ nuevo
       { to: "/chat-ia", label: "Chat IA", icon: MessageSquareText },
     ],
     []
   );
 
+  // Menú de administración (solo superusuario)
   const admin = useMemo(
     () =>
       isSuper
@@ -59,6 +62,7 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
     [isSuper]
   );
 
+  // Extras
   const extras = useMemo(
     () => [
       { href: "#ajustes", label: "Ajustes", icon: Settings },
