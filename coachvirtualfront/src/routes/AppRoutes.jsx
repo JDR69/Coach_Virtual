@@ -8,6 +8,7 @@ import Alerta from "../pages/GestionarAlerta/Alerta";
 import LoginPage from "../pages/Login/LoginPage";
 import PoseTest from "../pages/PoseTest";
 import IAPage from "../pages/IAPage";
+import ChatIA from "../pages/Chat/ChatIA";
 
 function RequireAuth() {
   const { isAuthenticated, initializing } = useAuth();
@@ -53,6 +54,7 @@ export default function AppRoutes() {
         <Route path="/home" element={<Home />} />
         <Route path="/pose-test" element={<PoseTest />} />
         <Route path="/ia" element={<IAPage />} />
+        <Route path="/chat-ia" element={<ChatIA />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

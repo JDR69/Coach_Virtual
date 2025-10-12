@@ -41,6 +41,13 @@ export default function Sidebar({ open, onClose }) {
         >
           IA
         </Link>
+        <Link
+          to="/chat-ia"
+          className="block px-4 py-2 rounded hover:bg-gray-700"
+          onClick={onClose}
+        >
+          Chat IA
+        </Link>
 
         <Link
           to="/alertas"
