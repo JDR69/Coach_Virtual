@@ -6,12 +6,18 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from ..models import Usuario
 from ..serializers import UsuarioSerializer
 
+# ⬇️ NUEVO: endpoint para traer el usuario autenticado con flags
+class MeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response(UsuarioSerializer(request.user).data)
 
 class UsuarioListaCrearVista(APIView):
     def get_permissions(self):
         if self.request.method == "POST":
             return [AllowAny()]
-        return [IsAuthenticated()] 
+        return [IsAuthenticated()]
 
     def get(self, request):
         if not request.user.is_superuser:
@@ -19,7 +25,6 @@ class UsuarioListaCrearVista(APIView):
                 {"detail": "No tienes permiso para ver la lista de usuarios."},
                 status=status.HTTP_403_FORBIDDEN
             )
-
         usuarios = Usuario.objects.all().order_by("id")
         serializer = UsuarioSerializer(usuarios, many=True)
         return Response(serializer.data)

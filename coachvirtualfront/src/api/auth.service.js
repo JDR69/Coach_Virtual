@@ -1,10 +1,10 @@
-// Ajusta la ruta si tu api.js está en otra carpeta
+// src/api/auth.service.js
 import api from "../api/api";
 
 // Servicio de auth compatible con SimpleJWT (access/refresh).
-// Persiste tokens en localStorage.
+// Persiste tokens en localStorage y siempre consulta /usuarios/me/ para obtener flags.
 
-const ME_URL = import.meta.env.VITE_ME_URL || ""; // opcional, relativo al baseURL del api
+const ME_URL = import.meta.env.VITE_ME_URL || "/usuarios/me/"; // ⬅️ por defecto
 
 let accessToken = null;
 let refreshToken = null;
@@ -33,6 +33,7 @@ export function restoreTokensFromStorage() {
   return { accessToken: a, refreshToken: r };
 }
 
+// --- fallback por si ME fallara (no se usa si ME funciona) ---
 function b64UrlDecode(str) {
   try {
     const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
@@ -53,39 +54,34 @@ function userFromAccess(token, fallbackEmail) {
 export const authService = {
   // SimpleJWT login (POST /api/token/)
   async login(email, password) {
-    // Con tu api.js, baseURL ya es http://127.0.0.1:8000/api
-    // Así que aquí usamos rutas relativas a /api
+    // data: { access, refresh, (opcional user) }
     const { data } = await api.post("/token/", { email, password });
-    // data: { access, refresh }
     saveTokens(data?.access, data?.refresh);
 
-    // Si tienes endpoint "me", úsalo; si no, crea user desde el token
+    // SIEMPRE intenta traer el perfil real con flags (is_superuser)
     let user = null;
-    if (ME_URL) {
-      try {
-        const me = await api.get(ME_URL);
-        user = me?.data ?? null;
-      } catch {
-        user = null;
-      }
+    try {
+      const me = await api.get(ME_URL);
+      user = me?.data ?? null; // ← incluye is_superuser
+    } catch {
+      // fallback ultra-minimo (no trae is_superuser)
+      user = userFromAccess(data?.access, email);
     }
-    if (!user) user = userFromAccess(data?.access, email);
     return { user, accessToken, refreshToken };
   },
 
-  // Intento de "me" (si tienes endpoint) o desde el token restaurado
   async me() {
-    if (ME_URL) {
-      try {
-        const { data } = await api.get(ME_URL);
-        return data;
-      } catch { /* fallback abajo */ }
+    try {
+      const { data } = await api.get(ME_URL); // ← incluye is_superuser
+      return data;
+    } catch {
+      // fallback si ME falla
+      return userFromAccess(accessToken, null);
     }
-    return userFromAccess(accessToken, null);
   },
 
   async logout() {
-    // SimpleJWT usualmente no hace logout server-side.
+    try { await api.post("/auth/logout/"); } catch {}
     clearTokens();
   },
 };
