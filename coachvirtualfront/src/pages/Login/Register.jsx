@@ -1,5 +1,6 @@
 import { useState } from "react";
-import api from "../../api/api"; // ajusta la ruta si fuera necesario
+import { useNavigate } from "react-router-dom";
+import api from "../../api/api";
 
 const PasswordInput = ({
   value,
@@ -48,6 +49,8 @@ const PasswordInput = ({
 };
 
 const Register = ({ signIn, onBack, onSuccess, onSwitchToLogin }) => {
+  const navigate = useNavigate();
+
   const [regData, setRegData] = useState({
     email: "",
     username: "",
@@ -86,25 +89,25 @@ const Register = ({ signIn, onBack, onSuccess, onSwitchToLogin }) => {
         peso: regData.peso ? parseFloat(regData.peso) : null,
       };
 
-      // Con baseURL = http://127.0.0.1:8000/api
       await api.post("/usuarios/", payload);
 
       setOkMsg("¡Cuenta creada! Te estamos iniciando sesión...");
       try {
         await signIn(regData.email, regData.password);
         onSuccess?.();
+        const next = localStorage.getItem("cv.category") ? "/musculo" : "/seleccionar";
+        navigate(next, { replace: true });
       } catch {
         setOkMsg("Cuenta creada. Inicia sesión con tus credenciales.");
         onSwitchToLogin?.();
       }
     } catch (err) {
-      // Intenta leer errores del backend
       const msg =
         err?.response?.data
           ? Object.entries(err.response.data)
               .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`)
               .join(" | ")
-          : (err?.message || "Error al registrar la cuenta.");
+          : err?.message || "Error al registrar la cuenta.";
       setError(msg);
     } finally {
       setIsLoading(false);
@@ -129,29 +132,64 @@ const Register = ({ signIn, onBack, onSuccess, onSwitchToLogin }) => {
       )}
 
       <form onSubmit={handleRegister} className="space-y-4">
-        {/* ... (inputs igual que antes) ... */}
-        <input name="email" type="email" required value={regData.email} onChange={handleRegChange}
+        <input
+          name="email"
+          type="email"
+          required
+          value={regData.email}
+          onChange={handleRegChange}
           className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 shadow-md"
-          placeholder="Email" />
-        <input name="username" type="text" required value={regData.username} onChange={handleRegChange}
+          placeholder="Email"
+        />
+        <input
+          name="username"
+          type="text"
+          required
+          value={regData.username}
+          onChange={handleRegChange}
           className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 shadow-md"
-          placeholder="Usuario" />
-        <PasswordInput name="password" value={regData.password} onChange={handleRegChange} required />
+          placeholder="Usuario"
+        />
+        <PasswordInput
+          name="password"
+          value={regData.password}
+          onChange={handleRegChange}
+          required
+        />
 
         <div className="grid grid-cols-2 gap-3">
-          <input name="nombre" type="text" value={regData.nombre} onChange={handleRegChange}
+          <input
+            name="nombre"
+            type="text"
+            value={regData.nombre}
+            onChange={handleRegChange}
             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 shadow-md"
-            placeholder="Nombre" />
-          <input name="apellido" type="text" value={regData.apellido} onChange={handleRegChange}
+            placeholder="Nombre"
+          />
+          <input
+            name="apellido"
+            type="text"
+            value={regData.apellido}
+            onChange={handleRegChange}
             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 shadow-md"
-            placeholder="Apellido" />
+            placeholder="Apellido"
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <input name="fecha_nacimiento" type="date" value={regData.fecha_nacimiento} onChange={handleRegChange}
-            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duración-300 shadow-md" />
-          <select name="genero" value={regData.genero} onChange={handleRegChange}
-            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duración-300 shadow-md">
+          <input
+            name="fecha_nacimiento"
+            type="date"
+            value={regData.fecha_nacimiento}
+            onChange={handleRegChange}
+            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 shadow-md"
+          />
+          <select
+            name="genero"
+            value={regData.genero}
+            onChange={handleRegChange}
+            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 shadow-md"
+          >
             <option value="">Género</option>
             <option value="M">Masculino</option>
             <option value="F">Femenino</option>
@@ -160,22 +198,51 @@ const Register = ({ signIn, onBack, onSuccess, onSwitchToLogin }) => {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <input name="altura" type="number" step="0.01" min="0" value={regData.altura} onChange={handleRegChange}
-            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duración-300 shadow-md"
-            placeholder="Altura (m)" />
-          <input name="peso" type="number" step="0.1" min="0" value={regData.peso} onChange={handleRegChange}
-            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duración-300 shadow-md"
-            placeholder="Peso (kg)" />
+          <input
+            name="altura"
+            type="number"
+            step="0.01"
+            min="0"
+            value={regData.altura}
+            onChange={handleRegChange}
+            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 shadow-md"
+            placeholder="Altura (m)"
+          />
+          <input
+            name="peso"
+            type="number"
+            step="0.1"
+            min="0"
+            value={regData.peso}
+            onChange={handleRegChange}
+            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 shadow-md"
+            placeholder="Peso (kg)"
+          />
         </div>
 
-        <button type="submit" disabled={isLoading}
-          className="mt-2 w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-lg shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105">
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="mt-2 w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-lg shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105"
+        >
           {isLoading ? "Procesando..." : "Registrarme"}
         </button>
 
         <div className="flex items-center justify-between pt-1">
-          <button type="button" onClick={onBack} className="py-2 text-gray-300 hover:text-white transition-colors duration-300">← Volver</button>
-          <button type="button" onClick={onSwitchToLogin} className="py-2 text-gray-300 hover:text-white transition-colors duration-300">¿Ya tienes cuenta? Inicia sesión</button>
+          <button
+            type="button"
+            onClick={onBack}
+            className="py-2 text-gray-300 hover:text-white transition-colors duration-300"
+          >
+            ← Volver
+          </button>
+          <button
+            type="button"
+            onClick={onSwitchToLogin}
+            className="py-2 text-gray-300 hover:text-white transition-colors duration-300"
+          >
+            ¿Ya tienes cuenta? Inicia sesión
+          </button>
         </div>
       </form>
     </>

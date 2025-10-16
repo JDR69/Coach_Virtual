@@ -3,26 +3,33 @@ import { BrowserRouter, useLocation } from "react-router-dom";
 import AppRoutes from "./routes/AppRoutes";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
-import { AuthProvider } from "./auth/AuthProvider.jsx"; // <-- IMPORTANTE
+import { AuthProvider } from "./auth/AuthProvider.jsx";
+import { CategoryProvider } from "./context/CategoryContext";
 
 function AppContent({ sidebarOpen, setSidebarOpen }) {
   const location = useLocation();
-  const isLoginPage = location.pathname === "/login";
+
+  // Ocultar sidebar en login, seleccionar y SOLO en /musculo (no en subrutas)
+  const hideSidebar =
+    location.pathname === "/login" ||
+    location.pathname === "/seleccionar" ||
+    location.pathname === "/musculo";
 
   return (
     <>
-      {!isLoginPage && (
-        <>
-          <Navbar
-            sidebarOpen={sidebarOpen}
-            onMenuClick={() => setSidebarOpen(!sidebarOpen)}
-          />
-          <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        </>
+      {/* Si también quieres ocultar el navbar en /seleccionar o /musculo, dímelo */}
+      <Navbar
+        sidebarOpen={!hideSidebar && sidebarOpen}
+        onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+      />
+
+      {!hideSidebar && (
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       )}
+
       <div
         className={`pt-16 transition-all duration-300 ${
-          !isLoginPage && sidebarOpen ? "ml-56 max-md:ml-0" : "ml-0"
+          !hideSidebar && sidebarOpen ? "ml-56 max-md:ml-0" : "ml-0"
         }`}
       >
         <AppRoutes />
@@ -32,8 +39,9 @@ function AppContent({ sidebarOpen, setSidebarOpen }) {
 }
 
 export default function App() {
-  // Sidebar abierto en desktop, cerrado en móvil
-  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768);
+  const [sidebarOpen, setSidebarOpen] = useState(
+    () => window.innerWidth >= 768
+  );
 
   useEffect(() => {
     const handleResize = () => setSidebarOpen(window.innerWidth >= 768);
@@ -42,12 +50,14 @@ export default function App() {
   }, []);
 
   return (
-    <AuthProvider>       {/* <-- ENVUELVE A TODO EL ROUTER */}
+    <AuthProvider>
       <BrowserRouter>
-        <AppContent
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-        />
+        <CategoryProvider>
+          <AppContent
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+          />
+        </CategoryProvider>
       </BrowserRouter>
     </AuthProvider>
   );

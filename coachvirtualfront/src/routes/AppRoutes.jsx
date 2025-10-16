@@ -1,6 +1,6 @@
-// src/routes/AppRoutes.jsx
 import { Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
+import { useCategory } from "../context/CategoryContext";
 
 import Home from "../pages/Home";
 import Perfil from "../pages/GestionarUsuario/Perfil";
@@ -12,29 +12,40 @@ import PoseTest from "../pages/PoseTest";
 import IAPage from "../pages/IAPage";
 import ChatIA from "../pages/Chat/ChatIA";
 
-// ⬇️ importa el notificador
 import AlertNotifier from "../pages/GestionarAlerta/AlertNotifier";
+
+// Flujo categoría / músculo / ejercicios
+import SelectCategory from "../pages/Categoria/SelectCategory";
+import CategoryGate from "./CategoryGate";
+import Musculo from "../pages/Musculo/Musculo";
+import Ejercicios from "../pages/Ejercicios/Ejercicios";
 
 // ====== Guards ======
 function RequireAuth() {
   const { isAuthenticated, initializing } = useAuth();
   const location = useLocation();
   if (initializing) return <div style={{ padding: 24 }}>Verificando sesión…</div>;
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace state={{ from: location }} />;
+  return isAuthenticated ? (
+    <Outlet />
+  ) : (
+    <Navigate to="/login" replace state={{ from: location }} />
+  );
 }
 
 function GuestOnly() {
   const { isAuthenticated, initializing } = useAuth();
   const location = useLocation();
   if (initializing) return <div style={{ padding: 24 }}>Verificando sesión…</div>;
-  const back = location.state?.from?.pathname || "/home";
+  const back = location.state?.from?.pathname || "/pose-test"; // ← pediste ir a PoseTest si ya está logueado
   return isAuthenticated ? <Navigate to={back} replace /> : <Outlet />;
 }
 
 function RootRedirect() {
   const { isAuthenticated, initializing } = useAuth();
+  const { category } = useCategory();
   if (initializing) return <div style={{ padding: 24 }}>Verificando sesión…</div>;
-  return <Navigate to={isAuthenticated ? "/home" : "/login"} replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return <Navigate to={category ? "/musculo" : "/seleccionar"} replace />;
 }
 
 function RequireSuper() {
@@ -43,9 +54,7 @@ function RequireSuper() {
   return isSuper ? <Outlet /> : <Navigate to="/home" replace />;
 }
 
-// ====== Layout autenticado con notificador ======
 function AuthenticatedLayout() {
-  // Monta el notificador UNA sola vez en toda el área autenticada
   return (
     <>
       <AlertNotifier intervalMs={10000} />
@@ -67,14 +76,25 @@ export default function AppRoutes() {
 
       {/* Autenticados */}
       <Route element={<RequireAuth />}>
-        {/* Layout que incluye el notificador */}
         <Route element={<AuthenticatedLayout />}>
+          {/* 1) Selección de categoría (sin sidebar) */}
+          <Route path="/seleccionar" element={<SelectCategory />} />
+
+          {/* 2) Requiere categoría */}
+          <Route element={<CategoryGate />}>
+            {/* 2.a) Elegir uno o más músculos (sin sidebar) */}
+            <Route path="/musculo" element={<Musculo />} />
+            {/* 2.b) Ejercicios (aquí ya aparece el sidebar) */}
+            <Route path="/musculo/ejercicios" element={<Ejercicios />} />
+          </Route>
+
+          {/* Otras secciones (sidebar visible) */}
           <Route path="/home" element={<Home />} />
           <Route path="/perfil" element={<Perfil />} />
           <Route path="/pose-test" element={<PoseTest />} />
           <Route path="/ia" element={<IAPage />} />
           <Route path="/chat-ia" element={<ChatIA />} />
-          <Route path="/mis-alertas" element={<AlertaUsuario />} />  {/* usuario */}
+          <Route path="/mis-alertas" element={<AlertaUsuario />} />
 
           {/* SOLO superusuario */}
           <Route element={<RequireSuper />}>

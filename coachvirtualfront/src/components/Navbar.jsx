@@ -1,20 +1,27 @@
 import React from "react";
-import { useAuth } from "../auth/useAuth";         // <-- importante
+import { useAuth } from "../auth/useAuth";
 import { useNavigate } from "react-router-dom";
+import { useCategory } from "../context/CategoryContext";
 
 const Navbar = ({ sidebarOpen, onMenuClick }) => {
   const { user, isAuthenticated, signOut } = useAuth();
+  const { category, clearCategory } = useCategory();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await signOut();                 // limpia tokens/estado
-    navigate("/login", { replace: true }); // opcional: la guarda igual te redirige
+    await signOut();
+    navigate("/login", { replace: true });
+  };
+
+  const changeCategory = () => {
+    clearCategory();
+    navigate("/seleccionar");
   };
 
   return (
     <nav className="fixed top-0 left-0 w-full h-16 bg-blue-600 px-4 flex items-center z-50 shadow">
       <div className="max-w-7xl mx-auto flex items-center w-full">
-        {/* Botón menú (siempre visible cuando Navbar está montado) */}
+        {/* Botón menú */}
         <button
           className="text-white focus:outline-none text-2xl ml-2"
           onClick={onMenuClick}
@@ -33,15 +40,21 @@ const Navbar = ({ sidebarOpen, onMenuClick }) => {
 
         {/* Acciones derecha */}
         <div className="flex items-center gap-3">
+          {/* Chip de categoría actual + cambiar */}
+          {isAuthenticated && category && (
+            <span className="hidden sm:flex items-center gap-2 bg-white/10 text-white px-2 py-1 rounded-lg border border-white/20">
+              {category === "gym" ? "Gimnasio" : "Fisioterapia"}
+              <button onClick={changeCategory} className="underline">Cambiar</button>
+            </span>
+          )}
+
           {isAuthenticated && (
             <>
-              {/* Mostrar nombre o email si existe */}
               {user && (user.name || user.email) && (
                 <span className="hidden sm:block text-white/90 text-sm">
                   {user.name || user.email}
                 </span>
               )}
-
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-3 py-1.5 rounded-lg border border-white/20 transition-colors"

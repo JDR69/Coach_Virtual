@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const PasswordInput = ({
   value,
@@ -47,6 +48,7 @@ const PasswordInput = ({
 };
 
 const IniciarSesion = ({ signIn, onBack, onSuccess, onSwitchToRegister }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -61,8 +63,12 @@ const IniciarSesion = ({ signIn, onBack, onSuccess, onSwitchToRegister }) => {
     try {
       await signIn(formData.email, formData.password);
       onSuccess?.();
+      const next = localStorage.getItem("cv.category") ? "/musculo" : "/seleccionar";
+      navigate(next, { replace: true });
     } catch (err) {
-      setError(err?.message || "Error al iniciar sesión. Verifica tus credenciales.");
+      setError(
+        err?.message || "Error al iniciar sesión. Verifica tus credenciales."
+      );
     } finally {
       setIsLoading(false);
     }
