@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { AlertaService } from "../../services/AlertaService";
+import Paginacion from "../../components/Paginacion"; // ⬅️ ajusta la ruta si es necesario
 
 const fmtDateTime = (iso) => {
   if (!iso) return "";
@@ -7,12 +8,11 @@ const fmtDateTime = (iso) => {
   return Number.isNaN(d.getTime()) ? iso : d.toLocaleString();
 };
 
-// Convierte ISO -> valor para <input type="datetime-local">
+// ISO -> <input type="datetime-local">
 const toInputDateTime = (iso) => {
   if (!iso) return "";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
-  // yyyy-MM-ddTHH:mm en hora local
   const pad = (n) => String(n).padStart(2, "0");
   const yyyy = d.getFullYear();
   const mm = pad(d.getMonth() + 1);
@@ -22,17 +22,12 @@ const toInputDateTime = (iso) => {
   return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
 };
 
-// Convierte valor de <input datetime-local> -> string para API
-// (en formato "YYYY-MM-DDTHH:mm:ss")
-const fromInputDateTime = (val) => {
-  if (!val) return "";
-  // val viene como "YYYY-MM-DDTHH:mm"
-  return `${val}:00`;
-};
+// <input datetime-local> -> "YYYY-MM-DDTHH:mm:ss"
+const fromInputDateTime = (val) => (!val ? "" : `${val}:00`);
 
 class Alerta extends Component {
   state = {
-    form: { id: null, mensaje: "", fecha: "", usuario: "" }, // fecha = datetime-local string
+    form: { id: null, mensaje: "", fecha: "", usuario: "" },
     items: [],
     users: [],
     usersById: {},
@@ -45,6 +40,10 @@ class Alerta extends Component {
     successSave: null,
     errorsByField: {},
     isEditing: false,
+
+    // ===== Paginación =====
+    currentPage: 1, // 1-based
+    pageSize: 5,    // 5 en 5
   };
 
   componentDidMount() {
@@ -52,19 +51,50 @@ class Alerta extends Component {
     this.loadUsers();
   }
 
+  componentDidUpdate(prevProps, prevState) {
+    // Si cambia el total de items o el pageSize, asegúrate de que la página quede en rango
+    if (
+      prevState.items.length !== this.state.items.length ||
+      prevState.pageSize !== this.state.pageSize
+    ) {
+      this.ensurePageInRange();
+    }
+  }
+
+  // ====== Helpers de paginación ======
+  ensurePageInRange = () => {
+    this.setState((prev) => {
+      const totalPages = Math.max(
+        1,
+        Math.ceil(prev.items.length / prev.pageSize)
+      );
+      const newPage = Math.min(prev.currentPage, totalPages) || 1;
+      return newPage !== prev.currentPage ? { currentPage: newPage } : null;
+    });
+  };
+
+  goToPage = (p) => {
+    this.setState({ currentPage: p });
+  };
+
+  getPagedItems = () => {
+    const { items, currentPage, pageSize } = this.state;
+    const start = (currentPage - 1) * pageSize;
+    return items.slice(start, start + pageSize);
+  };
+
   // ====== API ======
   loadList = async () => {
     this.setState({ loadingList: true, errorList: null });
     try {
       const data = await AlertaService.list();
-      // ordenar por recibida (created_at) desc
       const sorted = [...(data || [])].sort((a, b) => {
         const da = new Date(a.created_at).getTime() || 0;
         const db = new Date(b.created_at).getTime() || 0;
         if (db !== da) return db - da;
         return (b.id || 0) - (a.id || 0);
       });
-      this.setState({ items: sorted, loadingList: false });
+      this.setState({ items: sorted, loadingList: false }, this.ensurePageInRange);
     } catch (err) {
       const msg =
         err?.response?.data?.detail ||
@@ -118,7 +148,6 @@ class Alerta extends Component {
       form: {
         id: row.id,
         mensaje: row.mensaje,
-        // convertir ISO a valor aceptado por datetime-local
         fecha: toInputDateTime(row.fecha),
         usuario: usuarioId || "",
       },
@@ -134,9 +163,12 @@ class Alerta extends Component {
     if (!window.confirm(`¿Eliminar la alerta "${row.mensaje}"?`)) return;
     try {
       await AlertaService.remove(row.id);
-      this.setState((prev) => ({
-        items: prev.items.filter((x) => x.id !== row.id),
-      }));
+      this.setState(
+        (prev) => ({
+          items: prev.items.filter((x) => x.id !== row.id),
+        }),
+        this.ensurePageInRange
+      );
       if (this.state.form.id === row.id) this.resetForm();
     } catch (err) {
       const msg =
@@ -164,7 +196,6 @@ class Alerta extends Component {
 
     const payload = {
       mensaje: this.state.form.mensaje.trim(),
-      // convertir datetime-local a string ISO simple (YYYY-MM-DDTHH:mm:ss)
       fecha: fromInputDateTime(this.state.form.fecha),
       usuario: this.state.form.usuario,
     };
@@ -189,13 +220,12 @@ class Alerta extends Component {
         this.setState((prev) => ({ items: [saved, ...prev.items] }));
       }
       this.resetForm();
-      this.loadList(); // reordenar por recibida desc
+      this.loadList(); // reordenar por recibida desc y ajustar página
     } catch (err) {
       let msg = "Error al guardar.";
       let fieldErrors = {};
       if (err.response) {
-        if (typeof err.response.data === "object")
-          fieldErrors = err.response.data;
+        if (typeof err.response.data === "object") fieldErrors = err.response.data;
         msg = err.response.data?.detail || msg;
       } else if (err.message) msg = err.message;
       this.setState({
@@ -289,12 +319,17 @@ class Alerta extends Component {
       errorSave,
       successSave,
       isEditing,
+      currentPage,
+      pageSize,
     } = this.state;
+
+    const total = items.length;
+    const paged = this.getPagedItems();
 
     return (
       <main className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 p-6">
         {/* Form */}
-        <section className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-6 w/full max-w-3xl mx-auto border border-white/20 mb-8">
+        <section className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-6 w-full max-w-3xl mx-auto border border-white/20 mb-8">
           <h1 className="text-2xl font-bold text-white text-center mb-4">
             {isEditing ? "Editar alerta" : "Crear alerta"}
           </h1>
@@ -314,7 +349,6 @@ class Alerta extends Component {
             {this.renderField("Mensaje", "mensaje", "text", {
               placeholder: "Recordatorio…",
             })}
-            {/* ahora datetime-local */}
             {this.renderField("Fecha y hora límite", "fecha", "datetime-local")}
             {this.renderUserSelect()}
 
@@ -344,11 +378,9 @@ class Alerta extends Component {
         </section>
 
         {/* Listado */}
-        <section className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-6 w/full max-w-5xl mx-auto border border-white/20">
+        <section className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-6 w-full max-w-5xl mx-auto border border-white/20">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-white">
-              Listado de alertas
-            </h2>
+            <h2 className="text-xl font-semibold text-white">Listado de alertas</h2>
             <button
               onClick={this.loadList}
               className="text-white/80 text-sm underline hover:text-white"
@@ -363,60 +395,69 @@ class Alerta extends Component {
             <div className="p-3 rounded-xl bg-yellow-500/20 border border-yellow-400 text-yellow-100 text-sm">
               {errorList}
             </div>
-          ) : items.length === 0 ? (
+          ) : total === 0 ? (
             <p className="text-white/80">No hay alertas.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm text-white/90">
-                <thead>
-                  <tr className="text-left border-b border-white/20">
-                    <th className="py-2 pr-4">ID</th>
-                    <th className="py-2 pr-4">Mensaje</th>
-                    <th className="py-2 pr-4">Fecha/Hora límite</th>
-                    <th className="py-2 pr-4">Creado</th>
-                    <th className="py-2 pr-4">Usuario</th>
-                    <th className="py-2 pr-4">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((row) => {
-                    const userObj =
-                      typeof row.usuario === "object"
-                        ? row.usuario
-                        : usersById[row.usuario];
-                    const userLabel =
-                      userObj?.email ||
-                      userObj?.username ||
-                      (row.usuario ?? "—");
-                    return (
-                      <tr key={row.id} className="border-b border-white/10">
-                        <td className="py-2 pr-4">{row.id}</td>
-                        <td className="py-2 pr-4">{row.mensaje}</td>
-                        <td className="py-2 pr-4">{fmtDateTime(row.fecha)}</td>
-                        <td className="py-2 pr-4">{fmtDateTime(row.created_at)}</td>
-                        <td className="py-2 pr-4">{userLabel}</td>
-                        <td className="py-2 pr-4">
-                          <div className="flex gap-2">
-                            <button
-                              className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700"
-                              onClick={() => this.editRow(row)}
-                            >
-                              Editar
-                            </button>
-                            <button
-                              className="px-3 py-1 rounded bg-rose-600 hover:bg-rose-700"
-                              onClick={() => this.removeRow(row)}
-                            >
-                              Eliminar
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm text-white/90">
+                  <thead>
+                    <tr className="text-left border-b border-white/20">
+                      <th className="py-2 pr-4">ID</th>
+                      <th className="py-2 pr-4">Mensaje</th>
+                      <th className="py-2 pr-4">Fecha/Hora límite</th>
+                      <th className="py-2 pr-4">Creado</th>
+                      <th className="py-2 pr-4">Usuario</th>
+                      <th className="py-2 pr-4">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paged.map((row) => {
+                      const userObj =
+                        typeof row.usuario === "object"
+                          ? row.usuario
+                          : usersById[row.usuario];
+                      const userLabel =
+                        userObj?.email ||
+                        userObj?.username ||
+                        (row.usuario ?? "—");
+                      return (
+                        <tr key={row.id} className="border-b border-white/10">
+                          <td className="py-2 pr-4">{row.id}</td>
+                          <td className="py-2 pr-4">{row.mensaje}</td>
+                          <td className="py-2 pr-4">{fmtDateTime(row.fecha)}</td>
+                          <td className="py-2 pr-4">{fmtDateTime(row.created_at)}</td>
+                          <td className="py-2 pr-4">{userLabel}</td>
+                          <td className="py-2 pr-4">
+                            <div className="flex gap-2">
+                              <button
+                                className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700"
+                                onClick={() => this.editRow(row)}
+                              >
+                                Editar
+                              </button>
+                              <button
+                                className="px-3 py-1 rounded bg-rose-600 hover:bg-rose-700"
+                                onClick={() => this.removeRow(row)}
+                              >
+                                Eliminar
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <Paginacion
+                page={currentPage}
+                total={total}
+                pageSize={pageSize}
+                onChange={this.goToPage}
+              />
+            </>
           )}
         </section>
       </main>

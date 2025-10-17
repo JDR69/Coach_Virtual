@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import api from "../../api/api";
+import { createUser, buildUserPayload } from "../../services/UsuarioService"; 
 
 class Register extends Component {
   state = {
@@ -40,8 +40,8 @@ class Register extends Component {
     const { email, username, password } = this.state.form;
     const errors = {};
     if (!email) errors.email = "Email requerido";
-    if (!username) errors.username = "Username requerido";
-    if (!password) errors.password = "Password requerida";
+    if (!username) errors.username = "Usuario requerido";
+    if (!password) errors.password = "Contraseña requerida";
     this.setState({ errorsByField: errors });
     return Object.keys(errors).length === 0;
   };
@@ -53,20 +53,8 @@ class Register extends Component {
     this.setState({ loading: true, error: null, success: null });
 
     try {
-      const payload = { ...this.state.form };
-      [
-        "email",
-        "username",
-        "first_name",
-        "last_name",
-        "genero",
-        "altura",
-        "peso",
-      ].forEach((k) => {
-        if (typeof payload[k] === "string") payload[k] = payload[k].trim();
-      });
-
-      const { data } = await api.post("/usuarios/", payload);
+      const payload = buildUserPayload(this.state.form, { omitPasswordIfEmpty: false });
+      const data = await createUser(payload);
 
       this.setState({
         success: "Usuario registrado correctamente.",
@@ -105,7 +93,6 @@ class Register extends Component {
     const { form, errorsByField, showPassword } = this.state;
     const hasError = Boolean(errorsByField?.[name]);
 
-    // Campo especial para contraseña
     if (name === "password") {
       return (
         <div className="flex flex-col gap-1 relative">
@@ -141,7 +128,6 @@ class Register extends Component {
       );
     }
 
-    // Campos normales
     return (
       <div className="flex flex-col gap-1">
         <label className="text-white/80 text-sm" htmlFor={name}>
@@ -249,10 +235,10 @@ class Register extends Component {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {this.renderField("Altura", "altura", "text", {
+              {this.renderField("Altura (m)", "altura", "text", {
                 placeholder: "1.75",
               })}
-              {this.renderField("Peso", "peso", "text", { placeholder: "70" })}
+              {this.renderField("Peso (kg)", "peso", "text", { placeholder: "70" })}
             </div>
 
             <button
