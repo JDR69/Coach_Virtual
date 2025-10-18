@@ -3,7 +3,7 @@ import { useAuth } from "../auth/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useCategory } from "../context/CategoryContext";
 
-const Navbar = ({ sidebarOpen, onMenuClick }) => {
+const Header = ({ sidebarOpen, onMenuClick }) => {
   const { user, isAuthenticated, signOut } = useAuth();
   const { category, clearCategory } = useCategory();
   const navigate = useNavigate();
@@ -79,4 +79,4 @@ const Navbar = ({ sidebarOpen, onMenuClick }) => {
   );
 };
 
-export default Navbar;
+export default Header;

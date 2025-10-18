@@ -8,8 +8,8 @@ import Usuario from "../pages/GestionarUsuario/Usuario";
 import Alerta from "../pages/GestionarAlerta/Alerta";
 import AlertaUsuario from "../pages/GestionarAlerta/AlertaUsuario";
 import LoginPage from "../pages/Login/LoginPage";
-import PoseTest from "../pages/PoseTest";
-import IAPage from "../pages/IAPage";
+import PoseTest from "../pages/Detector/PoseTest";
+import IAPage from "../pages/IAPage/IAPage";
 import ChatIA from "../pages/Chat/ChatIA";
 
 import AlertNotifier from "../pages/GestionarAlerta/AlertNotifier";

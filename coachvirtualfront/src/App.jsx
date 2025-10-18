@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, useLocation } from "react-router-dom";
 import AppRoutes from "./routes/AppRoutes";
-import Navbar from "./components/Navbar";
+import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import { AuthProvider } from "./auth/AuthProvider.jsx";
 import { CategoryProvider } from "./context/CategoryContext";
@@ -17,8 +17,8 @@ function AppContent({ sidebarOpen, setSidebarOpen }) {
 
   return (
     <>
-      {/* Si también quieres ocultar el navbar en /seleccionar o /musculo, dímelo */}
-      <Navbar
+      {/* Header en lugar de Navbar */}
+      <Header
         sidebarOpen={!hideSidebar && sidebarOpen}
         onMenuClick={() => setSidebarOpen(!sidebarOpen)}
       />

@@ -1,9 +1,9 @@
 import { useState, useRef } from 'react';
-import PoseDetector from '../components/PoseDetector';
-import { fetchGroqCompletion } from '../services/groqClient';
-import { useSpeech } from '../utils/useSpeech';
-import { calculateBodyAngles } from '../utils/poseUtils';
-import { savePoseTrainingData } from '../services/poseTrainingApi';
+import PoseDetector from './PoseDetector';
+import { fetchGroqCompletion } from '../../services/groqClient';
+import { useSpeech } from '../../utils/useSpeech';
+import { calculateBodyAngles } from '../../utils/poseUtils';
+import { savePoseTrainingData } from '../../services/poseTrainingApi';
 
 export default function PoseTest() {
   const [poseData, setPoseData] = useState(null);

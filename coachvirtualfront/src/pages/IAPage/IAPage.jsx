@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { fetchGroqCompletion } from "../services/groqClient";
-import postureExamples from "../data/posture_examples.json"
-import { useSpeech } from "../utils/useSpeech";
+import { fetchGroqCompletion } from "../../services/groqClient";
+import postureExamples from "../../data/posture_examples.json"
+import { useSpeech } from "../../utils/useSpeech";
 
 
 export default function IAPage() {
