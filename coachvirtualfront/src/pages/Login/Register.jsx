@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth/useAuth";
 import api from "../../api/api";
 
 /* ===== Utilidad para clases ===== */
@@ -22,7 +23,13 @@ const HideNativeDateStyles = () => (
 );
 
 /* ===== Botón de icono seguro ===== */
-const SafeIconButton = ({ onClick, className = "", title, ariaLabel, children }) => (
+const SafeIconButton = ({
+  onClick,
+  className = "",
+  title,
+  ariaLabel,
+  children,
+}) => (
   <button
     type="button"
     title={title}
@@ -33,7 +40,10 @@ const SafeIconButton = ({ onClick, className = "", title, ariaLabel, children })
       e.stopPropagation();
       onClick?.(e);
     }}
-    className={cls("absolute p-1 rounded-md text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 z-20", className)}
+    className={cls(
+      "absolute p-1 rounded-md text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 z-20",
+      className
+    )}
   >
     {children}
   </button>
@@ -67,14 +77,14 @@ const PasswordInput = ({
         title={show ? "Ocultar contraseña" : "Mostrar contraseña"}
       >
         {show ? (
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M3 3l18 18" />
             <path d="M10.58 10.58A3 3 0 0 0 12 15a3 3 0 0 0 2.42-4.42" />
             <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.29 20.29 0 0 1 5.06-5.94" />
             <path d="M9.88 4.24A10.88 10.88 0 0 1 12 4c7 0 11 8 11 8a20.27 20.27 0 0 1-3.06 4.2" />
           </svg>
         ) : (
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
             <circle cx="12" cy="12" r="3" />
           </svg>
@@ -88,7 +98,9 @@ const PasswordInput = ({
 const useClickOutside = (refs, onOutside) => {
   useEffect(() => {
     const handler = (e) => {
-      const inside = refs.some((r) => r.current && r.current.contains(e.target));
+      const inside = refs.some(
+        (r) => r.current && r.current.contains(e.target)
+      );
       if (!inside) onOutside?.();
     };
     document.addEventListener("mousedown", handler);
@@ -101,12 +113,18 @@ const useClickOutside = (refs, onOutside) => {
 };
 
 /* ===== Select Género (toggle) ===== */
-const GenderSelect = ({ name="genero", value, onChange, placeholder="Género", options }) => {
+const GenderSelect = ({
+  name = "genero",
+  value,
+  onChange,
+  placeholder = "Género",
+  options,
+}) => {
   const ref = useRef(null);
   const [open, setOpen] = useState(false);
   useClickOutside([ref], () => setOpen(false));
 
-  const current = options.find(o => o.value === value);
+  const current = options.find((o) => o.value === value);
 
   const choose = (val) => {
     onChange?.({ target: { name, value: val } });
@@ -147,56 +165,58 @@ const GenderSelect = ({ name="genero", value, onChange, placeholder="Género", o
   );
 };
 
-/* ===== Date input nativo (ícono nativo oculto; usamos nuestro ícono blanco) ===== */
-const DateInputNative = forwardRef(({
-  name = "fecha_nacimiento",
-  valueISO,
-  onChangeISO,
-  minISO,
-  maxISO,
-}, ref) => {
-  const inputRef = useRef(null);
+/* ===== Date input nativo (oculta ícono negro nativo) ===== */
+const DateInputNative = forwardRef(
+  (
+    { name = "fecha_nacimiento", valueISO, onChangeISO, minISO, maxISO },
+    ref
+  ) => {
+    const inputRef = useRef(null);
 
-  useEffect(() => {
-    if (typeof ref === "function") ref(inputRef.current);
-    else if (ref) ref.current = inputRef.current;
-  }, [ref]);
+    useEffect(() => {
+      if (typeof ref === "function") ref(inputRef.current);
+      else if (ref) ref.current = inputRef.current;
+    }, [ref]);
 
-  const openPicker = () => {
-    try { inputRef.current?.showPicker?.(); } catch {}
-    inputRef.current?.focus?.();
-  };
+    const openPicker = () => {
+      try {
+        inputRef.current?.showPicker?.();
+      } catch {}
+      inputRef.current?.focus?.();
+    };
 
-  return (
-    <div className="relative">
-      <input
-        ref={inputRef}
-        type="date"
-        name={name}
-        value={valueISO || ""}
-        min={minISO}
-        max={maxISO}
-        onChange={onChangeISO}
-        className="hide-native-date w-full px-4 pr-12 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-200/80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 shadow"
-      />
-      <SafeIconButton
-        onClick={openPicker}
-        className="right-3 top-1/2 -translate-y-1/2"
-        title="Abrir calendario"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <rect x="3" y="4" width="18" height="18" rx="2" />
-          <line x1="16" y1="2" x2="16" y2="6" />
-          <line x1="8" y1="2" x2="8" y2="6" />
-          <line x1="3" y1="10" x2="21" y2="10" />
-        </svg>
-      </SafeIconButton>
-    </div>
-  );
-});
+    return (
+      <div className="relative">
+        <input
+          ref={inputRef}
+          type="date"
+          name={name}
+          value={valueISO || ""}
+          min={minISO}
+          max={maxISO}
+          onChange={onChangeISO}
+          className="hide-native-date w-full px-4 pr-12 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-200/80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 shadow"
+        />
+        <SafeIconButton
+          onClick={openPicker}
+          className="right-3 top-1/2 -translate-y-1/2"
+          title="Abrir calendario"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+        </SafeIconButton>
+      </div>
+    );
+  }
+);
 
 const Register = ({ signIn, onSuccess, onSwitchToLogin }) => {
   const navigate = useNavigate();
+  const { isSuper } = useAuth(); // ← leer rol tras signIn
 
   const [regData, setRegData] = useState({
     email: "",
@@ -243,20 +263,59 @@ const Register = ({ signIn, onSuccess, onSwitchToLogin }) => {
     setError("");
     setOkMsg("");
 
-    const { email, username, password, nombre, apellido, fecha_nacimiento, genero, altura, peso } = regData;
+    const {
+      email,
+      username,
+      password,
+      nombre,
+      apellido,
+      fecha_nacimiento,
+      genero,
+      altura,
+      peso,
+    } = regData;
 
-    if (!email.trim())        { setError("Falta Email"); return scrollAndFocus(refs.email.current); }
-    if (!username.trim())     { setError("Falta Usuario"); return scrollAndFocus(refs.username.current); }
-    if (!password)            { setError("Falta Contraseña"); return scrollAndFocus(refs.password.current); }
-    if (!nombre.trim())       { setError("Falta Nombre"); return scrollAndFocus(refs.nombre.current); }
-    if (!apellido.trim())     { setError("Falta Apellido"); return scrollAndFocus(refs.apellido.current); }
-    if (!fecha_nacimiento)    { setError("Falta Fecha de Nacimiento"); return scrollAndFocus(refs.fecha_nacimiento.current, () => refs.fecha_nacimiento.current?.showPicker?.()); }
-    if (!genero)              { setError("Falta Género"); return; }
+    if (!email.trim()) {
+      setError("Falta Email");
+      return scrollAndFocus(refs.email.current);
+    }
+    if (!username.trim()) {
+      setError("Falta Usuario");
+      return scrollAndFocus(refs.username.current);
+    }
+    if (!password) {
+      setError("Falta Contraseña");
+      return scrollAndFocus(refs.password.current);
+    }
+    if (!nombre.trim()) {
+      setError("Falta Nombre");
+      return scrollAndFocus(refs.nombre.current);
+    }
+    if (!apellido.trim()) {
+      setError("Falta Apellido");
+      return scrollAndFocus(refs.apellido.current);
+    }
+    if (!fecha_nacimiento) {
+      setError("Falta Fecha de Nacimiento");
+      return scrollAndFocus(refs.fecha_nacimiento.current, () =>
+        refs.fecha_nacimiento.current?.showPicker?.()
+      );
+    }
+    if (!genero) {
+      setError("Falta Género");
+      return;
+    }
 
     const h = parseFloat(altura);
-    if (Number.isNaN(h) || h <= 0) { setError("Altura debe ser > 0"); return scrollAndFocus(refs.altura.current); }
+    if (Number.isNaN(h) || h <= 0) {
+      setError("Altura debe ser > 0");
+      return scrollAndFocus(refs.altura.current);
+    }
     const p = parseFloat(peso);
-    if (Number.isNaN(p) || p <= 0) { setError("Peso debe ser > 0"); return scrollAndFocus(refs.peso.current); }
+    if (Number.isNaN(p) || p <= 0) {
+      setError("Peso debe ser > 0");
+      return scrollAndFocus(refs.peso.current);
+    }
 
     setIsLoading(true);
     try {
@@ -278,19 +337,26 @@ const Register = ({ signIn, onSuccess, onSwitchToLogin }) => {
       try {
         await signIn(email, password);
         onSuccess?.();
-        const next = localStorage.getItem("cv.category") ? "/musculo" : "/seleccionar";
-        navigate(next, { replace: true });
+
+        // Redirección por rol:
+        if (isSuper) {
+          navigate("/perfil", { replace: true });
+        } else {
+          const next = localStorage.getItem("cv.category") ? "/musculo" : "/seleccionar";
+          navigate(next, { replace: true });
+        }
       } catch {
         setOkMsg("Cuenta creada. Inicia sesión con tus credenciales.");
         onSwitchToLogin?.();
       }
     } catch (err) {
-      const msg =
-        err?.response?.data
-          ? Object.entries(err.response.data)
-              .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`)
-              .join(" | ")
-          : err?.message || "Error al registrar la cuenta.";
+      const msg = err?.response?.data
+        ? Object.entries(err.response.data)
+            .map(
+              ([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`
+            )
+            .join(" | ")
+        : err?.message || "Error al registrar la cuenta.";
       setError(msg);
     } finally {
       setIsLoading(false);

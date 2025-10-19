@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth/useAuth";
 
 /** Botón seguro para iconos (no roba foco) */
-const SafeIconButton = ({ onClick, className = "", title, ariaLabel, children }) => (
+const SafeIconButton = ({
+  onClick,
+  className = "",
+  title,
+  ariaLabel,
+  children,
+}) => (
   <button
     type="button"
     title={title}
@@ -64,8 +71,9 @@ const PasswordInput = ({
   );
 };
 
-const IniciarSesion = ({ signIn, onSuccess, onSwitchToRegister }) => {
+const IniciarSesion = ({ signIn, onSuccess /*, onSwitchToRegister*/ }) => {
   const navigate = useNavigate();
+  const { isSuper } = useAuth(); // ← leer rol desde contexto
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -80,10 +88,18 @@ const IniciarSesion = ({ signIn, onSuccess, onSwitchToRegister }) => {
     try {
       await signIn(formData.email, formData.password);
       onSuccess?.();
-      const next = localStorage.getItem("cv.category") ? "/musculo" : "/seleccionar";
-      navigate(next, { replace: true });
+
+      // Redirección por rol:
+      if (isSuper) {
+        navigate("/perfil", { replace: true });
+      } else {
+        const next = localStorage.getItem("cv.category") ? "/musculo" : "/seleccionar";
+        navigate(next, { replace: true });
+      }
     } catch (err) {
-      setError(err?.message || "Error al iniciar sesión. Verifica tus credenciales.");
+      setError(
+        err?.message || "Error al iniciar sesión. Verifica tus credenciales."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -98,7 +114,6 @@ const IniciarSesion = ({ signIn, onSuccess, onSwitchToRegister }) => {
         </div>
       )}
 
-      {/* SIN enlaces aquí para evitar duplicados */}
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-4">
           <input

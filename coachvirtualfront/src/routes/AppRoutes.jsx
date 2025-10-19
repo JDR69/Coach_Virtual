@@ -33,18 +33,32 @@ function RequireAuth() {
 }
 
 function GuestOnly() {
-  const { isAuthenticated, initializing } = useAuth();
+  const { isAuthenticated, isSuper, initializing } = useAuth();
+  const { category } = useCategory();
   const location = useLocation();
   if (initializing) return <div style={{ padding: 24 }}>Verificando sesión…</div>;
-  const back = location.state?.from?.pathname || "/pose-test"; // ← pediste ir a PoseTest si ya está logueado
-  return isAuthenticated ? <Navigate to={back} replace /> : <Outlet />;
+
+  if (isAuthenticated) {
+    // Redirección por rol
+    if (isSuper) return <Navigate to="/perfil" replace />;
+    // Usuario normal: respeta flujo seleccionar/músculo
+    const next = category ? "/musculo" : "/seleccionar";
+    return <Navigate to={next} replace />;
+  }
+
+  return <Outlet />;
 }
 
 function RootRedirect() {
-  const { isAuthenticated, initializing } = useAuth();
+  const { isAuthenticated, isSuper, initializing } = useAuth();
   const { category } = useCategory();
+
   if (initializing) return <div style={{ padding: 24 }}>Verificando sesión…</div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  // Redirección por rol
+  if (isSuper) return <Navigate to="/perfil" replace />;
+  // Usuario normal: respeta flujo seleccionar/músculo
   return <Navigate to={category ? "/musculo" : "/seleccionar"} replace />;
 }
 

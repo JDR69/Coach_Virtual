@@ -33,7 +33,9 @@ const LoginPage = () => {
               <h1 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-yellow-500">
                 Coach Virtual
               </h1>
-              <p className="text-white/90 mt-1">Tu entrenador personal digital</p>
+              <p className="text-white/90 mt-1">
+                Tu entrenador personal digital
+              </p>
             </div>
           </div>
         </div>
