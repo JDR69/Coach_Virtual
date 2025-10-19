@@ -1,9 +1,6 @@
+// src/pages/GestionarUsuario/Perfil.jsx
 import { useEffect, useMemo, useState } from "react";
-import {
-  fetchMyProfile,
-  updateUser,
-  sanitizeForPut,
-} from "../../services/UsuarioService"; // ajusta la ruta si hace falta
+import { fetchMyProfile, updateUser } from "../../services/UsuarioService";
 
 // ========= Helpers =========
 function formatDate(d) {
@@ -26,20 +23,17 @@ function labelGenero(v) {
 
 // ========= Componente =========
 export default function Perfil() {
-  const [user, setUser] = useState(null); // objeto crudo del backend
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // edición
+  // edición (solo 4 campos)
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({
-    nombre: "",
-    apellido: "",
     fecha_nacimiento: "",
     genero: "",
     altura: "",
     peso: "",
-    avatar: "",
   });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -67,53 +61,36 @@ export default function Perfil() {
     };
   }, []);
 
-  // ======= DERIVADOS PARA UI =======
+  // ======= DERIVADOS PARA UI (solo lo que mostramos) =======
   const ui = useMemo(() => {
     if (!user) return null;
 
-    // nombres REALES de la tabla (AbstractUser + extras)
-    const firstName = user.first_name || user.nombre || user.name || "";
-    const lastName = user.last_name || user.apellido || "";
-    const nombreCompleto =
-      `${firstName} ${lastName}`.trim() || (user.username ?? "Usuario");
-
     const email = user.email || "";
-    const fechaNacimiento = user.fecha_nacimiento || user.fechaNacimiento || "";
-    const genero = user.genero || "";
-    const altura = user.altura ?? ""; // varchar(10)
-    const peso = user.peso ?? ""; // varchar(10)
 
-    const fechaRegistro = user.date_joined || user.created_at || "";
-    const ultimoAcceso = user.last_login || "";
+    const fechaNacimientoRaw = user.fecha_nacimiento || user.fechaNacimiento || "";
+    const generoRaw = user.genero || "";
+    const alturaRaw = user.altura ?? "";
+    const pesoRaw = user.peso ?? "";
 
     const avatar =
       user.avatar ||
       user.foto ||
       user.foto_perfil ||
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(
-        nombreCompleto || email || "U"
-      )}`;
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(email || "U")}`;
 
     return {
       id: user.id ?? user.pk ?? null,
-      raw: user,
       avatar,
-      nombre: nombreCompleto || "—",
       email: email || "—",
-      fechaNacimiento: formatDate(fechaNacimiento) || "—",
-      genero: labelGenero(genero) || "—",
-      altura: (altura ? `${altura} m` : "—"),
-      peso: (peso ? `${peso} kg` : "—"),
-      fechaRegistro: formatDate(fechaRegistro) || "—",
-      ultimoAcceso: formatDate(ultimoAcceso) || "—",
+      fechaNacimiento: formatDate(fechaNacimientoRaw) || "—",
+      genero: labelGenero(generoRaw) || "—",
+      altura: alturaRaw ? `${alturaRaw} m` : "—",
+      peso: pesoRaw ? `${pesoRaw} kg` : "—",
       editable: {
-        nombre: firstName,
-        apellido: lastName,
-        fecha_nacimiento: formatDate(fechaNacimiento) || "",
-        genero: typeof genero === "string" ? genero : "",
-        altura,
-        peso,
-        avatar: user.avatar || user.foto || user.foto_perfil || "",
+        fecha_nacimiento: formatDate(fechaNacimientoRaw) || "",
+        genero: typeof generoRaw === "string" ? generoRaw : "",
+        altura: alturaRaw ?? "",
+        peso: pesoRaw ?? "",
       },
     };
   }, [user]);
@@ -122,20 +99,17 @@ export default function Perfil() {
   useEffect(() => {
     if (isEditing && ui?.editable) {
       setForm({
-        nombre: ui.editable.nombre || "",
-        apellido: ui.editable.apellido || "",
         fecha_nacimiento: ui.editable.fecha_nacimiento || "",
         genero: ui.editable.genero || "",
         altura: ui.editable.altura ?? "",
         peso: ui.editable.peso ?? "",
-        avatar: ui.editable.avatar || "",
       });
       setSaveError("");
       setSaveOk("");
     }
   }, [isEditing, ui]);
 
-  // ======= GUARDAR =======
+  // ======= GUARDAR (solo 4 campos) =======
   async function saveChanges(e) {
     e?.preventDefault?.();
     setSaving(true);
@@ -149,18 +123,16 @@ export default function Perfil() {
     }
 
     const updates = {
-      first_name: (form.nombre || "").trim(),
-      last_name: (form.apellido || "").trim(),
       fecha_nacimiento: form.fecha_nacimiento || null, // YYYY-MM-DD
-      genero: form.genero || null, // "M"/"F" o "Masculino"/"Femenino"/"Otro"
+      genero: form.genero || null,
       altura: (form.altura ?? "").toString().trim() || null,
       peso: (form.peso ?? "").toString().trim() || null,
-      avatar: (form.avatar || "").trim() || null, // quítalo si tu serializer no lo soporta
+      // No tocamos email, username, etc.
     };
 
     try {
       const data = await updateUser(ui.id, updates, {
-        mergeWith: user,   // conserva email/username, etc., y sanea
+        mergeWith: user,   // conserva el resto
         sanitize: true,
       });
       setUser(data);
@@ -179,7 +151,7 @@ export default function Perfil() {
     }
   }
 
-  // ======= UI =======
+  // ======= UI (solo los 5 datos) =======
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4">
       <section className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 max-w-lg w-full text-center border border-white/20 animate-fade-in">
@@ -194,7 +166,7 @@ export default function Perfil() {
           <>
             <div className="flex flex-col items-center mb-6">
               <img
-                src={isEditing ? (form.avatar || ui.avatar) : ui.avatar}
+                src={ui.avatar}
                 alt="Avatar"
                 className="w-32 h-32 rounded-full border-4 border-white shadow-lg mb-4 object-cover"
                 onError={(e) => {
@@ -202,10 +174,8 @@ export default function Perfil() {
                     "https://randomuser.me/api/portraits/lego/1.jpg";
                 }}
               />
-              <h2 className="text-3xl font-bold text-white mb-1">
-                {isEditing ? (form.nombre || "—") : ui.nombre}
-              </h2>
-              <span className="text-white/60 text-sm">{ui.email}</span>
+              {/* Título: email centrado como en tu imagen */}
+              <span className="text-white/70 text-sm">{ui.email}</span>
             </div>
 
             {isEditing ? (
@@ -221,16 +191,8 @@ export default function Perfil() {
                   </div>
                 )}
 
-                <Input
-                  label="Nombre"
-                  value={form.nombre}
-                  onChange={(v) => setForm((s) => ({ ...s, nombre: v }))}
-                />
-                <Input
-                  label="Apellido"
-                  value={form.apellido}
-                  onChange={(v) => setForm((s) => ({ ...s, apellido: v }))}
-                />
+                <ReadOnlyRow label="Email" value={ui.email} />
+
                 <Input
                   label="Fecha de nacimiento"
                   type="date"
@@ -266,12 +228,6 @@ export default function Perfil() {
                   onChange={(v) => setForm((s) => ({ ...s, peso: v }))}
                   placeholder="Ej: 70.5"
                 />
-                <Input
-                  label="Avatar (URL)"
-                  value={form.avatar}
-                  onChange={(v) => setForm((s) => ({ ...s, avatar: v }))}
-                  placeholder="https://..."
-                />
 
                 <div className="flex items-center justify-end gap-3 pt-2">
                   <button
@@ -303,8 +259,6 @@ export default function Perfil() {
                   <Row label="Género" value={ui.genero} />
                   <Row label="Altura" value={ui.altura} />
                   <Row label="Peso" value={ui.peso} />
-                  <Row label="Fecha de registro" value={ui.fechaRegistro} />
-                  <Row label="Último acceso" value={ui.ultimoAcceso} />
                 </div>
 
                 <button
@@ -334,6 +288,17 @@ function Row({ label, value }) {
   );
 }
 
+function ReadOnlyRow({ label, value }) {
+  return (
+    <label className="block">
+      <span className="text-white/80 text-sm">{label}</span>
+      <div className="mt-1 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white shadow-md">
+        {value ?? "—"}
+      </div>
+    </label>
+  );
+}
+
 function Input({ label, value, onChange, type = "text", placeholder = "", ...rest }) {
   return (
     <label className="block">
@@ -355,7 +320,7 @@ function Select({ label, value, onChange, options = [] }) {
     <label className="block">
       <span className="text-white/80 text-sm">{label}</span>
       <select
-        className="mt-1 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 shadow-md"
+        className="mt-1 w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 shadow-md"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >
@@ -373,10 +338,9 @@ function LoaderSkeleton() {
   return (
     <div className="animate-pulse">
       <div className="w-32 h-32 rounded-full bg-white/20 mx-auto mb-6" />
-      <div className="h-6 bg-white/20 rounded w-1/2 mx-auto mb-2" />
-      <div className="h-4 bg-white/20 rounded w-1/3 mx-auto mb-8" />
+      <div className="h-4 bg-white/20 rounded w-2/3 mx-auto mb-8" />
       <div className="space-y-3">
-        {[...Array(6)].map((_, i) => (
+        {[...Array(5)].map((_, i) => (
           <div key={i} className="h-10 bg-white/10 rounded" />
         ))}
       </div>
