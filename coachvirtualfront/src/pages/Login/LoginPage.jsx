@@ -3,96 +3,113 @@ import { useAuth } from "../../auth/useAuth";
 import IniciarSesion from "./IniciarSesion";
 import Register from "./Register";
 
+/** Altura aproximada del header si lo tienes fijo */
+const NAV_H = 64;
+
 const LoginPage = () => {
   const { signIn } = useAuth();
-
   const [mode, setMode] = useState("login"); // "login" | "register"
-  const [isFlipped, setIsFlipped] = useState(false);
 
-  // Imágenes
+  // Misma imagen para ambas vistas
   const gymImage =
     "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1470&q=80";
-  const leftImage =
-    "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=870&q=80";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4">
-      <div className="relative w-full max-w-4xl h-[600px]" style={{ perspective: "1000px" }}>
-        <div
-          className={`relative w-full h-full transition-transform duration-700 ${
-            isFlipped ? "[transform:rotateY(180deg)]" : ""
-          }`}
-          style={{ transformStyle: "preserve-3d" }}
-        >
-          {/* Cara frontal */}
-          <div
-            className="absolute inset-0 w-full h-full rounded-3xl overflow-hidden shadow-2xl"
-            style={{ backfaceVisibility: "hidden" }}
-          >
-            <div className="relative w-full h-full bg-gradient-to-br from-gray-800 to-black flex flex-col items-center justify-center">
-              <img
-                src={gymImage}
-                alt="Gym Background"
-                className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none"
-              />
-              <div className="relative z-10 text-center">
-                <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-yellow-500 mb-8">
-                  Coach Virtual
-                </h1>
-                <p className="text-xl text-white mb-8 opacity-90">Tu entrenador personal digital</p>
-                <div className="space-x-4">
-                  <button
-                    onClick={() => { setMode("login"); setIsFlipped(true); }}
-                    className="py-3 px-8 text-lg font-semibold text-white bg-gradient-to-r from-red-500 to-yellow-500 rounded-lg shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-300 transform"
-                  >
-                    Iniciar Sesión
-                  </button>
-                  <button
-                    onClick={() => { setMode("register"); setIsFlipped(true); }}
-                    className="py-3 px-8 text-lg font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-300 transform"
-                  >
-                    Registrarse
-                  </button>
-                </div>
-              </div>
+    <div
+      className="min-h-[calc(100svh-64px)] flex items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 px-4"
+      style={{ minHeight: `calc(100svh - ${NAV_H}px)` }}
+    >
+      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-0 rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-black/60">
+        {/* Imagen (arriba en móvil, a la izquierda en desktop) */}
+        <div className="relative h-48 md:h-auto">
+          <img
+            src={gymImage}
+            alt="Fondo gimnasio"
+            className="absolute inset-0 w-full h-full object-cover opacity-40"
+          />
+          <div className="absolute inset-0 bg-gradient-to-tr from-black/40 to-transparent" />
+          <div className="relative z-10 h-full w-full flex items-center justify-center md:justify-start md:pl-8">
+            <div className="text-center md:text-left">
+              <h1 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-yellow-500">
+                Coach Virtual
+              </h1>
+              <p className="text-white/90 mt-1">Tu entrenador personal digital</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Panel de formularios */}
+        <div className="p-6 sm:p-8 md:p-10 flex flex-col">
+          {/* Tabs SIEMPRE visibles (web y responsive) */}
+          <div className="flex items-center gap-2 bg-white/5 p-1 rounded-xl mb-6 w-full">
+            <button
+              type="button"
+              onClick={() => setMode("login")}
+              className={`flex-1 py-3 rounded-lg font-semibold transition ${
+                mode === "login"
+                  ? "bg-white/90 text-gray-900 shadow"
+                  : "text-white/80 hover:bg-white/10"
+              }`}
+            >
+              Iniciar sesión
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("register")}
+              className={`flex-1 py-3 rounded-lg font-semibold transition ${
+                mode === "register"
+                  ? "bg-white/90 text-gray-900 shadow"
+                  : "text-white/80 hover:bg-white/10"
+              }`}
+            >
+              Crear cuenta
+            </button>
+          </div>
+
+          {/* Título único: evita duplicados */}
+          <h2 className="text-2xl sm:text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-yellow-500 mb-6">
+            {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
+          </h2>
+
+          {/* Formulario centrado y consistente */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-full max-w-md">
+              {mode === "login" ? (
+                <IniciarSesion
+                  signIn={signIn}
+                  onSuccess={() => {}}
+                  onSwitchToRegister={() => setMode("register")}
+                />
+              ) : (
+                <Register
+                  signIn={signIn}
+                  onSuccess={() => setMode("login")}
+                  onSwitchToLogin={() => setMode("login")}
+                />
+              )}
             </div>
           </div>
 
-          {/* Cara trasera */}
-          <div
-            className="absolute inset-0 w-full h-full rounded-3xl overflow-hidden shadow-2xl [transform:rotateY(180deg)]"
-            style={{ backfaceVisibility: "hidden" }}
-          >
-            <div className="flex w-full h-full">
-              {/* Mitad izquierda */}
-              <div className="w-1/2 h-full relative">
-                <img src={leftImage} alt="Gym Environment" className="w-full h-full object-cover pointer-events-none" />
-                <div className="absolute inset-0 bg-black bg-opacity-30"></div>
-              </div>
-
-              {/* Mitad derecha */}
-              <div className="w-1/2 h-full bg-gradient-to-br from-gray-800 to-black flex flex-col justify-center px-12">
-                <div className="w-full max-w-md mx-auto">
-                  {mode === "login" ? (
-                    <IniciarSesion
-                      signIn={signIn}
-                      onBack={() => setIsFlipped(false)}
-                      onSuccess={() => setIsFlipped(false)}
-                      onSwitchToRegister={() => setMode("register")}
-                    />
-                  ) : (
-                    <Register
-                      signIn={signIn}
-                      onBack={() => setIsFlipped(false)}
-                      onSuccess={() => setIsFlipped(false)}
-                      onSwitchToLogin={() => setMode("login")}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
+          {/* ÚNICO enlace alterno (no hay link dentro de los formularios) */}
+          <div className="mt-6 text-center">
+            {mode === "login" ? (
+              <button
+                type="button"
+                onClick={() => setMode("register")}
+                className="text-sm text-gray-200 hover:text-white"
+              >
+                ¿No tienes cuenta? Crear cuenta
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setMode("login")}
+                className="text-sm text-gray-200 hover:text-white"
+              >
+                ¿Ya tienes cuenta? Iniciar sesión
+              </button>
+            )}
           </div>
-          {/* fin cara trasera */}
         </div>
       </div>
     </div>

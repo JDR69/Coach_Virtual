@@ -1,6 +1,25 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+/** Botón seguro para iconos (no roba foco) */
+const SafeIconButton = ({ onClick, className = "", title, ariaLabel, children }) => (
+  <button
+    type="button"
+    title={title}
+    aria-label={ariaLabel || title}
+    onMouseDown={(e) => e.preventDefault()}
+    onClick={(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onClick?.(e);
+    }}
+    className={`absolute p-1 rounded-md text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500 z-20 ${className}`}
+  >
+    {children}
+  </button>
+);
+
+/** Input de contraseña accesible */
 const PasswordInput = ({
   value,
   onChange,
@@ -19,14 +38,12 @@ const PasswordInput = ({
         onChange={onChange}
         required={required}
         autoComplete={autoComplete}
-        className="w-full px-4 pr-12 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300 shadow-md"
+        className="w-full px-4 pr-12 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300 shadow"
         placeholder={placeholder}
       />
-      <button
-        type="button"
+      <SafeIconButton
         onClick={() => setShow((s) => !s)}
-        className="absolute inset-y-0 right-3 flex items-center text-gray-300 hover:text-white"
-        aria-label={show ? "Ocultar contraseña" : "Mostrar contraseña"}
+        className="right-3 top-1/2 -translate-y-1/2"
         title={show ? "Ocultar contraseña" : "Mostrar contraseña"}
       >
         {show ? (
@@ -42,12 +59,12 @@ const PasswordInput = ({
             <circle cx="12" cy="12" r="3" />
           </svg>
         )}
-      </button>
+      </SafeIconButton>
     </div>
   );
 };
 
-const IniciarSesion = ({ signIn, onBack, onSuccess, onSwitchToRegister }) => {
+const IniciarSesion = ({ signIn, onSuccess, onSwitchToRegister }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
@@ -66,27 +83,23 @@ const IniciarSesion = ({ signIn, onBack, onSuccess, onSwitchToRegister }) => {
       const next = localStorage.getItem("cv.category") ? "/musculo" : "/seleccionar";
       navigate(next, { replace: true });
     } catch (err) {
-      setError(
-        err?.message || "Error al iniciar sesión. Verifica tus credenciales."
-      );
+      setError(err?.message || "Error al iniciar sesión. Verifica tus credenciales.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <>
-      <h2 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-yellow-500 mb-6 text-center">
-        Inicia Sesión
-      </h2>
-
+    <div className="w-full">
+      {/* Alerta (no empuja layout) */}
       {error && (
-        <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg text-center shadow-md">
+        <div className="mb-4 bg-red-100/90 border border-red-400 text-red-800 px-4 py-3 rounded-lg text-center shadow">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      {/* SIN enlaces aquí para evitar duplicados */}
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-4">
           <input
             name="email"
@@ -95,7 +108,7 @@ const IniciarSesion = ({ signIn, onBack, onSuccess, onSwitchToRegister }) => {
             required
             value={formData.email}
             onChange={handleChange}
-            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300 shadow-md"
+            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300 shadow"
             placeholder="Correo electrónico"
           />
           <PasswordInput
@@ -109,29 +122,12 @@ const IniciarSesion = ({ signIn, onBack, onSuccess, onSwitchToRegister }) => {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-3 px-4 bg-gradient-to-r from-red-500 to-yellow-500 hover:from-red-600 hover:to-yellow-600 text-white font-semibold rounded-lg shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105"
+          className="w-full py-3 px-4 bg-gradient-to-r from-red-500 to-yellow-500 hover:from-red-600 hover:to-yellow-600 text-white font-semibold rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
         >
-          {isLoading ? "Procesando..." : "Iniciar Sesión"}
+          {isLoading ? "Procesando..." : "Iniciar sesión"}
         </button>
-
-        <div className="flex items-center justify-between pt-1">
-          <button
-            type="button"
-            onClick={onBack}
-            className="py-2 text-gray-300 hover:text-white transition-colors duration-300"
-          >
-            ← Volver
-          </button>
-          <button
-            type="button"
-            onClick={onSwitchToRegister}
-            className="py-2 text-gray-300 hover:text-white transition-colors duration-300"
-          >
-            ¿No tienes cuenta? Regístrate
-          </button>
-        </div>
       </form>
-    </>
+    </div>
   );
 };
 
