@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'usuarios',
     'poses',
+    'suscripciones',  # Sistema de suscripciones (preparado, no activo)
     'rest_framework',
     'corsheaders',
 ]

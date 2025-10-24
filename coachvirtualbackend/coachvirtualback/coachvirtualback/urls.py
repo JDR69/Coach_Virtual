@@ -28,4 +28,5 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/', include('usuarios.urls')),
     path('api/poses/', include('poses.urls')),
+    path('api/suscripciones/', include('suscripciones.urls')),  # Sistema de suscripciones (preparado)
 ]

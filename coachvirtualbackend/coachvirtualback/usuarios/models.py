@@ -11,9 +11,45 @@ class Usuario(AbstractUser):
     email = models.EmailField(unique=True)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
+    
+    # Sistema de suscripciones (preparado, no activo aún)
+    plan_actual = models.CharField(
+        max_length=20,
+        choices=[
+            ('gratis', 'Gratis'),
+            ('basico', 'Básico'),
+            ('premium', 'Premium')
+        ],
+        default='gratis',
+        help_text='Plan de suscripción actual'
+    )
+    fecha_expiracion_plan = models.DateTimeField(
+        null=True, 
+        blank=True,
+        help_text='Fecha en que expira el plan actual'
+    )
+    # Contadores para límites (se resetean según el plan)
+    minutos_usados_hoy = models.IntegerField(default=0, help_text='Minutos de entrenamiento usados hoy')
+    ultima_sesion = models.DateField(null=True, blank=True, help_text='Última fecha de entrenamiento')
 
     def __str__(self):
         return self.email
+    
+    @property
+    def tiene_plan_activo(self):
+        """Verifica si el usuario tiene un plan pagado activo"""
+        from django.utils import timezone
+        if self.plan_actual == 'gratis':
+            return False
+        if self.fecha_expiracion_plan and self.fecha_expiracion_plan > timezone.now():
+            return True
+        return False
+    
+    @property
+    def puede_entrenar(self):
+        """Verifica si el usuario puede entrenar según su plan y límites"""
+        # TODO: Implementar lógica de límites cuando se active el sistema
+        return True  # Por ahora siempre True
 
 
 class Plan(models.Model):

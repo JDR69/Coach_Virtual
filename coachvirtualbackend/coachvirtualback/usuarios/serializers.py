@@ -6,6 +6,9 @@ class UsuarioSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
     is_superuser = serializers.BooleanField(read_only=True)
     is_staff = serializers.BooleanField(read_only=True)
+    # Campos de suscripción (solo lectura para usuarios normales)
+    tiene_plan_activo = serializers.BooleanField(read_only=True)
+    puede_entrenar = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Usuario
@@ -22,6 +25,11 @@ class UsuarioSerializer(serializers.ModelSerializer):
             "password",
             "is_superuser",
             "is_staff",
+            # Campos de suscripción
+            "plan_actual",
+            "fecha_expiracion_plan",
+            "tiene_plan_activo",
+            "puede_entrenar",
         ]
         extra_kwargs = {"email": {"required": True}}
 

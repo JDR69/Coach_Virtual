@@ -11,6 +11,7 @@ import LoginPage from "../pages/Login/LoginPage";
 import PoseTest from "../pages/Detector/PoseTest";
 import IAPage from "../pages/IAPage/IAPage";
 import ChatIA from "../pages/Chat/ChatIA";
+import Planes from "../pages/Planes/Planes";
 
 import AlertNotifier from "../pages/GestionarAlerta/AlertNotifier";
 
@@ -105,6 +106,7 @@ export default function AppRoutes() {
           {/* Otras secciones (sidebar visible) */}
           <Route path="/home" element={<Home />} />
           <Route path="/perfil" element={<Perfil />} />
+          <Route path="/planes" element={<Planes />} />
           <Route path="/pose-test" element={<PoseTest />} />
           <Route path="/ia" element={<IAPage />} />
           <Route path="/chat-ia" element={<ChatIA />} />

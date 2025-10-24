@@ -5,6 +5,7 @@ import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import { AuthProvider } from "./auth/AuthProvider.jsx";
 import { CategoryProvider } from "./context/CategoryContext";
+import { SubscriptionProvider } from "./context/SubscriptionContext";
 
 function AppContent({ sidebarOpen, setSidebarOpen }) {
   const location = useLocation();
@@ -53,10 +54,12 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <CategoryProvider>
-          <AppContent
-            sidebarOpen={sidebarOpen}
-            setSidebarOpen={setSidebarOpen}
-          />
+          <SubscriptionProvider>
+            <AppContent
+              sidebarOpen={sidebarOpen}
+              setSidebarOpen={setSidebarOpen}
+            />
+          </SubscriptionProvider>
         </CategoryProvider>
       </BrowserRouter>
     </AuthProvider>

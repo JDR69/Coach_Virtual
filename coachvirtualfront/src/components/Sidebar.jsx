@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   Dumbbell,
+  Crown,
 } from "lucide-react";
 
 const cx = (...c) => c.filter(Boolean).join(" ");
@@ -29,6 +30,7 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
       { to: "/home", label: "Inicio", icon: Home },
       { to: "/musculo", label: "Músculo", icon: Dumbbell }, // ⬅️ actualizado
       { to: "/perfil", label: "Perfil", icon: UserCircle2 },
+      { to: "/planes", label: "Planes Premium", icon: Crown },
       { to: "/mis-alertas", label: "Mis Alertas", icon: Bell },
       { to: "/ia", label: "IA", icon: Cpu },
       { to: "/pose-test", label: "Entrenar con (IA)", icon: Dumbbell },

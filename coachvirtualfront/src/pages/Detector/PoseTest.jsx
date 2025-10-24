@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import PoseDetector from './PoseDetector';
 import { fetchGroqCompletion } from '../../services/groqClient';
 import { useSpeech } from '../../utils/useSpeech';
@@ -18,10 +18,27 @@ export default function PoseTest() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   
+  // Estados para grabación continua
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedFrames, setRecordedFrames] = useState([]);
+  const [recordingDuration, setRecordingDuration] = useState(10); // segundos
+  const [recordingTimer, setRecordingTimer] = useState(0);
+  const recordingInterval = useRef(null);
+  const recordingFrames = useRef([]);
+  
   const lastAnalysisTime = useRef(0);
   const analysisInterval = 10000; 
   
   const { supported, speaking, speak, stop } = useSpeech({ lang: 'es-ES', rate: 1 });
+
+  // Limpiar interval al desmontar
+  useEffect(() => {
+    return () => {
+      if (recordingInterval.current) {
+        clearInterval(recordingInterval.current);
+      }
+    };
+  }, []);
 
   // Función para describir la pose actual
   const describePose = (landmarks) => {
@@ -50,6 +67,21 @@ export default function PoseTest() {
   const handlePoseDetected = (landmarks) => {
     // Guardar landmarks completos para el modo entrenamiento
     setCurrentLandmarks(landmarks);
+    
+    // Si está grabando, añadir frame a la secuencia
+    if (isRecording) {
+      const frameData = {
+        timestamp: Date.now(),
+        landmarks: landmarks.map(l => ({
+          x: l.x,
+          y: l.y,
+          z: l.z,
+          visibility: l.visibility
+        })),
+        angulos: calculateBodyAngles(landmarks)
+      };
+      recordingFrames.current.push(frameData);
+    }
     
     // Update pose data (only show first few landmarks to avoid clutter)
     setPoseData({
@@ -103,7 +135,7 @@ export default function PoseTest() {
     }
   };
 
-  // Función para guardar datos de entrenamiento
+  // Función para guardar datos de entrenamiento (snapshot individual)
   const handleSaveTrainingData = async (etiqueta) => {
     if (!currentLandmarks) {
       setSaveMessage('❌ No hay datos de pose para guardar');
@@ -148,6 +180,109 @@ export default function PoseTest() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Funciones para grabación continua
+  const startRecording = () => {
+    if (!currentLandmarks) {
+      setSaveMessage('❌ Espera a que se detecte tu pose primero');
+      return;
+    }
+
+    recordingFrames.current = [];
+    setRecordedFrames([]);
+    setIsRecording(true);
+    setRecordingTimer(recordingDuration);
+    setSaveMessage('');
+
+    if (supported) {
+      speak(`Comenzando grabación de ${recordingDuration} segundos`);
+    }
+
+    let secondsLeft = recordingDuration;
+    recordingInterval.current = setInterval(() => {
+      secondsLeft--;
+      setRecordingTimer(secondsLeft);
+
+      if (secondsLeft <= 0) {
+        stopRecording();
+      } else if (secondsLeft <= 3 && supported) {
+        speak(secondsLeft.toString());
+      }
+    }, 1000);
+  };
+
+  const stopRecording = () => {
+    if (recordingInterval.current) {
+      clearInterval(recordingInterval.current);
+    }
+    
+    setIsRecording(false);
+    setRecordingTimer(0);
+    
+    const frames = recordingFrames.current;
+    setRecordedFrames(frames);
+    
+    if (supported) {
+      speak(`Grabación completada. ${frames.length} frames capturados`);
+    }
+
+    setSaveMessage(`📹 Grabación completada: ${frames.length} frames. Ahora selecciona la etiqueta para guardar.`);
+  };
+
+  const saveRecordedSequence = async (etiqueta) => {
+    if (recordedFrames.length === 0) {
+      setSaveMessage('❌ No hay secuencia grabada para guardar');
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveMessage('');
+
+    try {
+      // Preparar datos de la secuencia
+      const sequenceData = {
+        ejercicio: ejercicioActual,
+        etiqueta: etiqueta,
+        tipo: 'secuencia',
+        frames: recordedFrames,
+        duracion_segundos: recordingDuration,
+        fps: recordedFrames.length / recordingDuration,
+        total_frames: recordedFrames.length
+      };
+
+      // Guardar en backend
+      await savePoseTrainingData(sequenceData);
+      
+      setSaveMessage(`✅ Secuencia de ${recordedFrames.length} frames guardada como "${etiqueta}"`);
+      
+      if (supported) {
+        speak(`Secuencia guardada correctamente`);
+      }
+
+      // Limpiar
+      setRecordedFrames([]);
+      recordingFrames.current = [];
+
+      setTimeout(() => setSaveMessage(''), 3000);
+    } catch (error) {
+      console.error('Error al guardar secuencia:', error);
+      setSaveMessage('❌ Error al guardar: ' + error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const cancelRecording = () => {
+    if (recordingInterval.current) {
+      clearInterval(recordingInterval.current);
+    }
+    setIsRecording(false);
+    setRecordingTimer(0);
+    setRecordedFrames([]);
+    recordingFrames.current = [];
+    setSaveMessage('🚫 Grabación cancelada');
+    setTimeout(() => setSaveMessage(''), 2000);
   };
 
   return (
@@ -203,23 +338,120 @@ export default function PoseTest() {
                     </select>
                   </div>
 
-                  {/* Botones para etiquetar */}
-                  <div className="space-y-2">
-                    <button 
-                      onClick={() => handleSaveTrainingData('correcto')}
-                      disabled={isSaving || !currentLandmarks}
-                      className="w-full bg-green-500 text-white px-4 py-3 rounded-lg font-semibold hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                    >
-                      {isSaving ? '⏳ Guardando...' : '✅ Guardar como CORRECTO'}
-                    </button>
+                  {/* MODO 1: Captura de Snapshot Individual */}
+                  <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    <h3 className="font-semibold text-sm mb-3 text-gray-700">📸 Modo Snapshot</h3>
+                    <div className="space-y-2">
+                      <button 
+                        onClick={() => handleSaveTrainingData('correcto')}
+                        disabled={isSaving || !currentLandmarks || isRecording}
+                        className="w-full bg-green-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                      >
+                        ✅ Guardar pose CORRECTA
+                      </button>
 
-                    <button 
-                      onClick={() => handleSaveTrainingData('incorrecto')}
-                      disabled={isSaving || !currentLandmarks}
-                      className="w-full bg-red-500 text-white px-4 py-3 rounded-lg font-semibold hover:bg-red-600 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                    >
-                      {isSaving ? '⏳ Guardando...' : '❌ Guardar como INCORRECTO'}
-                    </button>
+                      <button 
+                        onClick={() => handleSaveTrainingData('incorrecto')}
+                        disabled={isSaving || !currentLandmarks || isRecording}
+                        className="w-full bg-red-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-600 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                      >
+                        ❌ Guardar pose INCORRECTA
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* MODO 2: Grabación de Secuencia Continua */}
+                  <div className="mb-4 p-4 border-2 border-purple-300 rounded-lg bg-purple-50">
+                    <h3 className="font-semibold text-sm mb-3 text-purple-900">🎬 Modo Secuencia (Recomendado)</h3>
+                    
+                    {/* Configuración de duración */}
+                    <div className="mb-3">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Duración de grabación (segundos):
+                      </label>
+                      <input 
+                        type="number" 
+                        min="5" 
+                        max="30" 
+                        value={recordingDuration}
+                        onChange={e => setRecordingDuration(parseInt(e.target.value) || 10)}
+                        disabled={isRecording}
+                        className="w-full px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Recomendado: 10-15s para 1-2 repeticiones</p>
+                    </div>
+
+                    {/* Estado de grabación */}
+                    {isRecording && (
+                      <div className="mb-3 p-3 bg-red-100 border border-red-300 rounded-lg text-center animate-pulse">
+                        <div className="text-2xl font-bold text-red-600">🔴 GRABANDO</div>
+                        <div className="text-3xl font-mono font-bold text-red-700 mt-1">{recordingTimer}s</div>
+                        <div className="text-xs text-red-600 mt-1">
+                          {recordingFrames.current.length} frames capturados
+                        </div>
+                      </div>
+                    )}
+
+                    {recordedFrames.length > 0 && !isRecording && (
+                      <div className="mb-3 p-3 bg-green-100 border border-green-300 rounded-lg">
+                        <div className="text-sm font-semibold text-green-800">
+                          ✅ Secuencia lista para guardar
+                        </div>
+                        <div className="text-xs text-green-700 mt-1">
+                          {recordedFrames.length} frames • {(recordedFrames.length / recordingDuration).toFixed(1)} FPS
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Botones de control */}
+                    {!isRecording && recordedFrames.length === 0 && (
+                      <button 
+                        onClick={startRecording}
+                        disabled={!currentLandmarks || isSaving}
+                        className="w-full bg-purple-600 text-white px-4 py-3 rounded-lg font-bold hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center justify-center"
+                      >
+                        🎬 Iniciar Grabación
+                      </button>
+                    )}
+
+                    {isRecording && (
+                      <button 
+                        onClick={cancelRecording}
+                        className="w-full bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 text-sm"
+                      >
+                        ⏹️ Cancelar
+                      </button>
+                    )}
+
+                    {recordedFrames.length > 0 && !isRecording && (
+                      <div className="space-y-2">
+                        <button 
+                          onClick={() => saveRecordedSequence('correcto')}
+                          disabled={isSaving}
+                          className="w-full bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 text-sm"
+                        >
+                          {isSaving ? '⏳ Guardando...' : '✅ Guardar como CORRECTO'}
+                        </button>
+                        <button 
+                          onClick={() => saveRecordedSequence('incorrecto')}
+                          disabled={isSaving}
+                          className="w-full bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 text-sm"
+                        >
+                          {isSaving ? '⏳ Guardando...' : '❌ Guardar como INCORRECTO'}
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setRecordedFrames([]);
+                            recordingFrames.current = [];
+                            setSaveMessage('');
+                          }}
+                          disabled={isSaving}
+                          className="w-full bg-gray-400 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-500 text-sm"
+                        >
+                          🗑️ Descartar y grabar de nuevo
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Mensaje de guardado */}
@@ -232,7 +464,12 @@ export default function PoseTest() {
                   )}
 
                   <div className="mt-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-800">
-                    <p>💡 Colócate en la posición del ejercicio y presiona el botón correspondiente para etiquetar la postura.</p>
+                    <p className="font-semibold mb-1">💡 Cómo usar:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li><strong>Snapshot:</strong> Captura una sola pose estática</li>
+                      <li><strong>Secuencia:</strong> Graba todo el recorrido del ejercicio (1-2 reps)</li>
+                    </ul>
+                    <p className="mt-2 font-semibold">📊 Para entrenar ML, usa el modo Secuencia para capturar el movimiento completo.</p>
                   </div>
                 </>
               )}
