@@ -3,6 +3,7 @@ from .controllers.suscripcion_controller import (
     PlanesDisponiblesVista, PlanActualVista, 
     VerificarPermisoVista, ActualizarPlanVista,
 )
+from .controllers.stripe import crear_checkout_session
 
 urlpatterns = [
     # Planes disponibles
@@ -12,4 +13,7 @@ urlpatterns = [
     
     # Actualización de plan (TODO: integrar con pasarela de pago)
     path('planes/actualizar/', ActualizarPlanVista.as_view(), name='actualizar-plan'),
+
+    # Stripe Checkout
+    path('stripe/checkout/', crear_checkout_session, name='stripe-checkout'),
 ]
