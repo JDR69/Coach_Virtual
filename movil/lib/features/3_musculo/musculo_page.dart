@@ -10,9 +10,9 @@ class MusculoPage extends StatefulWidget {
 }
 
 class _MusculoPageState extends State<MusculoPage> {
-  late String _selectedCategory;
-  List<String> _selectedMuscles = [];
+  final List<String> _selectedMuscles = [];
 
+  // Catálogo de grupos musculares según la categoría
   final Map<String, List<Map<String, String>>> _muscleGroups = {
     'gym': [
       {'name': 'Pecho', 'description': 'Ejercicios y series recomendadas.'},
@@ -34,135 +34,153 @@ class _MusculoPageState extends State<MusculoPage> {
     ],
   };
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _selectedCategory =
-        Provider.of<CategoryProvider>(context).selectedCategory ?? 'gym';
-  }
-
   void _toggleMuscleSelection(String muscle) {
     setState(() {
-      if (_selectedMuscles.contains(muscle)) {
-        _selectedMuscles.remove(muscle);
-      } else {
-        _selectedMuscles.add(muscle);
-      }
+      _selectedMuscles.contains(muscle)
+          ? _selectedMuscles.remove(muscle)
+          : _selectedMuscles.add(muscle);
     });
   }
 
-  void _clearSelection() {
-    setState(() {
-      _selectedMuscles.clear();
-    });
-  }
+  void _clearSelection() => setState(_selectedMuscles.clear);
 
   void _changeCategory() {
-    Provider.of<CategoryProvider>(context, listen: false).clearCategory();
-    // GoRouter.of(context).go('/select-category'); // Esto se manejará en el redirect de GoRouter
+    // Limpia categoría; el redirect del GoRouter te llevará a /select-category
+    context.read<CategoryProvider>().clearCategory();
   }
 
   void _goToExercises() {
-    // Implementar navegación a la página de ejercicios con los músculos seleccionados
+    // Aquí navegas a tu pantalla de ejercicios, enviando la selección
+    // Por ahora sólo imprime.
+    // Ejemplo si usas GoRouter: context.go('/ejercicios', extra: _selectedMuscles);
+    // Ajusta según tu ruteo real.
+    // ignore: avoid_print
     print('Navegar a ejercicios con: $_selectedMuscles');
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentMuscleGroups = _muscleGroups[_selectedCategory] ?? [];
+    // Lee la categoría en vivo; si no existe, usa 'gym' por defecto
+    final selectedCategory =
+        context.watch<CategoryProvider>().selectedCategory ?? 'gym';
+    final currentMuscleGroups = _muscleGroups[selectedCategory] ?? [];
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.blue[900]!,
-              Colors.purple[900]!,
-              Colors.indigo[900]!,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Elige las zonas de trabajo',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Puedes elegir más de uno. Seleccionados: ${_selectedMuscles.length}',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white.withOpacity(0.8),
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  Expanded(
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: 2.5,
-                          ),
-                      itemCount: currentMuscleGroups.length,
-                      itemBuilder: (context, index) {
-                        final muscle = currentMuscleGroups[index];
-                        final isSelected = _selectedMuscles.contains(
-                          muscle['name'],
-                        );
-                        return _MuscleSelectionCard(
-                          title: muscle['name']!,
-                          subtitle: muscle['description']!,
-                          isSelected: isSelected,
-                          onTap: () => _toggleMuscleSelection(muscle['name']!),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _ActionButton(
-                        text: 'Cambiar categoría',
-                        onPressed: _changeCategory,
-                        backgroundColor: Colors.white.withOpacity(0.1),
-                        textColor: Colors.white,
-                      ),
-                      _ActionButton(
-                        text: 'Limpiar selección',
-                        onPressed: _clearSelection,
-                        backgroundColor: Colors.white.withOpacity(0.1),
-                        textColor: Colors.white,
-                      ),
-                      _ActionButton(
-                        text: 'Siguiente',
-                        onPressed: _goToExercises,
-                        backgroundColor: Colors.purple[700]!,
-                        textColor: Colors.white,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+      body: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.blue[900]!,
+                Colors.purple[900]!,
+                Colors.indigo[900]!,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+          ),
+
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Responsive 2 columnas en móvil, 3 en pantallas grandes
+              final width = constraints.maxWidth;
+              final cross = width >= 900 ? 3 : 2;
+              // Altura fija por tile para evitar overflow
+              // Sube/baja estos valores si quieres más/menos aire.
+              final double tileHeight = width >= 600 ? 126 : 122;
+
+              return Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      children: [
+                        // ---- Cabecera ----
+                        const Text(
+                          'Elige las zonas de trabajo',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Puedes elegir más de uno. Seleccionados: ${_selectedMuscles.length}',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white.withOpacity(0.8),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        // ---- Grid scrollable ----
+                        Expanded(
+                          child: GridView.builder(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: cross,
+                                  crossAxisSpacing: 16,
+                                  mainAxisSpacing: 16,
+                                  mainAxisExtent: tileHeight,
+                                ),
+                            itemCount: currentMuscleGroups.length,
+                            itemBuilder: (context, index) {
+                              final muscle = currentMuscleGroups[index];
+                              final name = muscle['name']!;
+                              final isSelected = _selectedMuscles.contains(
+                                name,
+                              );
+                              return _MuscleSelectionCard(
+                                title: name,
+                                subtitle: muscle['description']!,
+                                isSelected: isSelected,
+                                onTap: () => _toggleMuscleSelection(name),
+                              );
+                            },
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+                        // ---- Acciones inferiores (sin overflow) ----
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            _ActionButton(
+                              text: 'Cambiar categoría',
+                              onPressed: _changeCategory,
+                              backgroundColor: Colors.white.withOpacity(0.1),
+                              textColor: Colors.white,
+                            ),
+                            _ActionButton(
+                              text: 'Limpiar selección',
+                              onPressed: _clearSelection,
+                              backgroundColor: Colors.white.withOpacity(0.1),
+                              textColor: Colors.white,
+                            ),
+                            _ActionButton(
+                              text: 'Siguiente',
+                              onPressed: _selectedMuscles.isEmpty
+                                  ? null
+                                  : _goToExercises,
+                              backgroundColor: _selectedMuscles.isEmpty
+                                  ? Colors.white.withOpacity(0.2)
+                                  : Colors.purple[700]!,
+                              textColor: Colors.white,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -185,47 +203,83 @@ class _MuscleSelectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
       child: Container(
+        height: double.infinity,
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? Colors.purple[700]!.withOpacity(0.7)
-              : Colors.white.withOpacity(0.1),
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [
+                    Colors.blue.shade600.withOpacity(0.7),
+                    Colors.purple.shade600.withOpacity(0.7),
+                  ],
+                )
+              : null,
+          color: isSelected ? null : Colors.white.withOpacity(0.10),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected
-                ? Colors.purple[700]!
-                : Colors.white.withOpacity(0.2),
+            color: Colors.white.withOpacity(isSelected ? 0.30 : 0.20),
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withOpacity(0.20),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
           ],
         ),
-        padding: const EdgeInsets.all(16),
+
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+            // Cabecera: título + “check”
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSelected ? Colors.white : Colors.transparent,
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.45),
+                      width: 2,
+                    ),
+                  ),
+                  child: isSelected
+                      ? const Icon(Icons.check, size: 16, color: Colors.purple)
+                      : null,
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
+
             Text(
               subtitle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 12,
-                color: Colors.white.withOpacity(0.7),
+                fontSize: 13,
+                color: Colors.white.withOpacity(0.75),
               ),
             ),
           ],
@@ -237,7 +291,7 @@ class _MuscleSelectionCard extends StatelessWidget {
 
 class _ActionButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Color backgroundColor;
   final Color textColor;
 

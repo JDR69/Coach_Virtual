@@ -7,6 +7,8 @@ import '../../features/1_auth/login_page.dart';
 import '../../features/1_auth/register_page.dart';
 import '../../features/2_category/select_category_page.dart';
 import '../../features/3_musculo/musculo_page.dart';
+import '../../features/3_musculo/exercises_page.dart'; // ← importa
+
 import '../widgets/main_layout.dart';
 
 // Placeholder para la página de inicio
@@ -31,7 +33,6 @@ class HomePage extends StatelessWidget {
   }
 }
 
-
 class AppRouter {
   final AuthProvider authProvider;
   final CategoryProvider categoryProvider;
@@ -47,10 +48,7 @@ class AppRouter {
           return MainLayout(child: child);
         },
         routes: [
-          GoRoute(
-            path: '/',
-            builder: (context, state) => const HomePage(),
-          ),
+          GoRoute(path: '/', builder: (context, state) => const HomePage()),
           // Otras rutas que usarán el MainLayout
           GoRoute(
             path: '/musculo',
@@ -58,14 +56,25 @@ class AppRouter {
           ),
         ],
       ),
+
+      GoRoute(
+        path: '/ejercicios',
+        builder: (context, state) {
+          final groups = (state.extra as List<String>?) ?? const <String>[];
+          return ExercisesPage(groups: groups);
+        },
+      ),
+
       GoRoute(
         path: '/select-category',
         builder: (context, state) => const SelectCategoryPage(),
       ),
       GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginPage(),
+        path: '/category', // ← alias para compatibilidad
+        builder: (context, state) => const SelectCategoryPage(),
       ),
+
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterPage(),
@@ -73,15 +82,17 @@ class AppRouter {
     ],
     redirect: (BuildContext context, GoRouterState state) {
       final isAuthenticated = authProvider.isAuthenticated;
-      final isInitializing = authProvider.initializing || !categoryProvider.isInitialized;
-      final onLoginPage = state.matchedLocation == '/login';
-      final onRegisterPage = state.matchedLocation == '/register';
-      final onSelectCategoryPage = state.matchedLocation == '/select-category';
-      final onMusculoPage = state.matchedLocation == '/musculo';
+      final isInitializing =
+          authProvider.initializing || !categoryProvider.isInitialized;
 
-      if (isInitializing) {
-        return null;
-      }
+      final loc = state.matchedLocation;
+      final onLoginPage = loc == '/login';
+      final onRegisterPage = loc == '/register';
+      final onSelectCategoryPage =
+          (loc == '/select-category' || loc == '/category');
+      final onMusculoPage = loc == '/musculo';
+
+      if (isInitializing) return null;
 
       if (!isAuthenticated && !onLoginPage && !onRegisterPage) {
         return '/login';
@@ -89,16 +100,20 @@ class AppRouter {
 
       if (isAuthenticated) {
         if (onLoginPage || onRegisterPage) {
-          return categoryProvider.selectedCategory != null ? '/musculo' : '/select-category';
+          return categoryProvider.selectedCategory != null
+              ? '/musculo'
+              : '/select-category';
         }
-        if (categoryProvider.selectedCategory == null && !onSelectCategoryPage) {
+        if (categoryProvider.selectedCategory == null &&
+            !onSelectCategoryPage) {
           return '/select-category';
         }
-        if (categoryProvider.selectedCategory != null && !onMusculoPage && !onSelectCategoryPage) {
+        if (categoryProvider.selectedCategory != null &&
+            !onMusculoPage &&
+            !onSelectCategoryPage) {
           return '/musculo';
         }
       }
-
       return null;
     },
   );

@@ -21,25 +21,44 @@ class _RegisterPageState extends State<RegisterPage> {
   final _fechaNacimientoController = TextEditingController();
   final _alturaController = TextEditingController();
   final _pesoController = TextEditingController();
+
   String? _selectedGenero; // Para el DropdownButton
   bool _isLoading = false;
   bool _passwordVisible =
       false; // Para el icono de visibilidad de la contraseña
 
+  // --- >>> AQUÍ VA EL DISPOSE() <<<
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _fechaNacimientoController.dispose();
+    _alturaController.dispose();
+    _pesoController.dispose();
+    super.dispose();
+  }
+
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: DateTime(2000, 1, 1),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
     if (picked != null) {
-      setState(() {
-        _fechaNacimientoController.text = DateFormat(
-          'yyyy-MM-dd',
-        ).format(picked);
-      });
+      _fechaNacimientoController.text = DateFormat('dd/MM/yyyy').format(picked);
+      setState(() {});
     }
+  }
+
+  // Convierte dd/MM/yyyy -> yyyy-MM-dd para enviarlo
+  String? _toIsoDate(String? ddMMyyyy) {
+    if (ddMMyyyy == null || ddMMyyyy.isEmpty) return null;
+    final d = DateFormat('dd/MM/yyyy').parseStrict(ddMMyyyy);
+    return DateFormat('yyyy-MM-dd').format(d);
   }
 
   Future<void> _register() async {
@@ -63,7 +82,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ? _lastNameController.text
             : null,
         fechaNacimiento: _fechaNacimientoController.text.isNotEmpty
-            ? _fechaNacimientoController.text
+            ? _toIsoDate(_fechaNacimientoController.text)
             : null,
         genero: _selectedGenero, // Usar el valor del DropdownButton
         altura: _alturaController.text.isNotEmpty
@@ -199,12 +218,14 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     child: Form(
                       key: _formKey,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           _buildTextFormField(
                             controller: _emailController,
                             labelText: 'Email',
+                            keyboardType: TextInputType.emailAddress,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Por favor, introduce tu email';
@@ -273,7 +294,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                 // flex: 1, // Ajustar flex para una distribución más equitativa
                                 child: _buildTextFormField(
                                   controller: _fechaNacimientoController,
-                                  labelText: 'dd/mm/aaaa',
+                                  labelText: 'Fecha de nacimiento',
+                                  hintText: 'dd/MM/yyyy',
                                   readOnly: true,
                                   onTap: () => _selectDate(context),
                                   suffixIcon: const Icon(
@@ -285,24 +307,14 @@ class _RegisterPageState extends State<RegisterPage> {
                               const SizedBox(
                                 width: 8,
                               ), // Reducir aún más el espacio entre campos
+
                               Expanded(
-                                // flex: 1, // Ajustar flex para una distribución más equitativa
                                 child: DropdownButtonFormField<String>(
                                   value: _selectedGenero,
-                                  // 1) Expándelo para ocupar todo el ancho disponible
                                   isExpanded: true,
-                                  // 2) Usa hint en vez de un item “Género” con value null
-                                  hint: const Text(
-                                    'Género',
-                                    style: TextStyle(color: Colors.white70),
-                                  ),
-
-                                  decoration:
-                                      _buildInputDecoration(
-                                        labelText: 'Género',
-                                      ).copyWith(
-                                        isDense: true,
-                                      ), // opcional: compacta altura
+                                  decoration: _buildInputDecoration(
+                                    labelText: 'Género',
+                                  ).copyWith(isDense: true),
 
                                   dropdownColor: Colors.grey[800],
                                   style: const TextStyle(color: Colors.white),
@@ -310,30 +322,19 @@ class _RegisterPageState extends State<RegisterPage> {
                                     // DropdownMenuItem(value: null, child: Text('Género', style: TextStyle(color: Colors.white70))),
                                     DropdownMenuItem(
                                       value: 'M',
-                                      child: Text(
-                                        'Masculino',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
+                                      child: Text('Masculino'),
                                     ),
                                     DropdownMenuItem(
                                       value: 'F',
-                                      child: Text(
-                                        'Femenino',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
+                                      child: Text('Femenino'),
                                     ),
                                     DropdownMenuItem(
                                       value: 'O',
-                                      child: Text(
-                                        'Otro / Prefiero no decir',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
+                                      child: Text('Otro / Prefiero no decir'),
                                     ),
                                   ],
                                   onChanged: (String? newValue) {
-                                    setState(() {
-                                      _selectedGenero = newValue;
-                                    });
+                                    setState(() => _selectedGenero = newValue);
                                   },
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
@@ -386,7 +387,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                     ),
                                   ),
                                   child: ElevatedButton(
-                                    onPressed: _register,
+                                    onPressed: _isLoading ? null : _register,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.transparent,
                                       shadowColor: Colors.transparent,
@@ -430,14 +431,18 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   InputDecoration _buildInputDecoration({
-    required String labelText,
+    String? labelText,
+    String? hintText,
     Widget? suffixIcon,
   }) {
     return InputDecoration(
       labelText: labelText,
+      hintText: hintText,
       labelStyle: const TextStyle(color: Colors.white70),
+      hintStyle: const TextStyle(color: Colors.white54),
       filled: true,
-      fillColor: Colors.white.withOpacity(0.1),
+      fillColor: Colors.white.withOpacity(0.08),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide.none,
@@ -458,6 +463,7 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget _buildTextFormField({
     required TextEditingController controller,
     required String labelText,
+    String? hintText,
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
@@ -470,6 +476,7 @@ class _RegisterPageState extends State<RegisterPage> {
       style: const TextStyle(color: Colors.white),
       decoration: _buildInputDecoration(
         labelText: labelText,
+        hintText: hintText,
         suffixIcon: suffixIcon,
       ),
       obscureText: obscureText,

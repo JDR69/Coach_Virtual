@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart'; // ← agregado
 import 'package:provider/provider.dart';
 import '../../core/category_provider.dart';
 
@@ -6,7 +7,8 @@ class SelectCategoryPage extends StatelessWidget {
   const SelectCategoryPage({Key? key}) : super(key: key);
 
   void _selectCategory(BuildContext context, String category) {
-    Provider.of<CategoryProvider>(context, listen: false).chooseCategory(category);
+    context.read<CategoryProvider>().chooseCategory(category);
+    context.go('/musculo'); // navega a músculos
   }
 
   @override
@@ -15,7 +17,11 @@ class SelectCategoryPage extends StatelessWidget {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue[900]!, Colors.purple[900]!, Colors.indigo[900]!],
+            colors: [
+              Colors.blue[900]!,
+              Colors.purple[900]!,
+              Colors.indigo[900]!,
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

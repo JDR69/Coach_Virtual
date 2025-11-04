@@ -1,7 +1,7 @@
 // Fichero: movil/lib/api/endpoints.dart
 
 class Endpoints {
-  static const String baseUrl = 'http://192.168.1.2:8000';
+  static const String baseUrl = 'http://192.168.1.5:8000';
   static const String apiBaseUrl = '$baseUrl/api';
 
   // Autenticación
