@@ -9,6 +9,7 @@ import Alerta from "../pages/GestionarAlerta/Alerta";
 import AlertaUsuario from "../pages/GestionarAlerta/AlertaUsuario";
 import LoginPage from "../pages/Login/LoginPage";
 import PoseTest from "../pages/Detector/PoseTest";
+import BicepsCurlTrainer from "../pages/Detector/BicepsCurlTrainer";
 import IAPage from "../pages/IAPage/IAPage";
 import ChatIA from "../pages/Chat/ChatIA";
 import Planes from "../pages/Planes/Planes";
@@ -114,6 +115,7 @@ export default function AppRoutes() {
 
 
           <Route path="/pose-test" element={<PoseTest />} />
+          <Route path="/biceps-curl" element={<BicepsCurlTrainer />} />
           <Route path="/ia" element={<IAPage />} />
           <Route path="/chat-ia" element={<ChatIA />} />
           <Route path="/mis-alertas" element={<AlertaUsuario />} />

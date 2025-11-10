@@ -84,15 +84,26 @@ export default function Ejercicios() {
         </div>
 
         <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {exercises.map((name, idx) => (
-            <article
-              key={idx}
-              className="bg-white/10 border border-white/20 rounded-xl p-4 hover:bg-white/20 transition"
-            >
-              <h3 className="font-semibold">{name}</h3>
-              <p className="text-sm text-white/70">3–4 series · 8–12 reps</p>
-            </article>
-          ))}
+          {exercises.map((name, idx) => {
+            const isBicepsCurl = name === "Curl de bíceps";
+            return (
+              <article
+                key={idx}
+                className={`bg-white/10 border border-white/20 rounded-xl p-4 transition ${
+                  isBicepsCurl 
+                    ? 'hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-purple-500/20 cursor-pointer' 
+                    : 'hover:bg-white/20'
+                }`}
+                onClick={() => isBicepsCurl && navigate("/biceps-curl")}
+              >
+                <h3 className="font-semibold">
+                  {name}
+                  {isBicepsCurl && <span className="ml-2 text-xs text-blue-300">🤖 IA</span>}
+                </h3>
+                <p className="text-sm text-white/70">3–4 series · 8–12 reps</p>
+              </article>
+            );
+          })}
           {!exercises.length && (
             <p className="text-white/80">
               No hay ejercicios configurados todavía.

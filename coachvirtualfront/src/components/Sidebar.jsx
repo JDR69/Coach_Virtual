@@ -34,6 +34,7 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
       { to: "/mis-alertas", label: "Mis Alertas", icon: Bell },
       { to: "/ia", label: "IA", icon: Cpu },
       { to: "/pose-test", label: "Entrenar con (IA)", icon: Dumbbell },
+      { to: "/biceps-curl", label: "Curl de Bíceps 🤖", icon: Dumbbell },
       { to: "/chat-ia", label: "Chat IA", icon: MessageSquareText },
     ],
     []
