@@ -20,24 +20,27 @@ import AlertNotifier from "../pages/GestionarAlerta/AlertNotifier";
 // Flujo categoría / músculo / ejercicios
 import SelectCategory from "../pages/Categoria/SelectCategory";
 import CategoryGate from "./CategoryGate";
-import Musculo from "../pages/Musculo/Musculo";
-import Ejercicios from "../pages/Ejercicios/Ejercicios";
+import Musculo from "../pages/GestionarMusculo/Musculo";
+import Ejercicios from "../pages/GestionarEjercicio/EjercicioUsuario";
+import MusculoUsuario from "../pages/GestionarMusculo/MusculoUsuario";
+import Ejercicio from "../pages/GestionarEjercicio/Ejercicio";
+import EjercicioUsuario from "../pages/GestionarEjercicio/EjercicioUsuario";
+import DetalleMusculo from "../pages/Detalle_Musculo/Detalle_Musculo";
+import Detalle_Musculo from "../pages/Detalle_Musculo/Detalle_Musculo";
 
 // ====== Guards ======
 function RequireAuth() {
   const { isAuthenticated, initializing } = useAuth();
-  const location = useLocation();
   if (initializing) return <div style={{ padding: 24 }}>Verificando sesión…</div>;
   return isAuthenticated ? (
     <Outlet />
   ) : (
-    <Navigate to="/login" replace state={{ from: location }} />
+    <Navigate to="/login" replace />
   );
 }
 
 function GuestOnly() {
   const { isAuthenticated, isSuper, initializing } = useAuth();
-  const { category } = useCategory();
   const location = useLocation();
   if (initializing) return <div style={{ padding: 24 }}>Verificando sesión…</div>;
 
@@ -45,7 +48,7 @@ function GuestOnly() {
     // Redirección por rol
     if (isSuper) return <Navigate to="/perfil" replace />;
     // Usuario normal: respeta flujo seleccionar/músculo
-    const next = category ? "/musculo" : "/seleccionar";
+    const next = location.pathname ? "/musculo" : "/seleccionar";
     return <Navigate to={next} replace />;
   }
 
@@ -100,7 +103,7 @@ export default function AppRoutes() {
           {/* 2) Requiere categoría */}
           <Route element={<CategoryGate />}>
             {/* 2.a) Elegir uno o más músculos (sin sidebar) */}
-            <Route path="/musculo" element={<Musculo />} />
+            
             {/* 2.b) Ejercicios (aquí ya aparece el sidebar) */}
             <Route path="/musculo/ejercicios" element={<Ejercicios />} />
           </Route>
@@ -119,11 +122,16 @@ export default function AppRoutes() {
           <Route path="/ia" element={<IAPage />} />
           <Route path="/chat-ia" element={<ChatIA />} />
           <Route path="/mis-alertas" element={<AlertaUsuario />} />
+          <Route path="/mis-musculos" element={<MusculoUsuario />} />
+          <Route path="/mis-ejercicios" element={<EjercicioUsuario />} />
 
           {/* SOLO superusuario */}
           <Route element={<RequireSuper />}>
-            <Route path="/usuario" element={<Usuario />} />
+            <Route path="/musculos" element={<Musculo />} /> {/* Ruta para administradores */}
+            <Route path="/usuarios" element={<Usuario />} />
             <Route path="/alertas" element={<Alerta />} />
+            <Route path="/ejercicios" element={<Ejercicio />} />
+            <Route path="/detalles-musculo" element={<Detalle_Musculo />} />
           </Route>
         </Route>
       </Route>

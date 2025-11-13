@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "suscripciones",  # Sistema de suscripciones (preparado, no activo)
     "rest_framework",
     "corsheaders",
+    "musculos",
 ]
 
 REST_FRAMEWORK = {
