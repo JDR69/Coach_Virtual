@@ -7,7 +7,7 @@ export default function SelectCategory() {
 
   const pick = (value) => {
     chooseCategory(value); // "gym" | "fisio"
-    navigate("/musculo", { replace: true });
+    navigate("/mis-musculos", { replace: true });
   };
 
   return (

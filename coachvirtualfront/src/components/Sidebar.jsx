@@ -12,6 +12,11 @@ import {
   LogOut,
   Dumbbell,
   Crown,
+  Activity,
+  ClipboardList,
+  ListChecks,
+  PlayCircle,
+  Brain,
 } from "lucide-react";
 
 const cx = (...c) => c.filter(Boolean).join(" ");
@@ -28,20 +33,25 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
   const principal = useMemo(
     () => [
       { to: "/home", label: "Inicio", icon: Home },
-      { to: "/mis-musculos", label: "Músculo", icon: Dumbbell }, // ⬅️ actualizado
+      
       { to: "/perfil", label: "Perfil", icon: UserCircle2 },
       { to: "/planes", label: "Planes Premium", icon: Crown },
       { to: "/mis-alertas", label: "Mis Alertas", icon: Bell },
-      { to: "/mis-ejercicios", label: "Mis Ejercicio", icon: Dumbbell },
+
+     /* { to: "/mis-musculos", label: "Músculo", icon: Dumbbell },
+      { to: "/mis-ejercicios", label: "Mis Ejercicios", icon: Activity },
       {
         to: "/mis-ejercicios-asignados",
         label: "Mis Ejercicios Asignados",
-        icon: Dumbbell,
+        icon: ListChecks,
       },
-      { to: "/ia", label: "IA", icon: Cpu },
-      { to: "/pose-test", label: "Entrenar con (IA)", icon: Dumbbell },
+     */
+
+    
+      { to: "/ia", label: "IA", icon: Brain },
+      { to: "/pose-test", label: "Entrenar con (IA)", icon: PlayCircle },
       { to: "/biceps-curl", label: "Curl de Bíceps 🤖", icon: Dumbbell },
-      { to: "/chat-ia", label: "Chat IA", icon: MessageSquareText },
+      { to: "/chat-ia", label: "Chat IA", icon: Cpu },
     ],
     []
   );
@@ -50,19 +60,24 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
     () =>
       isSuper
         ? [
-            { to: "/musculos", label: "Gestionar Músculo", icon: Dumbbell }, // Ruta para administradores
+            
             { to: "/usuarios", label: "Gestionar Usuario", icon: Users },
             { to: "/alertas", label: "Gestionar Alerta", icon: Bell },
-            { to: "/ejercicios", label: "Gestionar Ejercicio", icon: Dumbbell },
+            { to: "/musculos", label: "Gestionar Músculo", icon: Dumbbell },
+            {
+              to: "/ejercicios",
+              label: "Gestionar Ejercicio",
+              icon: Activity,
+            },
             {
               to: "/detalles-musculo",
               label: "Gestionar Detalle Músculo",
-              icon: Dumbbell,
+              icon: ClipboardList,
             },
             {
               to: "/ejercicios-asignados",
               label: "Gestionar Ejercicio Asignado",
-              icon: Dumbbell,
+              icon: ListChecks,
             },
           ]
         : [],

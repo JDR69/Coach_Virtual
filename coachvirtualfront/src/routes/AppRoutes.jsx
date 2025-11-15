@@ -1,3 +1,4 @@
+// src/routes/AppRoutes.jsx (o como se llame)
 import { Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import { useCategory } from "../context/CategoryContext";
@@ -21,12 +22,10 @@ import AlertNotifier from "../pages/GestionarAlerta/AlertNotifier";
 import SelectCategory from "../pages/Categoria/SelectCategory";
 import CategoryGate from "./CategoryGate";
 import Musculo from "../pages/GestionarMusculo/Musculo";
-import Ejercicios from "../pages/GestionarEjercicio/Detalle_MusculoUsuario";
 import MusculoUsuario from "../pages/GestionarMusculo/MusculoUsuario";
 import Ejercicio from "../pages/GestionarEjercicio/Ejercicio";
-import EjercicioUsuario from "../pages/GestionarEjercicio/Detalle_MusculoUsuario";
-import DetalleMusculo from "../pages/Detalle_Musculo/Detalle_Musculo";
 import Detalle_Musculo from "../pages/Detalle_Musculo/Detalle_Musculo";
+import DetalleMusculoUsuario from "../pages/GestionarEjercicio/Detalle_MusculoUsuario";
 import Ejercicio_Asignado from "../pages/GestionarEjercicio_Asignacion/Ejercicio_Asignado";
 import Ejercicio_AsignadoUsuario from "../pages/GestionarEjercicio_Asignacion/Ejercicio_AsignadoUsuario";
 
@@ -34,24 +33,29 @@ import Ejercicio_AsignadoUsuario from "../pages/GestionarEjercicio_Asignacion/Ej
 function RequireAuth() {
   const { isAuthenticated, initializing } = useAuth();
   if (initializing) return <div style={{ padding: 24 }}>Verificando sesión…</div>;
-  return isAuthenticated ? (
-    <Outlet />
-  ) : (
-    <Navigate to="/login" replace />
-  );
+  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 }
 
 function GuestOnly() {
   const { isAuthenticated, isSuper, initializing } = useAuth();
+  const { category } = useCategory();
   const location = useLocation();
+
   if (initializing) return <div style={{ padding: 24 }}>Verificando sesión…</div>;
 
   if (isAuthenticated) {
-    // Redirección por rol
     if (isSuper) return <Navigate to="/perfil" replace />;
-    // Usuario normal: respeta flujo seleccionar/músculo
-    const next = location.pathname ? "/musculo" : "/seleccionar";
-    return <Navigate to={next} replace />;
+    // usuario normal: respetar flujo
+    const fromRoot = location.pathname === "/" || location.pathname === "/login";
+    if (fromRoot) {
+      return (
+        <Navigate
+          to={category ? "/mis-musculos" : "/seleccionar"}
+          replace
+        />
+      );
+    }
+    return <Navigate to="/" replace />;
   }
 
   return <Outlet />;
@@ -64,10 +68,13 @@ function RootRedirect() {
   if (initializing) return <div style={{ padding: 24 }}>Verificando sesión…</div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  // Redirección por rol
   if (isSuper) return <Navigate to="/perfil" replace />;
-  // Usuario normal: respeta flujo seleccionar/músculo
-  return <Navigate to={category ? "/musculo" : "/seleccionar"} replace />;
+  return (
+    <Navigate
+      to={category ? "/mis-musculos" : "/seleccionar"}
+      replace
+    />
+  );
 }
 
 function RequireSuper() {
@@ -102,35 +109,33 @@ export default function AppRoutes() {
           {/* 1) Selección de categoría (sin sidebar) */}
           <Route path="/seleccionar" element={<SelectCategory />} />
 
-          {/* 2) Requiere categoría */}
+          {/* 2) Flujo guiado que requiere categoría */}
           <Route element={<CategoryGate />}>
-            {/* 2.a) Elegir uno o más músculos (sin sidebar) */}
-            
-            {/* 2.b) Ejercicios (aquí ya aparece el sidebar) */}
-            <Route path="/musculo/ejercicios" element={<Ejercicios />} />
+            {/* 2.a) Elegir músculo */}
+            <Route path="/mis-musculos" element={<MusculoUsuario />} />
+            {/* 2.b) Ver detalles según músculo elegido */}
+            <Route path="/mis-ejercicios" element={<DetalleMusculoUsuario />} />
+            {/* 2.c) Ver ejercicios asignados según detalles elegidos */}
+            <Route
+              path="/mis-ejercicios-asignados"
+              element={<Ejercicio_AsignadoUsuario />}
+            />
           </Route>
 
           {/* Otras secciones (sidebar visible) */}
           <Route path="/home" element={<Home />} />
           <Route path="/perfil" element={<Perfil />} />
-
-          
           <Route path="/planes" element={<Planes />} />
           <Route path="/planes/pago" element={<Pago />} />
-
-
           <Route path="/pose-test" element={<PoseTest />} />
           <Route path="/biceps-curl" element={<BicepsCurlTrainer />} />
           <Route path="/ia" element={<IAPage />} />
           <Route path="/chat-ia" element={<ChatIA />} />
           <Route path="/mis-alertas" element={<AlertaUsuario />} />
-          <Route path="/mis-musculos" element={<MusculoUsuario />} />
-          <Route path="/mis-ejercicios" element={<EjercicioUsuario />} />
-          <Route path="/mis-ejercicios-asignados" element={<Ejercicio_AsignadoUsuario />} />
 
           {/* SOLO superusuario */}
           <Route element={<RequireSuper />}>
-            <Route path="/musculos" element={<Musculo />} /> {/* Ruta para administradores */}
+            <Route path="/musculos" element={<Musculo />} />
             <Route path="/usuarios" element={<Usuario />} />
             <Route path="/alertas" element={<Alerta />} />
             <Route path="/ejercicios" element={<Ejercicio />} />

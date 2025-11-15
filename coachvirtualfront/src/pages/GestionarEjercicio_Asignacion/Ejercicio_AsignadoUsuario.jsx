@@ -1,9 +1,11 @@
-// src/pages/usuario/Ejercicio_AsignadoUsuario.jsx
+// src/pages/GestionarEjercicio_Asignacion/Ejercicio_AsignadoUsuario.jsx
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import EjercicioAsignadoService from "../../services/Ejercicio_AsignadoService";
 import DetalleMusculoService from "../../services/DetalleMusculoService";
 import MusculoService from "../../services/MusculoService";
 import EjercicioService from "../../services/EjercicioService";
+import { useCategory } from "../../context/CategoryContext";
 
 const Ejercicio_AsignadoUsuario = () => {
   const [asignados, setAsignados] = useState([]);
@@ -12,8 +14,10 @@ const Ejercicio_AsignadoUsuario = () => {
   const [ejercicios, setEjercicios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorList, setErrorList] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
 
-  const [selectedImage, setSelectedImage] = useState(null); // para el modal
+  const { selectedDetalleIds } = useCategory();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchAll();
@@ -24,17 +28,13 @@ const Ejercicio_AsignadoUsuario = () => {
       setLoading(true);
       setErrorList(null);
 
-      const [
-        asignadosData,
-        detallesData,
-        musculosData,
-        ejerciciosData,
-      ] = await Promise.all([
-        EjercicioAsignadoService.getAll(),
-        DetalleMusculoService.getAll(),
-        MusculoService.getAll(),
-        EjercicioService.getAll(),
-      ]);
+      const [asignadosData, detallesData, musculosData, ejerciciosData] =
+        await Promise.all([
+          EjercicioAsignadoService.getAll(),
+          DetalleMusculoService.getAll(),
+          MusculoService.getAll(),
+          EjercicioService.getAll(),
+        ]);
 
       setAsignados(Array.isArray(asignadosData) ? asignadosData : []);
       setDetalles(Array.isArray(detallesData) ? detallesData : []);
@@ -52,7 +52,6 @@ const Ejercicio_AsignadoUsuario = () => {
     }
   };
 
-  // ===== helpers para buscar info relacionada =====
   const findDetalle = (idDetalle) => {
     const numId = Number(idDetalle);
     return detalles.find((d) => Number(d.id) === numId);
@@ -66,6 +65,18 @@ const Ejercicio_AsignadoUsuario = () => {
   const findEjercicio = (idEjercicio) => {
     const numId = Number(idEjercicio);
     return ejercicios.find((e) => Number(e.id) === numId);
+  };
+
+  // si hay detalles seleccionados, filtramos solo esos ejercicios asignados
+  const visibleAsignados =
+    selectedDetalleIds.length > 0
+      ? asignados.filter((a) =>
+          selectedDetalleIds.includes(Number(a.idDetalleMusculo))
+        )
+      : asignados;
+
+  const handleGoDetector = () => {
+    navigate("/pose-test"); // o "/biceps-curl" si prefieres
   };
 
   return (
@@ -90,80 +101,89 @@ const Ejercicio_AsignadoUsuario = () => {
           </div>
         )}
 
-        {!loading && !errorList && asignados.length === 0 && (
+        {!loading && !errorList && visibleAsignados.length === 0 && (
           <div className="text-center py-8">
             <p className="text-white/60">
-              No tienes ejercicios asignados por el momento.
+              No tienes ejercicios asignados para los detalles seleccionados.
             </p>
           </div>
         )}
 
-        {!loading && !errorList && asignados.length > 0 && (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {asignados.map((item) => {
-              const detalle = findDetalle(item.idDetalleMusculo);
-              const musculo = detalle
-                ? findMusculo(detalle.idMusculo)
-                : null;
-              const ejercicio = detalle
-                ? findEjercicio(detalle.idEjercicio)
-                : null;
+        {!loading && !errorList && visibleAsignados.length > 0 && (
+          <>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {visibleAsignados.map((item) => {
+                const detalle = findDetalle(item.idDetalleMusculo);
+                const musculo = detalle ? findMusculo(detalle.idMusculo) : null;
+                const ejercicio = detalle
+                  ? findEjercicio(detalle.idEjercicio)
+                  : null;
 
-              const titulo = ejercicio ? ejercicio.nombre : "Ejercicio asignado";
-              const imgUrl = ejercicio?.url || null;
+                const titulo = ejercicio ? ejercicio.nombre : "Ejercicio asignado";
+                const imgUrl = ejercicio?.url || null;
 
-              return (
-                <article
-                  key={item.id}
-                  className="bg-white/10 border border-white/20 rounded-2xl p-4 md:p-5 shadow-lg hover:bg-white/20 transition-all"
-                >
-                  {imgUrl && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSelectedImage({ url: imgUrl, title: titulo })
-                      }
-                      className="mb-3 rounded-xl overflow-hidden border border-white/20 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    >
-                      <img
-                        src={imgUrl}
-                        alt={titulo}
-                        className="w-full h-40 object-cover hover:scale-[1.03] transition-transform"
-                      />
-                    </button>
-                  )}
-
-                  {/* Título del ejercicio (sin 'Detalle #...') */}
-                  <h3 className="font-semibold text-lg mb-3">{titulo}</h3>
-
-                  <div className="space-y-1 text-sm text-white/80">
-                    <p>
-                      <span className="font-semibold text-white">
-                        Músculo:
-                      </span>{" "}
-                      {musculo ? musculo.nombre : detalle?.idMusculo}
-                    </p>
-
-                    {detalle && (
-                      <p>
-                        <span className="font-semibold text-white">
-                          Activación:
-                        </span>{" "}
-                        {detalle.porcentaje}
-                      </p>
+                return (
+                  <article
+                    key={item.id}
+                    className="bg-white/10 border border-white/20 rounded-2xl p-4 md:p-5 shadow-lg hover:bg-white/20 transition-all"
+                  >
+                    {imgUrl && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedImage({ url: imgUrl, title: titulo })
+                        }
+                        className="mb-3 rounded-xl overflow-hidden border border-white/20 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      >
+                        <img
+                          src={imgUrl}
+                          alt={titulo}
+                          className="w-full h-40 object-cover hover:scale-[1.03] transition-transform"
+                        />
+                      </button>
                     )}
 
-                    <p className="mt-2">
-                      <span className="font-semibold text-white">
-                        Series x reps:
-                      </span>{" "}
-                      {item.series} x {item.repeticiones}
-                    </p>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+                    <h3 className="font-semibold text-lg mb-3">{titulo}</h3>
+
+                    <div className="space-y-1 text-sm text-white/80">
+                      <p>
+                        <span className="font-semibold text-white">
+                          Músculo:
+                        </span>{" "}
+                        {musculo ? musculo.nombre : detalle?.idMusculo}
+                      </p>
+
+                      {detalle && (
+                        <p>
+                          <span className="font-semibold text-white">
+                            Activación:
+                          </span>{" "}
+                          {detalle.porcentaje}
+                        </p>
+                      )}
+
+                      <p className="mt-2">
+                        <span className="font-semibold text-white">
+                          Series x reps:
+                        </span>{" "}
+                        {item.series} x {item.repeticiones}
+                      </p>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            <div className="mt-8 flex justify-center">
+              <button
+                type="button"
+                onClick={handleGoDetector}
+                className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg"
+              >
+                Ir al detector IA
+              </button>
+            </div>
+          </>
         )}
 
         <footer className="mt-10 text-white/40 text-xs text-center">
