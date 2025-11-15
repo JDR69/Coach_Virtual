@@ -33,6 +33,11 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
       { to: "/planes", label: "Planes Premium", icon: Crown },
       { to: "/mis-alertas", label: "Mis Alertas", icon: Bell },
       { to: "/mis-ejercicios", label: "Mis Ejercicio", icon: Dumbbell },
+      {
+        to: "/mis-ejercicios-asignados",
+        label: "Mis Ejercicios Asignados",
+        icon: Dumbbell,
+      },
       { to: "/ia", label: "IA", icon: Cpu },
       { to: "/pose-test", label: "Entrenar con (IA)", icon: Dumbbell },
       { to: "/biceps-curl", label: "Curl de Bíceps 🤖", icon: Dumbbell },
@@ -49,7 +54,16 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
             { to: "/usuarios", label: "Gestionar Usuario", icon: Users },
             { to: "/alertas", label: "Gestionar Alerta", icon: Bell },
             { to: "/ejercicios", label: "Gestionar Ejercicio", icon: Dumbbell },
-             { to: "/detalles-musculo", label: "Gestionar Detalle Músculo", icon: Dumbbell },
+            {
+              to: "/detalles-musculo",
+              label: "Gestionar Detalle Músculo",
+              icon: Dumbbell,
+            },
+            {
+              to: "/ejercicios-asignados",
+              label: "Gestionar Ejercicio Asignado",
+              icon: Dumbbell,
+            },
           ]
         : [],
     [isSuper]

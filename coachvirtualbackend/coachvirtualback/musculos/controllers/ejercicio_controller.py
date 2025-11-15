@@ -4,12 +4,14 @@ from rest_framework import status, views
 from ..models import Ejercicio
 from ..serializers import EjercicioSerializer
 
+
 class EjercicioController(views.APIView):
     def get(self, request, pk=None):
-        if pk:
+        if pk is not None:
             ejercicio = get_object_or_404(Ejercicio, pk=pk)
             serializer = EjercicioSerializer(ejercicio)
             return Response(serializer.data)
+
         ejercicios = Ejercicio.objects.all()
         serializer = EjercicioSerializer(ejercicios, many=True)
         return Response(serializer.data)

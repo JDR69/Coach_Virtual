@@ -4,12 +4,14 @@ from rest_framework import status, views
 from ..models import DetalleMusculo
 from ..serializers import DetalleMusculoSerializer
 
+
 class DetalleMusculoController(views.APIView):
     def get(self, request, pk=None):
-        if pk:
+        if pk is not None:
             detalle_musculo = get_object_or_404(DetalleMusculo, pk=pk)
             serializer = DetalleMusculoSerializer(detalle_musculo)
             return Response(serializer.data)
+
         detalles_musculo = DetalleMusculo.objects.all()
         serializer = DetalleMusculoSerializer(detalles_musculo, many=True)
         return Response(serializer.data)

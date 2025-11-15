@@ -4,12 +4,14 @@ from rest_framework import status, views
 from ..models import Musculo
 from ..serializers import MusculoSerializer
 
+
 class MusculoController(views.APIView):
     def get(self, request, pk=None):
-        if pk:
+        if pk is not None:
             musculo = get_object_or_404(Musculo, pk=pk)
             serializer = MusculoSerializer(musculo)
             return Response(serializer.data)
+
         musculos = Musculo.objects.all()
         serializer = MusculoSerializer(musculos, many=True)
         return Response(serializer.data)

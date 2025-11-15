@@ -21,12 +21,14 @@ import AlertNotifier from "../pages/GestionarAlerta/AlertNotifier";
 import SelectCategory from "../pages/Categoria/SelectCategory";
 import CategoryGate from "./CategoryGate";
 import Musculo from "../pages/GestionarMusculo/Musculo";
-import Ejercicios from "../pages/GestionarEjercicio/EjercicioUsuario";
+import Ejercicios from "../pages/GestionarEjercicio/Detalle_MusculoUsuario";
 import MusculoUsuario from "../pages/GestionarMusculo/MusculoUsuario";
 import Ejercicio from "../pages/GestionarEjercicio/Ejercicio";
-import EjercicioUsuario from "../pages/GestionarEjercicio/EjercicioUsuario";
+import EjercicioUsuario from "../pages/GestionarEjercicio/Detalle_MusculoUsuario";
 import DetalleMusculo from "../pages/Detalle_Musculo/Detalle_Musculo";
 import Detalle_Musculo from "../pages/Detalle_Musculo/Detalle_Musculo";
+import Ejercicio_Asignado from "../pages/GestionarEjercicio_Asignacion/Ejercicio_Asignado";
+import Ejercicio_AsignadoUsuario from "../pages/GestionarEjercicio_Asignacion/Ejercicio_AsignadoUsuario";
 
 // ====== Guards ======
 function RequireAuth() {
@@ -124,6 +126,7 @@ export default function AppRoutes() {
           <Route path="/mis-alertas" element={<AlertaUsuario />} />
           <Route path="/mis-musculos" element={<MusculoUsuario />} />
           <Route path="/mis-ejercicios" element={<EjercicioUsuario />} />
+          <Route path="/mis-ejercicios-asignados" element={<Ejercicio_AsignadoUsuario />} />
 
           {/* SOLO superusuario */}
           <Route element={<RequireSuper />}>
@@ -132,6 +135,7 @@ export default function AppRoutes() {
             <Route path="/alertas" element={<Alerta />} />
             <Route path="/ejercicios" element={<Ejercicio />} />
             <Route path="/detalles-musculo" element={<Detalle_Musculo />} />
+            <Route path="/ejercicios-asignados" element={<Ejercicio_Asignado />} />
           </Route>
         </Route>
       </Route>

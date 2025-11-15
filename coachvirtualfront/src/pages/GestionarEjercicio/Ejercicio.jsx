@@ -53,10 +53,13 @@ class Ejercicio extends Component {
 
     this.setState({ loadingSave: true, errorSave: null });
     try {
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
-        method: 'POST',
-        body: data,
-      });
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
+        {
+          method: 'POST',
+          body: data,
+        }
+      );
       const file = await response.json();
       this.setState((prev) => ({
         form: { ...prev.form, url: file.secure_url },
@@ -64,7 +67,10 @@ class Ejercicio extends Component {
         successSave: 'Imagen cargada exitosamente',
       }));
     } catch {
-      this.setState({ errorSave: 'Error al cargar la imagen', loadingSave: false });
+      this.setState({
+        errorSave: 'Error al cargar la imagen',
+        loadingSave: false,
+      });
     }
   };
 
@@ -126,12 +132,12 @@ class Ejercicio extends Component {
   };
 
   editRow = (item) => {
-    this.setState({ 
-      form: { nombre: item.nombre, url: item.url, estado: item.estado }, 
-      isEditing: true, 
+    this.setState({
+      form: { nombre: item.nombre, url: item.url, estado: item.estado },
+      isEditing: true,
       editingId: item.id,
-      errorSave: null, 
-      successSave: null 
+      errorSave: null,
+      successSave: null,
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -186,8 +192,20 @@ class Ejercicio extends Component {
   }
 
   render() {
-    const { successSave, errorSave, form, loadingSave, isEditing, items, currentPage, pageSize } = this.state;
-    const pagedItems = Array.isArray(this.getPagedItems()) ? this.getPagedItems() : [];
+    const {
+      successSave,
+      errorSave,
+      form,
+      loadingSave,
+      isEditing,
+      items,
+      currentPage,
+      pageSize,
+    } = this.state;
+
+    const pagedItems = Array.isArray(this.getPagedItems())
+      ? this.getPagedItems()
+      : [];
 
     return (
       <main className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4">
@@ -209,7 +227,9 @@ class Ejercicio extends Component {
 
           <form onSubmit={this.handleSubmit} className="mb-8 space-y-4">
             <div className="flex flex-col gap-4">
-              {this.renderField('Nombre', 'nombre', 'text', { placeholder: 'Nombre del ejercicio' })}
+              {this.renderField('Nombre', 'nombre', 'text', {
+                placeholder: 'Nombre del ejercicio',
+              })}
             </div>
 
             <div className="flex flex-col gap-2">
@@ -234,7 +254,12 @@ class Ejercicio extends Component {
                 onChange={this.handleChange}
                 className="w-5 h-5 rounded border-white/20 bg-white/10 focus:ring-2 focus:ring-white/40"
               />
-              <label className="text-white/80 text-sm" htmlFor="estado">Activo</label>
+              <label
+                className="text-white/80 text-sm"
+                htmlFor="estado"
+              >
+                Activo
+              </label>
             </div>
 
             {form.url && (
@@ -253,7 +278,11 @@ class Ejercicio extends Component {
                 disabled={loadingSave}
                 className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loadingSave ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear')}
+                {loadingSave
+                  ? 'Guardando...'
+                  : isEditing
+                  ? 'Actualizar'
+                  : 'Crear'}
               </button>
               {isEditing && (
                 <button
@@ -280,9 +309,15 @@ class Ejercicio extends Component {
                     className="w-full h-40 object-cover rounded-xl mb-4"
                   />
                 )}
-                <h3 className="text-xl font-semibold mb-2">{item.nombre}</h3>
+                <h3 className="text-xl font-semibold mb-2">
+                  {item.nombre}
+                </h3>
                 <p className="text-sm text-white/70 mb-2">ID: {item.id}</p>
-                <p className={`text-sm mb-4 ${item.estado ? 'text-green-400' : 'text-red-400'}`}>
+                <p
+                  className={`text-sm mb-4 ${
+                    item.estado ? 'text-green-400' : 'text-red-400'
+                  }`}
+                >
                   {item.estado ? 'Activo' : 'Inactivo'}
                 </p>
 

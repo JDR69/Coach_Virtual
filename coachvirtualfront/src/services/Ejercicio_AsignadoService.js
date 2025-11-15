@@ -1,8 +1,9 @@
+// src/services/EjercicioAsignadoService.js
 import api from '../api/api';
 
-const API_URL = '/ejercicios/';
+const API_URL = '/ejercicios-asignados/';
 
-const EjercicioService = {
+const EjercicioAsignadoService = {
   getAll: async () => {
     const response = await api.get(API_URL);
     return response.data;
@@ -29,4 +30,4 @@ const EjercicioService = {
   },
 };
 
-export default EjercicioService;
+export default EjercicioAsignadoService;

@@ -1,3 +1,4 @@
+// src/pages/detalle-musculo/Detalle_Musculo.jsx
 import React, { Component } from 'react';
 import DetalleMusculoService from '../../services/DetalleMusculoService';
 import MusculoService from '../../services/MusculoService';
@@ -26,13 +27,14 @@ class Detalle_Musculo extends Component {
     this.fetchAll();
   }
 
+  // ================== CARGA INICIAL ==================
   fetchAll = async () => {
     this.setState({ loadingList: true, errorList: null });
     try {
       const [detallesData, musculosData, ejerciciosData] = await Promise.all([
         DetalleMusculoService.getAll(),
         MusculoService.getAll(),
-        EjercicioService.getAll()
+        EjercicioService.getAll(),
       ]);
       this.setState({
         items: detallesData,
@@ -45,11 +47,43 @@ class Detalle_Musculo extends Component {
     }
   };
 
+  // ================== HELPERS ==================
+  getPagedItems() {
+    const { items, currentPage, pageSize } = this.state;
+    const start = (currentPage - 1) * pageSize;
+    return items.slice(start, start + pageSize);
+  }
+
+  findMusculo = (id) => {
+    const { musculos } = this.state;
+    const numId = Number(id);
+    return musculos.find((m) => Number(m.id) === numId);
+  };
+
+  findEjercicio = (id) => {
+    const { ejercicios } = this.state;
+    const numId = Number(id);
+    return ejercicios.find((e) => Number(e.id) === numId);
+  };
+
+  getMusculoNombre = (id) => {
+    const musculo = this.findMusculo(id);
+    return musculo ? musculo.nombre : id;
+  };
+
+  getEjercicioNombre = (id) => {
+    const ejercicio = this.findEjercicio(id);
+    return ejercicio ? ejercicio.nombre : id;
+  };
+
+  // ================== FORM ==================
   handleChange = (e) => {
     const { name, value } = e.target;
     this.setState((prev) => ({
       form: { ...prev.form, [name]: value },
       errorsByField: { ...prev.errorsByField, [name]: undefined },
+      errorSave: null,
+      successSave: null,
     }));
   };
 
@@ -78,7 +112,10 @@ class Detalle_Musculo extends Component {
     try {
       let savedItem;
       if (this.state.isEditing) {
-        savedItem = await DetalleMusculoService.update(this.state.editingId, payload);
+        savedItem = await DetalleMusculoService.update(
+          this.state.editingId,
+          payload
+        );
         this.setState((prev) => ({
           items: prev.items.map((item) =>
             item.id === savedItem.id ? savedItem : item
@@ -112,12 +149,17 @@ class Detalle_Musculo extends Component {
   };
 
   editRow = (item) => {
-    this.setState({ 
-      form: { porcentaje: item.porcentaje, idMusculo: item.idMusculo, idEjercicio: item.idEjercicio }, 
-      isEditing: true, 
+    this.setState({
+      form: {
+        porcentaje: item.porcentaje,
+        idMusculo: String(item.idMusculo),
+        idEjercicio: String(item.idEjercicio),
+      },
+      isEditing: true,
       editingId: item.id,
-      errorSave: null, 
-      successSave: null 
+      errorSave: null,
+      successSave: null,
+      errorsByField: {},
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -135,22 +177,7 @@ class Detalle_Musculo extends Component {
     }
   };
 
-  getPagedItems() {
-    const { items, currentPage, pageSize } = this.state;
-    const start = (currentPage - 1) * pageSize;
-    return items.slice(start, start + pageSize);
-  }
-
-  getMusculoNombre = (id) => {
-    const musculo = this.state.musculos.find(m => m.id === id);
-    return musculo ? musculo.nombre : id;
-  };
-
-  getEjercicioNombre = (id) => {
-    const ejercicio = this.state.ejercicios.find(e => e.id === id);
-    return ejercicio ? ejercicio.nombre : id;
-  };
-
+  // ================== COMPONENTES DE UI ==================
   renderField(label, name, type = 'text', props = {}) {
     const { form, errorsByField } = this.state;
     const hasError = Boolean(errorsByField?.[name]);
@@ -184,10 +211,18 @@ class Detalle_Musculo extends Component {
   renderSelect(label, name, options, valueKey, labelKey) {
     const { form, errorsByField } = this.state;
     const hasError = Boolean(errorsByField?.[name]);
-    
-    // Validar que options sea un array
     const safeOptions = Array.isArray(options) ? options : [];
-    
+
+    // estilos inline para que el desplegable NO sea blanco
+    const selectStyle = {
+      backgroundColor: 'rgba(255,255,255,0.08)',
+      color: '#ffffff',
+    };
+    const optionStyle = {
+      backgroundColor: '#111827', // gris muy oscuro
+      color: '#ffffff',
+    };
+
     return (
       <div className="flex flex-col gap-1">
         <label className="text-white/80 text-sm" htmlFor={name}>
@@ -198,13 +233,20 @@ class Detalle_Musculo extends Component {
           name={name}
           value={form[name] || ''}
           onChange={this.handleChange}
-          className={`px-4 py-3 rounded-xl bg-white/10 border ${
+          style={selectStyle}
+          className={`px-4 py-3 rounded-xl border ${
             hasError ? 'border-red-400' : 'border-white/20'
           } text-white focus:outline-none focus:ring-2 focus:ring-white/40`}
         >
-          <option value="">Seleccione una opción</option>
-          {safeOptions.map(option => (
-            <option key={option[valueKey]} value={option[valueKey]}>
+          <option value="" style={optionStyle}>
+            Seleccione una opción
+          </option>
+          {safeOptions.map((option) => (
+            <option
+              key={option[valueKey]}
+              value={option[valueKey]}
+              style={optionStyle}
+            >
               {option[labelKey]}
             </option>
           ))}
@@ -220,9 +262,33 @@ class Detalle_Musculo extends Component {
     );
   }
 
+  // ================== RENDER ==================
   render() {
-    const { successSave, errorSave, loadingSave, isEditing, musculos, ejercicios, items, currentPage, pageSize } = this.state;
-    const pagedItems = Array.isArray(this.getPagedItems()) ? this.getPagedItems() : [];
+    const {
+      successSave,
+      errorSave,
+      loadingSave,
+      isEditing,
+      musculos,
+      ejercicios,
+      items,
+      currentPage,
+      pageSize,
+      form,
+      loadingList,
+    } = this.state;
+
+    const pagedItems = Array.isArray(this.getPagedItems())
+      ? this.getPagedItems()
+      : [];
+
+    // previews seleccionados en el formulario
+    const selectedMusculo = form.idMusculo
+      ? this.findMusculo(form.idMusculo)
+      : null;
+    const selectedEjercicio = form.idEjercicio
+      ? this.findEjercicio(form.idEjercicio)
+      : null;
 
     return (
       <main className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4">
@@ -231,6 +297,7 @@ class Detalle_Musculo extends Component {
             Gestionar Detalles de Músculo
           </h1>
 
+          {/* Mensajes */}
           {successSave && (
             <div className="mb-4 p-4 bg-green-500/20 border border-green-500/50 rounded-xl text-green-200">
               {successSave}
@@ -242,22 +309,92 @@ class Detalle_Musculo extends Component {
             </div>
           )}
 
-          <form onSubmit={this.handleSubmit} className="mb-8 space-y-4">
+          {/* FORMULARIO */}
+          <form onSubmit={this.handleSubmit} className="mb-8 space-y-6">
             <div className="grid md:grid-cols-2 gap-4">
-              {this.renderField('Porcentaje', 'porcentaje', 'text', { placeholder: 'Ej: 75%' })}
-              {this.renderSelect('Músculo', 'idMusculo', musculos, 'id', 'nombre')}
+              {this.renderField('Porcentaje', 'porcentaje', 'text', {
+                placeholder: 'Ej: 75%',
+              })}
+              {this.renderSelect(
+                'Músculo',
+                'idMusculo',
+                musculos,
+                'id',
+                'nombre'
+              )}
             </div>
             <div className="grid md:grid-cols-1 gap-4">
-              {this.renderSelect('Ejercicio', 'idEjercicio', ejercicios, 'id', 'nombre')}
+              {this.renderSelect(
+                'Ejercicio',
+                'idEjercicio',
+                ejercicios,
+                'id',
+                'nombre'
+              )}
             </div>
 
-            <div className="flex gap-3 justify-center">
+            {/* PREVIEW DE IMÁGENES SELECCIONADAS */}
+            <div className="grid md:grid-cols-2 gap-4 mt-4">
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/10 flex flex-col items-center">
+                <h2 className="text-sm font-semibold mb-2 text-white/80">
+                  Músculo seleccionado
+                </h2>
+                {selectedMusculo ? (
+                  <>
+                    {selectedMusculo.url && (
+                      <img
+                        src={selectedMusculo.url}
+                        alt={selectedMusculo.nombre}
+                        className="w-full h-40 object-cover rounded-xl mb-2 border border-white/20"
+                      />
+                    )}
+                    <p className="text-white font-semibold">
+                      {selectedMusculo.nombre}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-white/50 text-xs">
+                    Aún no has seleccionado un músculo.
+                  </p>
+                )}
+              </div>
+
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/10 flex flex-col items-center">
+                <h2 className="text-sm font-semibold mb-2 text-white/80">
+                  Ejercicio seleccionado
+                </h2>
+                {selectedEjercicio ? (
+                  <>
+                    {selectedEjercicio.url && (
+                      <img
+                        src={selectedEjercicio.url}
+                        alt={selectedEjercicio.nombre}
+                        className="w-full h-40 object-cover rounded-xl mb-2 border border-white/20"
+                      />
+                    )}
+                    <p className="text-white font-semibold">
+                      {selectedEjercicio.nombre}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-white/50 text-xs">
+                    Aún no has seleccionado un ejercicio.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-center mt-4">
               <button
                 type="submit"
                 disabled={loadingSave}
                 className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loadingSave ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear')}
+                {loadingSave
+                  ? 'Guardando...'
+                  : isEditing
+                  ? 'Actualizar'
+                  : 'Crear'}
               </button>
               {isEditing && (
                 <button
@@ -271,53 +408,95 @@ class Detalle_Musculo extends Component {
             </div>
           </form>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-left">
-            {pagedItems.map((item) => (
-              <div
-                key={item.id}
-                className="rounded-2xl p-6 bg-white/10 hover:bg-white/20 border border-white/20 transition-all shadow-lg"
-              >
-                <h3 className="text-xl font-semibold mb-2">ID: {item.id}</h3>
-                <p className="text-sm text-white/70 mb-2">
-                  <span className="font-semibold">Músculo:</span> {this.getMusculoNombre(item.idMusculo)}
-                </p>
-                <p className="text-sm text-white/70 mb-2">
-                  <span className="font-semibold">Ejercicio:</span> {this.getEjercicioNombre(item.idEjercicio)}
-                </p>
-                <p className="text-sm text-white/70 mb-4">
-                  <span className="font-semibold">Porcentaje:</span> {item.porcentaje}
-                </p>
+          {/* LISTA */}
+          {loadingList ? (
+            <div className="text-center py-8">
+              <p className="text-white/60">Cargando detalles...</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-left">
+                {pagedItems.map((item) => {
+                  const musculo = this.findMusculo(item.idMusculo);
+                  const ejercicio = this.findEjercicio(item.idEjercicio);
 
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => this.editRow(item)}
-                    className="flex-1 px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => this.removeRow(item)}
-                    className="flex-1 px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white font-semibold transition"
-                  >
-                    Eliminar
-                  </button>
-                </div>
+                  return (
+                    <div
+                      key={item.id}
+                      className="rounded-2xl p-6 bg-white/10 hover:bg-white/20 border border-white/20 transition-all shadow-lg"
+                    >
+                      <p className="text-xs text-white/60 mb-2">
+                        Detalle #{item.id}
+                      </p>
+
+                      {/* Imágenes en la card */}
+                      <div className="flex gap-3 mb-4">
+                        <div className="flex-1">
+                          {musculo?.url && (
+                            <img
+                              src={musculo.url}
+                              alt={musculo.nombre}
+                              className="w-full h-24 object-cover rounded-xl border border-white/20 mb-1"
+                            />
+                          )}
+                          <p className="text-xs text-white/70">
+                            <span className="font-semibold">Músculo:</span>{' '}
+                            {musculo ? musculo.nombre : item.idMusculo}
+                          </p>
+                        </div>
+                        <div className="flex-1">
+                          {ejercicio?.url && (
+                            <img
+                              src={ejercicio.url}
+                              alt={ejercicio.nombre}
+                              className="w-full h-24 object-cover rounded-xl border border-white/20 mb-1"
+                            />
+                          )}
+                          <p className="text-xs text-white/70">
+                            <span className="font-semibold">Ejercicio:</span>{' '}
+                            {ejercicio ? ejercicio.nombre : item.idEjercicio}
+                          </p>
+                        </div>
+                      </div>
+
+                      <p className="text-sm text-white/80 mb-4">
+                        <span className="font-semibold">Porcentaje:</span>{' '}
+                        {item.porcentaje}
+                      </p>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => this.editRow(item)}
+                          className="flex-1 px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => this.removeRow(item)}
+                          className="flex-1 px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white font-semibold transition"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
 
-          {pagedItems.length === 0 && (
-            <p className="text-center text-white/60 mt-8">
-              No hay detalles registrados todavía.
-            </p>
+              {pagedItems.length === 0 && (
+                <p className="text-center text-white/60 mt-8">
+                  No hay detalles registrados todavía.
+                </p>
+              )}
+
+              <Paginacion
+                currentPage={currentPage}
+                totalItems={items.length}
+                pageSize={pageSize}
+                onPageChange={(page) => this.setState({ currentPage: page })}
+              />
+            </>
           )}
-
-          <Paginacion
-            currentPage={currentPage}
-            totalItems={items.length}
-            pageSize={pageSize}
-            onPageChange={(page) => this.setState({ currentPage: page })}
-          />
 
           <footer className="mt-8 text-white/40 text-xs text-center">
             Coach Virtual &copy; {new Date().getFullYear()}

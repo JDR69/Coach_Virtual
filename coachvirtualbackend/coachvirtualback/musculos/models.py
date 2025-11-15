@@ -1,8 +1,8 @@
+# musculos/models.py
 from django.db import models
 
 
 class Musculo(models.Model):
-    id = models.CharField(primary_key=True, max_length=255)
     nombre = models.CharField(max_length=255)
     url = models.URLField()
 
@@ -10,30 +10,32 @@ class Musculo(models.Model):
         return str(self.nombre)
 
 
-class DetalleMusculo(models.Model):
-    id = models.CharField(primary_key=True, max_length=255)
-    porcentaje = models.CharField(max_length=255)
-    idMusculo = models.ForeignKey(Musculo, on_delete=models.CASCADE)
-    idEjercicio = models.ForeignKey('Ejercicio', on_delete=models.CASCADE)
-
-    def __str__(self):
-        return str(self.id)
-
-
 class Ejercicio(models.Model):
-    id = models.CharField(primary_key=True, max_length=255)
     nombre = models.CharField(max_length=255)
-    url = models.URLField(blank=True, default='')
-    estado = models.BooleanField()
+    url = models.URLField(blank=True, default="")
+    estado = models.BooleanField(default=True)
 
     def __str__(self):
         return str(self.nombre)
 
 
+class DetalleMusculo(models.Model):
+    porcentaje = models.CharField(max_length=255)
+    idMusculo = models.ForeignKey(Musculo, on_delete=models.CASCADE)
+    idEjercicio = models.ForeignKey(Ejercicio, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.idMusculo} - {self.idEjercicio} ({self.porcentaje})"
+
+
 class EjercicioAsignado(models.Model):
-    id = models.CharField(primary_key=True, max_length=255)
+    idDetalleMusculo = models.ForeignKey(
+        DetalleMusculo,
+        on_delete=models.CASCADE,
+        related_name='ejercicios_asignados',
+    )
     series = models.IntegerField()
     repeticiones = models.IntegerField()
 
     def __str__(self):
-        return str(self.id)
+        return f"{self.series}x{self.repeticiones} (Detalle {self.idDetalleMusculo_id})"

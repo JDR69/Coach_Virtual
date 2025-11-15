@@ -1,3 +1,4 @@
+// src/pages/musculos/Musculo.jsx
 import React, { Component } from 'react';
 import MusculoService from '../../services/MusculoService';
 
@@ -34,7 +35,10 @@ class Musculo extends Component {
 
   ensurePageInRange = () => {
     this.setState((prev) => {
-      const totalPages = Math.ceil(prev.items.length / prev.pageSize);
+      const totalPages = Math.max(
+        1,
+        Math.ceil(prev.items.length / prev.pageSize) || 1
+      );
       return {
         currentPage: Math.min(prev.currentPage, totalPages),
       };
@@ -50,6 +54,8 @@ class Musculo extends Component {
     const start = (currentPage - 1) * pageSize;
     return items.slice(start, start + pageSize);
   };
+
+  // =================== CRUD ===================
 
   loadList = async () => {
     this.setState({ loadingList: true, errorList: null });
@@ -103,6 +109,7 @@ class Musculo extends Component {
       }));
     } catch (err) {
       console.error(err);
+      this.setState({ errorSave: 'No se pudo eliminar el músculo.' });
     }
   };
 
@@ -152,43 +159,65 @@ class Musculo extends Component {
       }
       this.resetForm();
     } catch (err) {
-      this.setState({ errorSave: err.message, loadingSave: false });
+      console.error(err);
+      this.setState({
+        errorSave: 'Error al guardar el músculo. Revisa el backend o la conexión.',
+        loadingSave: false,
+      });
     }
   };
 
-  // Añadir método para subir imágenes a Cloudinary
+  // ============ Cloudinary ============
+
   uploadImage = async (e) => {
-    const preset_name = "coachVirtual";
-    const cloud_name = "dwerzrgya";
+    const preset_name = 'coachVirtual'; // debe ser UNSIGNED en Cloudinary
+    const cloud_name = 'dwerzrgya';
 
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    
+
     const data = new FormData();
     data.append('file', files[0]);
     data.append('upload_preset', preset_name);
 
-    this.setState({ loadingSave: true, errorSave: null });
+    this.setState({ loadingSave: true, errorSave: null, successSave: null });
 
     try {
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
-            method: 'POST',
-            body: data,
-        });
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
+        {
+          method: 'POST',
+          body: data,
+        }
+      );
 
-        const file = await response.json();
-        this.setState((prev) => ({
-            form: { ...prev.form, url: file.secure_url },
-            successSave: 'Imagen cargada exitosamente',
-            loadingSave: false,
-        }));
-    } catch {
-        this.setState({ 
-          errorSave: 'Error al cargar la imagen',
-          loadingSave: false 
+      const file = await response.json();
+
+      // Si Cloudinary devuelve error, file va a tener "error"
+      if (file.error) {
+        console.error(file.error);
+        this.setState({
+          errorSave: `Error Cloudinary: ${file.error.message || 'Bad Request'}`,
+          loadingSave: false,
         });
+        return;
+      }
+
+      this.setState((prev) => ({
+        form: { ...prev.form, url: file.secure_url },
+        successSave: 'Imagen cargada exitosamente',
+        loadingSave: false,
+      }));
+    } catch (error) {
+      console.error(error);
+      this.setState({
+        errorSave: 'Error al cargar la imagen. Revisa Cloudinary o tu conexión.',
+        loadingSave: false,
+      });
     }
-};
+  };
+
+  // ============ Helpers de UI ============
 
   renderField(label, name, type = 'text', props = {}) {
     const { form, errorsByField } = this.state;
@@ -220,9 +249,49 @@ class Musculo extends Component {
     );
   }
 
+  renderPagination() {
+    const { items, pageSize, currentPage } = this.state;
+    const totalPages = Math.ceil(items.length / pageSize) || 1;
+    if (totalPages <= 1) return null;
+
+    const pages = [];
+    for (let p = 1; p <= totalPages; p++) {
+      pages.push(
+        <button
+          key={p}
+          type="button"
+          onClick={() => this.goToPage(p)}
+          className={`px-3 py-1 rounded-full text-sm font-semibold ${
+            p === currentPage
+              ? 'bg-white text-purple-700'
+              : 'bg-white/10 text-white hover:bg-white/20'
+          }`}
+        >
+          {p}
+        </button>
+      );
+    }
+
+    return (
+      <div className="flex justify-center mt-6 gap-2">
+        {pages}
+      </div>
+    );
+  }
+
   render() {
-    const { successSave, errorSave, form, loadingSave, isEditing, loadingList } = this.state;
-    const pagedItems = Array.isArray(this.getPagedItems()) ? this.getPagedItems() : [];
+    const {
+      successSave,
+      errorSave,
+      form,
+      loadingSave,
+      isEditing,
+      loadingList,
+    } = this.state;
+
+    const pagedItems = Array.isArray(this.getPagedItems())
+      ? this.getPagedItems()
+      : [];
 
     return (
       <main className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4">
@@ -244,7 +313,9 @@ class Musculo extends Component {
 
           <form onSubmit={this.handleSubmit} className="mb-8 space-y-4">
             <div className="flex flex-col gap-4">
-              {this.renderField('Nombre', 'nombre', 'text', { placeholder: 'Nombre del músculo' })}
+              {this.renderField('Nombre', 'nombre', 'text', {
+                placeholder: 'Nombre del músculo',
+              })}
             </div>
 
             <div className="flex flex-col gap-2">
@@ -276,7 +347,11 @@ class Musculo extends Component {
                 disabled={loadingSave}
                 className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loadingSave ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear')}
+                {loadingSave
+                  ? 'Guardando...'
+                  : isEditing
+                  ? 'Actualizar'
+                  : 'Crear'}
               </button>
               {isEditing && (
                 <button
@@ -309,7 +384,9 @@ class Musculo extends Component {
                         className="w-full h-40 object-cover rounded-xl mb-4"
                       />
                     )}
-                    <h3 className="text-xl font-semibold mb-2">{item.nombre}</h3>
+                    <h3 className="text-xl font-semibold mb-2">
+                      {item.nombre}
+                    </h3>
                     <p className="text-sm text-white/70 mb-4">ID: {item.id}</p>
 
                     <div className="flex gap-2">
@@ -335,6 +412,8 @@ class Musculo extends Component {
                   No hay músculos registrados todavía.
                 </p>
               )}
+
+              {this.renderPagination()}
             </>
           )}
 
