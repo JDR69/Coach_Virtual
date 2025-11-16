@@ -43,13 +43,20 @@ class Ejercicio_Asignado extends Component {
         EjercicioService.getAll(),
       ]);
 
-      this.setState({
+      this.setState((prev) => ({
         items: Array.isArray(asignados) ? asignados : [],
         detalles: Array.isArray(detalles) ? detalles : [],
         musculos: Array.isArray(musculos) ? musculos : [],
         ejercicios: Array.isArray(ejercicios) ? ejercicios : [],
         loadingList: false,
-      });
+        // si cambió el tamaño de la lista, aseguro que currentPage sea válido
+        currentPage:
+          prev.currentPage > 1 &&
+          (Array.isArray(asignados) ? asignados.length : 0) <=
+            (prev.currentPage - 1) * prev.pageSize
+            ? 1
+            : prev.currentPage,
+      }));
     } catch (err) {
       console.error(err);
       this.setState({
@@ -198,10 +205,22 @@ class Ejercicio_Asignado extends Component {
 
     try {
       await EjercicioAsignadoService.delete(item.id);
-      this.setState((prev) => ({
-        items: prev.items.filter((x) => x.id !== item.id),
-        successSave: "Ejercicio asignado eliminado exitosamente",
-      }));
+      this.setState((prev) => {
+        const newItems = prev.items.filter((x) => x.id !== item.id);
+        const totalItems = newItems.length;
+        const totalPages = Math.max(
+          1,
+          Math.ceil(totalItems / prev.pageSize || 1)
+        );
+        const newPage =
+          prev.currentPage > totalPages ? totalPages : prev.currentPage;
+
+        return {
+          items: newItems,
+          successSave: "Ejercicio asignado eliminado exitosamente",
+          currentPage: newPage,
+        };
+      });
     } catch (err) {
       this.setState({ errorSave: err.message || "Error al eliminar" });
     }
@@ -308,9 +327,8 @@ class Ejercicio_Asignado extends Component {
       loadingList,
     } = this.state;
 
-    const pagedItems = Array.isArray(this.getPagedItems())
-      ? this.getPagedItems()
-      : [];
+    const rawPaged = this.getPagedItems();
+    const pagedItems = Array.isArray(rawPaged) ? rawPaged : [];
 
     const selectedDetalle = form.idDetalleMusculo
       ? this.findDetalle(form.idDetalleMusculo)
@@ -521,11 +539,12 @@ class Ejercicio_Asignado extends Component {
                 </p>
               )}
 
+              {/* ✅ AQUÍ USAMOS TU NUEVO COMPONENTE DE PAGINACIÓN */}
               <Paginacion
-                page={currentPage}
-                total={items.length}
+                currentPage={currentPage}
+                totalItems={items.length}
                 pageSize={pageSize}
-                onChange={(page) => this.setState({ currentPage: page })}
+                onPageChange={(page) => this.setState({ currentPage: page })}
               />
             </>
           )}
