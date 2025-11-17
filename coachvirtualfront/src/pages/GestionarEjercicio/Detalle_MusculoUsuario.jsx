@@ -1,10 +1,40 @@
 // src/pages/GestionarEjercicio/Detalle_MusculoUsuario.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import DetalleMusculoService from "../../services/DetalleMusculoService";
 import MusculoService from "../../services/MusculoService";
 import EjercicioService from "../../services/EjercicioService";
 import { useCategory } from "../../context/CategoryContext";
+
+// helper para normalizar IDs a número
+const normalizeId = (value) => {
+  if (value == null) return null;
+  if (typeof value === "object") {
+    if (value.id != null) return Number(value.id);
+    return null;
+  }
+  const str = String(value);
+  if (!/^\d+$/.test(str)) return null;
+  return Number(str);
+};
+
+// obtiene el idTipo de un detalle, sin importar la forma
+const getDetalleTipoId = (detalle) => {
+  if (!detalle) return null;
+
+  // 1) campo idTipo puede ser número, string u objeto
+  if (detalle.idTipo != null) {
+    if (typeof detalle.idTipo === "object") {
+      return normalizeId(detalle.idTipo.id ?? detalle.idTipo);
+    }
+    return normalizeId(detalle.idTipo);
+  }
+  // 2) o puede venir solo en detalle.tipo.id
+  if (detalle.tipo && detalle.tipo.id != null) {
+    return normalizeId(detalle.tipo.id);
+  }
+  return null;
+};
 
 const DetalleMusculoUsuario = () => {
   const [detalles, setDetalles] = useState([]);
@@ -17,7 +47,9 @@ const DetalleMusculoUsuario = () => {
     selectedMuscleIds,
     selectedDetalleIds,
     toggleDetalle,
+    category,
   } = useCategory();
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,6 +64,7 @@ const DetalleMusculoUsuario = () => {
         MusculoService.getAll(),
         EjercicioService.getAll(),
       ]);
+
       setDetalles(Array.isArray(detallesData) ? detallesData : []);
       setMusculos(Array.isArray(musculosData) ? musculosData : []);
       setEjercicios(Array.isArray(ejerciciosData) ? ejerciciosData : []);
@@ -46,30 +79,59 @@ const DetalleMusculoUsuario = () => {
   };
 
   const getMusculoNombre = (id) => {
-    const numId = Number(id);
-    const musculo = musculos.find((m) => Number(m.id) === numId);
+    const numId = normalizeId(id);
+    const musculo = musculos.find((m) => normalizeId(m.id) === numId);
     return musculo ? musculo.nombre : id;
   };
 
   const getEjercicioNombre = (id) => {
-    const numId = Number(id);
-    const ejercicio = ejercicios.find((e) => Number(e.id) === numId);
+    const numId = normalizeId(id);
+    const ejercicio = ejercicios.find((e) => normalizeId(e.id) === numId);
     return ejercicio ? ejercicio.nombre : id;
   };
 
   const getEjercicioUrl = (id) => {
-    const numId = Number(id);
-    const ejercicio = ejercicios.find((e) => Number(e.id) === numId);
+    const numId = normalizeId(id);
+    const ejercicio = ejercicios.find((e) => normalizeId(e.id) === numId);
     return ejercicio ? ejercicio.url : null;
   };
 
-  // ✅ Detalles filtrados por TODOS los músculos seleccionados
-  const filteredDetalles =
-    selectedMuscleIds.length > 0
-      ? detalles.filter((d) =>
-          selectedMuscleIds.includes(Number(d.idMusculo))
-        )
-      : detalles;
+  // id del tipo seleccionado (desde el contexto)
+  const categoryId = useMemo(() => {
+    if (!category) return null;
+    if (typeof category === "object" && category.id != null) {
+      return normalizeId(category.id);
+    }
+    // si por algún motivo quedó guardado como "3" o 3
+    return normalizeId(category);
+  }, [category]);
+
+  // etiqueta legible del tipo
+  const selectedTipoLabel = useMemo(() => {
+    if (categoryId == null) return "Todos";
+    if (typeof category === "object" && category.nombre) {
+      return category.nombre;
+    }
+    return `Tipo #${categoryId}`;
+  }, [category, categoryId]);
+
+  // ✅ Detalles filtrados por músculos seleccionados + tipo seleccionado
+  const filteredDetalles = useMemo(() => {
+    return detalles.filter((d) => {
+      // filtro por músculos
+      const muscMatch =
+        selectedMuscleIds.length > 0
+          ? selectedMuscleIds.includes(normalizeId(d.idMusculo))
+          : true;
+
+      // filtro por tipo
+      const detalleTipoId = getDetalleTipoId(d);
+      const tipoMatch =
+        categoryId == null ? true : detalleTipoId === categoryId;
+
+      return muscMatch && tipoMatch;
+    });
+  }, [detalles, selectedMuscleIds, categoryId]);
 
   const selectedMusclesNames =
     selectedMuscleIds
@@ -93,6 +155,10 @@ const DetalleMusculoUsuario = () => {
           elegidos.
         </p>
 
+        <p className="text-center text-white/80 mb-1 text-sm">
+          Tipo seleccionado:{" "}
+          <span className="font-semibold">{selectedTipoLabel}</span>
+        </p>
         <p className="text-center text-white/80 mb-6 text-sm">
           Músculos seleccionados:{" "}
           <span className="font-semibold">{selectedMusclesNames}</span>
@@ -107,7 +173,8 @@ const DetalleMusculoUsuario = () => {
         {!loading && filteredDetalles.length === 0 && (
           <div className="text-center py-8">
             <p className="text-white/60">
-              No hay detalles de músculos disponibles para estos músculos.
+              No hay detalles de músculos disponibles para este tipo y estos
+              músculos.
             </p>
           </div>
         )}
@@ -119,6 +186,17 @@ const DetalleMusculoUsuario = () => {
                 const imgUrl = getEjercicioUrl(detalle.idEjercicio);
                 const titulo = getEjercicioNombre(detalle.idEjercicio);
                 const isSelected = selectedDetalleIds.includes(detalle.id);
+
+                // 👇 mostramos el nombre del tipo: si hay categoría seleccionada, usamos esa
+                const tipoNombre =
+                  categoryId != null
+                    ? selectedTipoLabel
+                    : detalle.tipo?.nombre ||
+                      (typeof detalle.idTipo === "object"
+                        ? detalle.idTipo?.nombre
+                        : detalle.idTipo
+                        ? `Tipo #${detalle.idTipo}`
+                        : "Sin tipo");
 
                 return (
                   <article
@@ -159,6 +237,12 @@ const DetalleMusculoUsuario = () => {
                           Activación:
                         </span>{" "}
                         {detalle.porcentaje}
+                      </p>
+                      <p>
+                        <span className="font-semibold text-white">
+                          Tipo:
+                        </span>{" "}
+                        {tipoNombre}
                       </p>
                     </div>
 

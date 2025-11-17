@@ -46,12 +46,13 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
         icon: ListChecks,
       },
      */
-
-    
+      
+    { to: "/chat-ia", label: "Chat IA", icon: Cpu },
       { to: "/ia", label: "IA", icon: Brain },
       { to: "/pose-test", label: "Entrenar con (IA)", icon: PlayCircle },
       { to: "/biceps-curl", label: "Curl de Bíceps 🤖", icon: Dumbbell },
       { to: "/chat-ia", label: "Chat IA", icon: Cpu },
+      { to:"/seleccionar", label: "Mis Tipos", icon: ListChecks },
     ],
     []
   );
@@ -77,6 +78,11 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
             {
               to: "/ejercicios-asignados",
               label: "Gestionar Ejercicio Asignado",
+              icon: ListChecks,
+            },
+            {
+              to: "/tipo",
+              label: "Gestionar Tipo",
               icon: ListChecks,
             },
           ]

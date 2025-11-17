@@ -28,6 +28,8 @@ import Detalle_Musculo from "../pages/Detalle_Musculo/Detalle_Musculo";
 import DetalleMusculoUsuario from "../pages/GestionarEjercicio/Detalle_MusculoUsuario";
 import Ejercicio_Asignado from "../pages/GestionarEjercicio_Asignacion/Ejercicio_Asignado";
 import Ejercicio_AsignadoUsuario from "../pages/GestionarEjercicio_Asignacion/Ejercicio_AsignadoUsuario";
+import GestionarTipo from "../pages/GestionarTipo/GestionarTipo";
+import GestionarTipoUsuario from "../pages/GestionarTipo/GestionarTipoUsuario";
 
 // ====== Guards ======
 function RequireAuth() {
@@ -120,6 +122,7 @@ export default function AppRoutes() {
               path="/mis-ejercicios-asignados"
               element={<Ejercicio_AsignadoUsuario />}
             />
+            
           </Route>
 
           {/* Otras secciones (sidebar visible) */}
@@ -132,6 +135,7 @@ export default function AppRoutes() {
           <Route path="/ia" element={<IAPage />} />
           <Route path="/chat-ia" element={<ChatIA />} />
           <Route path="/mis-alertas" element={<AlertaUsuario />} />
+          <Route path="/seleccionar" element={<GestionarTipoUsuario />} />
 
           {/* SOLO superusuario */}
           <Route element={<RequireSuper />}>
@@ -141,6 +145,7 @@ export default function AppRoutes() {
             <Route path="/ejercicios" element={<Ejercicio />} />
             <Route path="/detalles-musculo" element={<Detalle_Musculo />} />
             <Route path="/ejercicios-asignados" element={<Ejercicio_Asignado />} />
+            <Route path="/tipo" element={<GestionarTipo />} />
           </Route>
         </Route>
       </Route>

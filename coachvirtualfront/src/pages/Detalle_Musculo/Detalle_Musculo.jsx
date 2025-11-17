@@ -1,16 +1,18 @@
 // src/pages/detalle-musculo/Detalle_Musculo.jsx
-import React, { Component } from 'react';
-import DetalleMusculoService from '../../services/DetalleMusculoService';
-import MusculoService from '../../services/MusculoService';
-import EjercicioService from '../../services/EjercicioService';
-import Paginacion from '../../components/Paginacion';
+import React, { Component } from "react";
+import DetalleMusculoService from "../../services/DetalleMusculoService";
+import MusculoService from "../../services/MusculoService";
+import EjercicioService from "../../services/EjercicioService";
+import TipoService from "../../services/TipoService";
+import Paginacion from "../../components/Paginacion";
 
 class Detalle_Musculo extends Component {
   state = {
-    form: { porcentaje: '', idMusculo: '', idEjercicio: '' },
+    form: { porcentaje: "", idMusculo: "", idEjercicio: "", idTipo: "" },
     items: [],
     musculos: [],
     ejercicios: [],
+    tipos: [],
     loadingList: false,
     loadingSave: false,
     errorList: null,
@@ -31,39 +33,68 @@ class Detalle_Musculo extends Component {
   fetchAll = async () => {
     this.setState({ loadingList: true, errorList: null });
     try {
-      const [detallesData, musculosData, ejerciciosData] = await Promise.all([
+      const [
+        detallesData,
+        musculosData,
+        ejerciciosData,
+        tiposData,
+      ] = await Promise.all([
         DetalleMusculoService.getAll(),
         MusculoService.getAll(),
         EjercicioService.getAll(),
+        TipoService.getAll(), // o listActivos() si quieres solo activos
       ]);
+
       this.setState({
-        items: detallesData,
-        musculos: musculosData,
-        ejercicios: ejerciciosData,
+        items: Array.isArray(detallesData) ? detallesData : [],
+        musculos: Array.isArray(musculosData) ? musculosData : [],
+        ejercicios: Array.isArray(ejerciciosData) ? ejerciciosData : [],
+        tipos: Array.isArray(tiposData) ? tiposData : [],
         loadingList: false,
       });
     } catch (err) {
-      this.setState({ errorList: err.message, loadingList: false });
+      this.setState({
+        errorList:
+          err?.response?.data?.detail ||
+          err?.message ||
+          "No se pudo cargar la información.",
+        loadingList: false,
+      });
     }
   };
 
   // ================== HELPERS ==================
+  normalizeId = (value) => {
+    if (value == null) return null;
+    if (typeof value === "object") return Number(value.id);
+    return Number(value);
+  };
+
   getPagedItems() {
     const { items, currentPage, pageSize } = this.state;
     const start = (currentPage - 1) * pageSize;
-    return items.slice(start, start + pageSize);
+    return (items || []).slice(start, start + pageSize);
   }
 
   findMusculo = (id) => {
     const { musculos } = this.state;
-    const numId = Number(id);
+    const numId = this.normalizeId(id);
+    if (numId == null || Number.isNaN(numId)) return undefined;
     return musculos.find((m) => Number(m.id) === numId);
   };
 
   findEjercicio = (id) => {
     const { ejercicios } = this.state;
-    const numId = Number(id);
+    const numId = this.normalizeId(id);
+    if (numId == null || Number.isNaN(numId)) return undefined;
     return ejercicios.find((e) => Number(e.id) === numId);
+  };
+
+  findTipo = (id) => {
+    const { tipos } = this.state;
+    const numId = this.normalizeId(id);
+    if (numId == null || Number.isNaN(numId)) return undefined;
+    return tipos.find((t) => Number(t.id) === numId);
   };
 
   getMusculoNombre = (id) => {
@@ -74,6 +105,13 @@ class Detalle_Musculo extends Component {
   getEjercicioNombre = (id) => {
     const ejercicio = this.findEjercicio(id);
     return ejercicio ? ejercicio.nombre : id;
+  };
+
+  getTipoNombre = (id, rawItem) => {
+    // por si el backend devuelve también item.tipo.nombre
+    if (rawItem?.tipo?.nombre) return rawItem.tipo.nombre;
+    const tipo = this.findTipo(id);
+    return tipo ? tipo.nombre : id;
   };
 
   // ================== FORM ==================
@@ -88,11 +126,12 @@ class Detalle_Musculo extends Component {
   };
 
   validate = () => {
-    const { porcentaje, idMusculo, idEjercicio } = this.state.form;
+    const { porcentaje, idMusculo, idEjercicio, idTipo } = this.state.form;
     const errors = {};
-    if (!porcentaje?.trim()) errors.porcentaje = 'El porcentaje es obligatorio';
-    if (!idMusculo?.trim()) errors.idMusculo = 'El músculo es obligatorio';
-    if (!idEjercicio?.trim()) errors.idEjercicio = 'El ejercicio es obligatorio';
+    if (!porcentaje?.trim()) errors.porcentaje = "El porcentaje es obligatorio";
+    if (!idMusculo?.trim()) errors.idMusculo = "El músculo es obligatorio";
+    if (!idEjercicio?.trim()) errors.idEjercicio = "El ejercicio es obligatorio";
+    if (!idTipo?.trim()) errors.idTipo = "El tipo es obligatorio";
     this.setState({ errorsByField: errors });
     return Object.keys(errors).length === 0;
   };
@@ -107,6 +146,7 @@ class Detalle_Musculo extends Component {
       porcentaje: this.state.form.porcentaje.trim(),
       idMusculo: this.state.form.idMusculo.trim(),
       idEjercicio: this.state.form.idEjercicio.trim(),
+      idTipo: this.state.form.idTipo.trim(),
     };
 
     try {
@@ -120,26 +160,32 @@ class Detalle_Musculo extends Component {
           items: prev.items.map((item) =>
             item.id === savedItem.id ? savedItem : item
           ),
-          successSave: 'Detalle actualizado exitosamente',
+          successSave: "Detalle actualizado exitosamente",
           loadingSave: false,
         }));
       } else {
         savedItem = await DetalleMusculoService.create(payload);
         this.setState((prev) => ({
           items: [...prev.items, savedItem],
-          successSave: 'Detalle creado exitosamente',
+          successSave: "Detalle creado exitosamente",
           loadingSave: false,
         }));
       }
       this.resetForm();
     } catch (err) {
-      this.setState({ errorSave: err.message, loadingSave: false });
+      this.setState({
+        errorSave:
+          err?.response?.data?.detail ||
+          err?.message ||
+          "No se pudo guardar el detalle.",
+        loadingSave: false,
+      });
     }
   };
 
   resetForm = () => {
     this.setState({
-      form: { porcentaje: '', idMusculo: '', idEjercicio: '' },
+      form: { porcentaje: "", idMusculo: "", idEjercicio: "", idTipo: "" },
       isEditing: false,
       editingId: null,
       errorSave: null,
@@ -149,11 +195,21 @@ class Detalle_Musculo extends Component {
   };
 
   editRow = (item) => {
+    const safeIdMusculo =
+      typeof item.idMusculo === "object" ? item.idMusculo.id : item.idMusculo;
+    const safeIdEjercicio =
+      typeof item.idEjercicio === "object"
+        ? item.idEjercicio.id
+        : item.idEjercicio;
+    const safeIdTipo =
+      typeof item.idTipo === "object" ? item.idTipo.id : item.idTipo;
+
     this.setState({
       form: {
-        porcentaje: item.porcentaje,
-        idMusculo: String(item.idMusculo),
-        idEjercicio: String(item.idEjercicio),
+        porcentaje: item.porcentaje ?? "",
+        idMusculo: safeIdMusculo != null ? String(safeIdMusculo) : "",
+        idEjercicio: safeIdEjercicio != null ? String(safeIdEjercicio) : "",
+        idTipo: safeIdTipo != null ? String(safeIdTipo) : "",
       },
       isEditing: true,
       editingId: item.id,
@@ -161,7 +217,7 @@ class Detalle_Musculo extends Component {
       successSave: null,
       errorsByField: {},
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   removeRow = async (item) => {
@@ -170,15 +226,20 @@ class Detalle_Musculo extends Component {
       await DetalleMusculoService.delete(item.id);
       this.setState((prev) => ({
         items: prev.items.filter((x) => x.id !== item.id),
-        successSave: 'Detalle eliminado exitosamente',
+        successSave: "Detalle eliminado exitosamente",
       }));
     } catch (err) {
-      this.setState({ errorSave: err.message });
+      this.setState({
+        errorSave:
+          err?.response?.data?.detail ||
+          err?.message ||
+          "No se pudo eliminar el detalle.",
+      });
     }
   };
 
   // ================== COMPONENTES DE UI ==================
-  renderField(label, name, type = 'text', props = {}) {
+  renderField(label, name, type = "text", props = {}) {
     const { form, errorsByField } = this.state;
     const hasError = Boolean(errorsByField?.[name]);
     return (
@@ -190,17 +251,17 @@ class Detalle_Musculo extends Component {
           id={name}
           name={name}
           type={type}
-          value={form[name] || ''}
+          value={form[name] || ""}
           onChange={this.handleChange}
           className={`px-4 py-3 rounded-xl bg-white/10 border ${
-            hasError ? 'border-red-400' : 'border-white/20'
+            hasError ? "border-red-400" : "border-white/20"
           } text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/40`}
           {...props}
         />
         {hasError && (
           <span className="text-red-300 text-xs">
             {Array.isArray(errorsByField[name])
-              ? errorsByField[name].join(', ')
+              ? errorsByField[name].join(", ")
               : String(errorsByField[name])}
           </span>
         )}
@@ -213,14 +274,13 @@ class Detalle_Musculo extends Component {
     const hasError = Boolean(errorsByField?.[name]);
     const safeOptions = Array.isArray(options) ? options : [];
 
-    // estilos inline para que el desplegable NO sea blanco
     const selectStyle = {
-      backgroundColor: 'rgba(255,255,255,0.08)',
-      color: '#ffffff',
+      backgroundColor: "rgba(255,255,255,0.08)",
+      color: "#ffffff",
     };
     const optionStyle = {
-      backgroundColor: '#111827', // gris muy oscuro
-      color: '#ffffff',
+      backgroundColor: "#111827",
+      color: "#ffffff",
     };
 
     return (
@@ -231,11 +291,11 @@ class Detalle_Musculo extends Component {
         <select
           id={name}
           name={name}
-          value={form[name] || ''}
+          value={form[name] || ""}
           onChange={this.handleChange}
           style={selectStyle}
           className={`px-4 py-3 rounded-xl border ${
-            hasError ? 'border-red-400' : 'border-white/20'
+            hasError ? "border-red-400" : "border-white/20"
           } text-white focus:outline-none focus:ring-2 focus:ring-white/40`}
         >
           <option value="" style={optionStyle}>
@@ -254,7 +314,7 @@ class Detalle_Musculo extends Component {
         {hasError && (
           <span className="text-red-300 text-xs">
             {Array.isArray(errorsByField[name])
-              ? errorsByField[name].join(', ')
+              ? errorsByField[name].join(", ")
               : String(errorsByField[name])}
           </span>
         )}
@@ -271,6 +331,7 @@ class Detalle_Musculo extends Component {
       isEditing,
       musculos,
       ejercicios,
+      tipos,
       items,
       currentPage,
       pageSize,
@@ -282,7 +343,6 @@ class Detalle_Musculo extends Component {
       ? this.getPagedItems()
       : [];
 
-    // previews seleccionados en el formulario
     const selectedMusculo = form.idMusculo
       ? this.findMusculo(form.idMusculo)
       : null;
@@ -312,24 +372,26 @@ class Detalle_Musculo extends Component {
           {/* FORMULARIO */}
           <form onSubmit={this.handleSubmit} className="mb-8 space-y-6">
             <div className="grid md:grid-cols-2 gap-4">
-              {this.renderField('Porcentaje', 'porcentaje', 'text', {
-                placeholder: 'Ej: 75%',
+              {this.renderField("Porcentaje", "porcentaje", "text", {
+                placeholder: "Ej: 75%",
               })}
-              {this.renderSelect(
-                'Músculo',
-                'idMusculo',
-                musculos,
-                'id',
-                'nombre'
-              )}
+              {this.renderSelect("Tipo", "idTipo", tipos, "id", "nombre")}
             </div>
-            <div className="grid md:grid-cols-1 gap-4">
+
+            <div className="grid md:grid-cols-2 gap-4">
               {this.renderSelect(
-                'Ejercicio',
-                'idEjercicio',
+                "Músculo",
+                "idMusculo",
+                musculos,
+                "id",
+                "nombre"
+              )}
+              {this.renderSelect(
+                "Ejercicio",
+                "idEjercicio",
                 ejercicios,
-                'id',
-                'nombre'
+                "id",
+                "nombre"
               )}
             </div>
 
@@ -391,10 +453,10 @@ class Detalle_Musculo extends Component {
                 className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loadingSave
-                  ? 'Guardando...'
+                  ? "Guardando..."
                   : isEditing
-                  ? 'Actualizar'
-                  : 'Crear'}
+                  ? "Actualizar"
+                  : "Crear"}
               </button>
               {isEditing && (
                 <button
@@ -419,6 +481,7 @@ class Detalle_Musculo extends Component {
                 {pagedItems.map((item) => {
                   const musculo = this.findMusculo(item.idMusculo);
                   const ejercicio = this.findEjercicio(item.idEjercicio);
+                  const tipoNombre = this.getTipoNombre(item.idTipo, item);
 
                   return (
                     <div
@@ -429,7 +492,6 @@ class Detalle_Musculo extends Component {
                         Detalle #{item.id}
                       </p>
 
-                      {/* Imágenes en la card */}
                       <div className="flex gap-3 mb-4">
                         <div className="flex-1">
                           {musculo?.url && (
@@ -440,7 +502,7 @@ class Detalle_Musculo extends Component {
                             />
                           )}
                           <p className="text-xs text-white/70">
-                            <span className="font-semibold">Músculo:</span>{' '}
+                            <span className="font-semibold">Músculo:</span>{" "}
                             {musculo ? musculo.nombre : item.idMusculo}
                           </p>
                         </div>
@@ -453,15 +515,19 @@ class Detalle_Musculo extends Component {
                             />
                           )}
                           <p className="text-xs text-white/70">
-                            <span className="font-semibold">Ejercicio:</span>{' '}
+                            <span className="font-semibold">Ejercicio:</span>{" "}
                             {ejercicio ? ejercicio.nombre : item.idEjercicio}
                           </p>
                         </div>
                       </div>
 
-                      <p className="text-sm text-white/80 mb-4">
-                        <span className="font-semibold">Porcentaje:</span>{' '}
+                      <p className="text-sm text-white/80 mb-1">
+                        <span className="font-semibold">Porcentaje:</span>{" "}
                         {item.porcentaje}
+                      </p>
+                      <p className="text-sm text-white/80 mb-4">
+                        <span className="font-semibold">Tipo:</span>{" "}
+                        {tipoNombre}
                       </p>
 
                       <div className="flex gap-2">

@@ -26,11 +26,47 @@ class Ejercicio_Asignado extends Component {
 
     currentPage: 1,
     pageSize: 5,
+
+    // 👇 para hacer el texto del select responsive
+    isMobile: false,
   };
 
   componentDidMount() {
     this.fetchAll();
+    this.setupMediaQuery();
   }
+
+  componentWillUnmount() {
+    if (this._mq && this._mq.mq && this._mq.handleChange) {
+      const { mq, handleChange } = this._mq;
+      if (mq.removeEventListener) {
+        mq.removeEventListener("change", handleChange);
+      } else if (mq.removeListener) {
+        mq.removeListener(handleChange);
+      }
+    }
+  }
+
+  // ================== MEDIA QUERY PARA MÓVIL ==================
+  setupMediaQuery = () => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+
+    const mq = window.matchMedia("(max-width: 640px)");
+    const handleChange = (e) => {
+      this.setState({ isMobile: e.matches });
+    };
+
+    // estado inicial
+    handleChange(mq);
+
+    if (mq.addEventListener) {
+      mq.addEventListener("change", handleChange);
+    } else if (mq.addListener) {
+      mq.addListener(handleChange);
+    }
+
+    this._mq = { mq, handleChange };
+  };
 
   // =============== CARGA INICIAL =================
   fetchAll = async () => {
@@ -49,7 +85,6 @@ class Ejercicio_Asignado extends Component {
         musculos: Array.isArray(musculos) ? musculos : [],
         ejercicios: Array.isArray(ejercicios) ? ejercicios : [],
         loadingList: false,
-        // si cambió el tamaño de la lista, aseguro que currentPage sea válido
         currentPage:
           prev.currentPage > 1 &&
           (Array.isArray(asignados) ? asignados.length : 0) <=
@@ -89,6 +124,21 @@ class Ejercicio_Asignado extends Component {
     const { ejercicios } = this.state;
     const numId = Number(id);
     return ejercicios.find((e) => Number(e.id) === numId);
+  };
+
+  // 👉 helper para sacar el nombre del tipo desde el detalle
+  getTipoNombreFromDetalle = (detalle) => {
+    if (!detalle) return "Sin tipo";
+
+    if (detalle.tipo && detalle.tipo.nombre) return detalle.tipo.nombre;
+
+    if (detalle.idTipo && typeof detalle.idTipo === "object") {
+      if (detalle.idTipo.nombre) return detalle.idTipo.nombre;
+      if (detalle.idTipo.id != null) return `Tipo #${detalle.idTipo.id}`;
+    }
+
+    if (detalle.idTipo != null) return `Tipo #${detalle.idTipo}`;
+    return "Sin tipo";
   };
 
   // =============== FORM =================
@@ -232,7 +282,7 @@ class Ejercicio_Asignado extends Component {
     const hasError = Boolean(errorsByField?.[name]);
 
     return (
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 w-full">
         <label className="text-white/80 text-sm" htmlFor={name}>
           {label}
         </label>
@@ -242,7 +292,7 @@ class Ejercicio_Asignado extends Component {
           type={type}
           value={form[name] || ""}
           onChange={this.handleChange}
-          className={`px-4 py-3 rounded-xl bg-white/10 border ${
+          className={`w-full px-4 py-3 rounded-xl bg-white/10 border ${
             hasError ? "border-red-400" : "border-white/20"
           } text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/40`}
           {...props}
@@ -259,13 +309,13 @@ class Ejercicio_Asignado extends Component {
   }
 
   renderSelectDetalle() {
-    const { form, errorsByField, detalles } = this.state;
+    const { form, errorsByField, detalles, isMobile } = this.state;
     const hasError = Boolean(errorsByField?.idDetalleMusculo);
 
     const safeDetalles = Array.isArray(detalles) ? detalles : [];
 
     return (
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 w-full">
         <label className="text-white/80 text-sm" htmlFor="idDetalleMusculo">
           Detalle de músculo
         </label>
@@ -274,7 +324,7 @@ class Ejercicio_Asignado extends Component {
           name="idDetalleMusculo"
           value={form.idDetalleMusculo || ""}
           onChange={this.handleChange}
-          className={`px-4 py-3 rounded-xl bg-white/10 border ${
+          className={`w-full px-4 py-3 rounded-xl bg-white/10 border ${
             hasError ? "border-red-400" : "border-white/20"
           } text-white focus:outline-none focus:ring-2 focus:ring-white/40`}
         >
@@ -284,12 +334,30 @@ class Ejercicio_Asignado extends Component {
           {safeDetalles.map((detalle) => {
             const musculo = this.findMusculo(detalle.idMusculo);
             const ejercicio = this.findEjercicio(detalle.idEjercicio);
-            const labelParts = [];
-            if (musculo) labelParts.push(`Músculo: ${musculo.nombre}`);
-            if (ejercicio) labelParts.push(`Ejercicio: ${ejercicio.nombre}`);
+            const tipoNombre = this.getTipoNombreFromDetalle(detalle);
+
+            // versión completa (escritorio)
+            const fullParts = [];
+            if (tipoNombre) fullParts.push(`[${tipoNombre}]`);
+            if (musculo) fullParts.push(`Músculo: ${musculo.nombre}`);
+            if (ejercicio) fullParts.push(`Ejercicio: ${ejercicio.nombre}`);
             if (detalle.porcentaje)
-              labelParts.push(`Activación: ${detalle.porcentaje}`);
-            const label = labelParts.join(" · ") || `Detalle #${detalle.id}`;
+              fullParts.push(`Activación: ${detalle.porcentaje}`);
+            const fullLabel =
+              fullParts.join(" · ") || `Detalle #${detalle.id}`;
+
+            // versión corta (móvil)
+            const shortParts = [];
+            if (tipoNombre) shortParts.push(`[${tipoNombre}]`);
+            if (musculo) shortParts.push(musculo.nombre);
+            if (ejercicio) shortParts.push(ejercicio.nombre);
+            let shortLabel =
+              shortParts.join(" · ") || `Detalle #${detalle.id}`;
+            if (shortLabel.length > 40) {
+              shortLabel = shortLabel.slice(0, 37) + "…";
+            }
+
+            const label = isMobile ? shortLabel : fullLabel;
 
             return (
               <option
@@ -339,29 +407,30 @@ class Ejercicio_Asignado extends Component {
     const selectedEjercicio = selectedDetalle
       ? this.findEjercicio(selectedDetalle.idEjercicio)
       : null;
+    const selectedTipoNombre = this.getTipoNombreFromDetalle(selectedDetalle);
 
     return (
-      <main className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4">
-        <section className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 md:p-12 max-w-6xl w-full border border-white/20 text-white">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 mb-6 text-center">
+      <main className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 px-3 py-4 sm:p-4">
+        <section className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-5 sm:p-8 md:p-12 max-w-6xl w-full border border-white/20 text-white">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 mb-6 text-center">
             Gestionar Ejercicios Asignados
           </h1>
 
           {/* Mensajes */}
           {successSave && (
-            <div className="mb-4 p-4 bg-green-500/20 border border-green-500/50 rounded-xl text-green-200">
+            <div className="mb-4 p-4 bg-green-500/20 border border-green-500/50 rounded-xl text-green-200 text-sm">
               {successSave}
             </div>
           )}
           {errorSave && (
-            <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-200">
+            <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-200 text-sm">
               Error: {errorSave}
             </div>
           )}
 
           {/* FORMULARIO */}
           <form onSubmit={this.handleSubmit} className="mb-8 space-y-6">
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {this.renderSelectDetalle()}
               {this.renderField("Series", "series", "number", {
                 placeholder: "Ej: 4",
@@ -369,34 +438,40 @@ class Ejercicio_Asignado extends Component {
               })}
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {this.renderField("Repeticiones", "repeticiones", "number", {
                 placeholder: "Ej: 12",
                 min: 1,
               })}
 
               {/* PREVIEW RESUMEN DEL DETALLE SELECCIONADO */}
-              <div className="bg-white/5 rounded-2xl p-4 border border-white/10 flex flex-col md:flex-row gap-3 items-center">
-                {selectedMusculo?.url && (
-                  <img
-                    src={selectedMusculo.url}
-                    alt={selectedMusculo.nombre}
-                    className="w-20 h-20 object-cover rounded-xl border border-white/20"
-                  />
-                )}
-                {selectedEjercicio?.url && (
-                  <img
-                    src={selectedEjercicio.url}
-                    alt={selectedEjercicio.nombre}
-                    className="w-20 h-20 object-cover rounded-xl border border-white/20"
-                  />
-                )}
-                <div className="text-xs text-white/80 text-left">
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/10 flex flex-col sm:flex-row gap-3 sm:items-center">
+                <div className="flex gap-3 justify-center sm:justify-start">
+                  {selectedMusculo?.url && (
+                    <img
+                      src={selectedMusculo.url}
+                      alt={selectedMusculo.nombre}
+                      className="w-20 h-20 object-cover rounded-xl border border-white/20"
+                    />
+                  )}
+                  {selectedEjercicio?.url && (
+                    <img
+                      src={selectedEjercicio.url}
+                      alt={selectedEjercicio.nombre}
+                      className="w-20 h-20 object-cover rounded-xl border border-white/20"
+                    />
+                  )}
+                </div>
+                <div className="text-xs sm:text-sm text-white/80 text-left mt-2 sm:mt-0">
                   <p className="font-semibold mb-1">
                     Resumen del detalle seleccionado
                   </p>
                   {selectedDetalle ? (
                     <>
+                      <p>
+                        <span className="font-semibold">Tipo:</span>{" "}
+                        {selectedTipoNombre}
+                      </p>
                       <p>
                         <span className="font-semibold">Músculo:</span>{" "}
                         {selectedMusculo
@@ -423,11 +498,11 @@ class Ejercicio_Asignado extends Component {
               </div>
             </div>
 
-            <div className="flex gap-3 justify-center mt-4">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
               <button
                 type="submit"
                 disabled={loadingSave}
-                className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               >
                 {loadingSave
                   ? "Guardando..."
@@ -439,7 +514,7 @@ class Ejercicio_Asignado extends Component {
                 <button
                   type="button"
                   onClick={this.resetForm}
-                  className="px-6 py-3 rounded-full border-2 border-white/30 hover:border-white/60 text-white font-semibold transition hover:bg-white/10"
+                  className="w-full sm:w-auto px-6 py-3 rounded-full border-2 border-white/30 hover:border-white/60 text-white font-semibold transition hover:bg-white/10 text-sm sm:text-base"
                 >
                   Cancelar
                 </button>
@@ -454,7 +529,7 @@ class Ejercicio_Asignado extends Component {
             </div>
           ) : (
             <>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-left">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 text-left">
                 {pagedItems.map((item) => {
                   const detalle = this.findDetalle(item.idDetalleMusculo);
                   const musculo = detalle
@@ -463,13 +538,14 @@ class Ejercicio_Asignado extends Component {
                   const ejercicio = detalle
                     ? this.findEjercicio(detalle.idEjercicio)
                     : null;
+                  const tipoNombre = this.getTipoNombreFromDetalle(detalle);
 
                   return (
                     <div
                       key={item.id}
-                      className="rounded-2xl p-6 bg-white/10 hover:bg-white/20 border border-white/20 transition-all shadow-lg"
+                      className="rounded-2xl p-5 sm:p-6 bg-white/10 hover:bg-white/20 border border-white/20 transition-all shadow-lg flex flex-col h-full"
                     >
-                      <p className="text-xs text-white/60 mb-2">
+                      <p className="text-[11px] sm:text-xs text-white/60 mb-2">
                         Ejercicio asignado #{item.id}
                       </p>
 
@@ -479,7 +555,7 @@ class Ejercicio_Asignado extends Component {
                             <img
                               src={musculo.url}
                               alt={musculo.nombre}
-                              className="w-full h-24 object-cover rounded-xl border border-white/20 mb-1"
+                              className="w-full h-24 sm:h-28 object-cover rounded-xl border border-white/20 mb-1"
                             />
                           )}
                           <p className="text-xs text-white/70">
@@ -492,7 +568,7 @@ class Ejercicio_Asignado extends Component {
                             <img
                               src={ejercicio.url}
                               alt={ejercicio.nombre}
-                              className="w-full h-24 object-cover rounded-xl border border-white/20 mb-1"
+                              className="w-full h-24 sm:h-28 object-cover rounded-xl border border-white/20 mb-1"
                             />
                           )}
                           <p className="text-xs text-white/70">
@@ -503,10 +579,16 @@ class Ejercicio_Asignado extends Component {
                       </div>
 
                       {detalle && (
-                        <p className="text-xs text-white/70 mb-2">
-                          <span className="font-semibold">Activación:</span>{" "}
-                          {detalle.porcentaje}
-                        </p>
+                        <>
+                          <p className="text-xs text-white/70 mb-1">
+                            <span className="font-semibold">Tipo:</span>{" "}
+                            {tipoNombre}
+                          </p>
+                          <p className="text-xs text-white/70 mb-2">
+                            <span className="font-semibold">Activación:</span>{" "}
+                            {detalle.porcentaje}
+                          </p>
+                        </>
                       )}
 
                       <p className="text-sm text-white/80 mb-4">
@@ -514,16 +596,16 @@ class Ejercicio_Asignado extends Component {
                         {item.series} x {item.repeticiones}
                       </p>
 
-                      <div className="flex gap-2">
+                      <div className="mt-auto flex flex-col sm:flex-row gap-2">
                         <button
                           onClick={() => this.editRow(item)}
-                          className="flex-1 px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
+                          className="w-full sm:w-auto flex-1 px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold transition text-sm"
                         >
                           Editar
                         </button>
                         <button
                           onClick={() => this.removeRow(item)}
-                          className="flex-1 px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white font-semibold transition"
+                          className="w-full sm:w-auto flex-1 px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white font-semibold transition text-sm"
                         >
                           Eliminar
                         </button>
@@ -534,22 +616,23 @@ class Ejercicio_Asignado extends Component {
               </div>
 
               {pagedItems.length === 0 && (
-                <p className="text-center text-white/60 mt-8">
+                <p className="text-center text-white/60 mt-8 text-sm">
                   No hay ejercicios asignados todavía.
                 </p>
               )}
 
-              {/* ✅ AQUÍ USAMOS TU NUEVO COMPONENTE DE PAGINACIÓN */}
-              <Paginacion
-                currentPage={currentPage}
-                totalItems={items.length}
-                pageSize={pageSize}
-                onPageChange={(page) => this.setState({ currentPage: page })}
-              />
+              <div className="mt-6">
+                <Paginacion
+                  currentPage={currentPage}
+                  totalItems={items.length}
+                  pageSize={pageSize}
+                  onPageChange={(page) => this.setState({ currentPage: page })}
+                />
+              </div>
             </>
           )}
 
-          <footer className="mt-8 text-white/40 text-xs text-center">
+          <footer className="mt-8 text-white/40 text-[11px] sm:text-xs text-center">
             Coach Virtual &copy; {new Date().getFullYear()}
           </footer>
         </section>

@@ -4,6 +4,7 @@ from .controllers.musculo_controller import MusculoController
 from .controllers.ejercicio_controller import EjercicioController
 from .controllers.detalle_musculo_controller import DetalleMusculoController
 from .controllers.ejercicio_asignado_controller import EjercicioAsignadoController
+from .controllers.tipo_controller import TipoController   # 🔹 nuevo import
 
 urlpatterns = [
     # /api/musculos/
@@ -21,4 +22,8 @@ urlpatterns = [
     # /api/ejercicios-asignados/
     path('ejercicios-asignados/', EjercicioAsignadoController.as_view(), name='ejercicios-asignados'),
     path('ejercicios-asignados/<int:pk>/', EjercicioAsignadoController.as_view(), name='ejercicio-asignado-detail'),
+
+    # /api/tipos/
+    path('tipos/', TipoController.as_view(), name='tipos'),
+    path('tipos/<int:pk>/', TipoController.as_view(), name='tipo-detail'),
 ]

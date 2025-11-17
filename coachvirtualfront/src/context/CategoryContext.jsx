@@ -4,19 +4,23 @@ import { createContext, useContext, useState } from "react";
 const CategoryContext = createContext(null);
 
 export function CategoryProvider({ children }) {
-  const [category, setCategory] = useState(
-    () => localStorage.getItem("cv.category") || null // "gym" | "fisio" | null
-  );
+  const [category, setCategory] = useState(() => {
+    const raw = localStorage.getItem("cv.category");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw); // { id, nombre } si ya guardamos así
+    } catch {
+      // por si tenías antes "gym"/"fisio"
+      return raw;
+    }
+  });
 
-  // ✅ ahora son varios músculos seleccionados
   const [selectedMuscleIds, setSelectedMuscleIds] = useState([]); // number[]
-  // ✅ ya tenías varios detalles seleccionados
   const [selectedDetalleIds, setSelectedDetalleIds] = useState([]); // number[]
 
   const chooseCategory = (value) => {
     setCategory(value);
-    localStorage.setItem("cv.category", value);
-    // al cambiar categoría limpiamos el flujo
+    localStorage.setItem("cv.category", JSON.stringify(value));
     setSelectedMuscleIds([]);
     setSelectedDetalleIds([]);
   };
@@ -28,24 +32,18 @@ export function CategoryProvider({ children }) {
     setSelectedDetalleIds([]);
   };
 
-  // ✅ marcar / desmarcar un músculo
   const toggleMuscle = (id) => {
     const numId = Number(id);
     setSelectedMuscleIds((prev) =>
-      prev.includes(numId)
-        ? prev.filter((x) => x !== numId)
-        : [...prev, numId]
+      prev.includes(numId) ? prev.filter((x) => x !== numId) : [...prev, numId]
     );
-    // si cambian los músculos, reseteo los detalles
     setSelectedDetalleIds([]);
   };
 
   const toggleDetalle = (id) => {
     const numId = Number(id);
     setSelectedDetalleIds((prev) =>
-      prev.includes(numId)
-        ? prev.filter((x) => x !== numId)
-        : [...prev, numId]
+      prev.includes(numId) ? prev.filter((x) => x !== numId) : [...prev, numId]
     );
   };
 
@@ -60,13 +58,10 @@ export function CategoryProvider({ children }) {
         category,
         chooseCategory,
         clearCategory,
-
         selectedMuscleIds,
         toggleMuscle,
-
         selectedDetalleIds,
         toggleDetalle,
-
         resetFlow,
       }}
     >
