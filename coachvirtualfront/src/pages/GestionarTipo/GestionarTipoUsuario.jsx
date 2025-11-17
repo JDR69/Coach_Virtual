@@ -15,14 +15,17 @@ export default function GestionarTipoUsuario() {
   const pick = (tipo) => {
     // 👉 guardamos el tipo elegido en el contexto
     chooseCategory(tipo); // { id, nombre, estado, ... }
-    navigate("/mis-musculos", { replace: true });
+
+    // IMPORTANTE: sin { replace: true } para que el botón "Volver"
+    // en MusculoUsuario pueda regresar a esta pantalla.
+    navigate("/mis-musculos");
   };
 
   const load = async () => {
     setLoading(true);
     setErr(null);
     try {
-      const data = await TipoService.listActivos(); // o getAll() si quieres ver todos
+      const data = await TipoService.listActivos(); // o getAll()
       const sorted = [...(data || [])].sort(
         (a, b) => (b.id || 0) - (a.id || 0)
       );

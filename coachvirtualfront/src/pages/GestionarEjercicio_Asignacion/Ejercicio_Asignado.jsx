@@ -1,4 +1,3 @@
-// src/pages/ejercicio-asignado/Ejercicio_Asignado.jsx
 import React, { Component } from "react";
 import EjercicioAsignadoService from "../../services/Ejercicio_AsignadoService.js";
 import DetalleMusculoService from "../../services/DetalleMusculoService.js";
@@ -10,7 +9,7 @@ class Ejercicio_Asignado extends Component {
   state = {
     form: { idDetalleMusculo: "", series: "", repeticiones: "" },
 
-    items: [], // ejercicios asignados
+    items: [],
     detalles: [],
     musculos: [],
     ejercicios: [],
@@ -27,8 +26,10 @@ class Ejercicio_Asignado extends Component {
     currentPage: 1,
     pageSize: 5,
 
-    // 👇 para hacer el texto del select responsive
     isMobile: false,
+
+    // para ver imágenes grandes
+    selectedImage: null,
   };
 
   componentDidMount() {
@@ -56,7 +57,6 @@ class Ejercicio_Asignado extends Component {
       this.setState({ isMobile: e.matches });
     };
 
-    // estado inicial
     handleChange(mq);
 
     if (mq.addEventListener) {
@@ -66,6 +66,16 @@ class Ejercicio_Asignado extends Component {
     }
 
     this._mq = { mq, handleChange };
+  };
+
+  // ================== MODAL DE IMAGEN ==================
+  openImageModal = (url, title) => {
+    if (!url) return;
+    this.setState({ selectedImage: { url, title } });
+  };
+
+  closeImageModal = () => {
+    this.setState({ selectedImage: null });
   };
 
   // =============== CARGA INICIAL =================
@@ -126,7 +136,6 @@ class Ejercicio_Asignado extends Component {
     return ejercicios.find((e) => Number(e.id) === numId);
   };
 
-  // 👉 helper para sacar el nombre del tipo desde el detalle
   getTipoNombreFromDetalle = (detalle) => {
     if (!detalle) return "Sin tipo";
 
@@ -336,7 +345,6 @@ class Ejercicio_Asignado extends Component {
             const ejercicio = this.findEjercicio(detalle.idEjercicio);
             const tipoNombre = this.getTipoNombreFromDetalle(detalle);
 
-            // versión completa (escritorio)
             const fullParts = [];
             if (tipoNombre) fullParts.push(`[${tipoNombre}]`);
             if (musculo) fullParts.push(`Músculo: ${musculo.nombre}`);
@@ -346,7 +354,6 @@ class Ejercicio_Asignado extends Component {
             const fullLabel =
               fullParts.join(" · ") || `Detalle #${detalle.id}`;
 
-            // versión corta (móvil)
             const shortParts = [];
             if (tipoNombre) shortParts.push(`[${tipoNombre}]`);
             if (musculo) shortParts.push(musculo.nombre);
@@ -393,6 +400,7 @@ class Ejercicio_Asignado extends Component {
       pageSize,
       form,
       loadingList,
+      selectedImage,
     } = this.state;
 
     const rawPaged = this.getPagedItems();
@@ -416,7 +424,6 @@ class Ejercicio_Asignado extends Component {
             Gestionar Ejercicios Asignados
           </h1>
 
-          {/* Mensajes */}
           {successSave && (
             <div className="mb-4 p-4 bg-green-500/20 border border-green-500/50 rounded-xl text-green-200 text-sm">
               {successSave}
@@ -448,18 +455,40 @@ class Ejercicio_Asignado extends Component {
               <div className="bg-white/5 rounded-2xl p-4 border border-white/10 flex flex-col sm:flex-row gap-3 sm:items-center">
                 <div className="flex gap-3 justify-center sm:justify-start">
                   {selectedMusculo?.url && (
-                    <img
-                      src={selectedMusculo.url}
-                      alt={selectedMusculo.nombre}
-                      className="w-20 h-20 object-cover rounded-xl border border-white/20"
-                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        this.openImageModal(
+                          selectedMusculo.url,
+                          selectedMusculo.nombre
+                        )
+                      }
+                      className="focus:outline-none"
+                    >
+                      <img
+                        src={selectedMusculo.url}
+                        alt={selectedMusculo.nombre}
+                        className="w-24 h-24 object-contain rounded-xl border border-white/20 bg-black/40"
+                      />
+                    </button>
                   )}
                   {selectedEjercicio?.url && (
-                    <img
-                      src={selectedEjercicio.url}
-                      alt={selectedEjercicio.nombre}
-                      className="w-20 h-20 object-cover rounded-xl border border-white/20"
-                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        this.openImageModal(
+                          selectedEjercicio.url,
+                          selectedEjercicio.nombre
+                        )
+                      }
+                      className="focus:outline-none"
+                    >
+                      <img
+                        src={selectedEjercicio.url}
+                        alt={selectedEjercicio.nombre}
+                        className="w-24 h-24 object-contain rounded-xl border border-white/20 bg-black/40"
+                      />
+                    </button>
                   )}
                 </div>
                 <div className="text-xs sm:text-sm text-white/80 text-left mt-2 sm:mt-0">
@@ -552,11 +581,22 @@ class Ejercicio_Asignado extends Component {
                       <div className="flex gap-3 mb-4">
                         <div className="flex-1">
                           {musculo?.url && (
-                            <img
-                              src={musculo.url}
-                              alt={musculo.nombre}
-                              className="w-full h-24 sm:h-28 object-cover rounded-xl border border-white/20 mb-1"
-                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                this.openImageModal(
+                                  musculo.url,
+                                  musculo.nombre
+                                )
+                              }
+                              className="w-full mb-1 rounded-xl overflow-hidden border border-white/20 bg-black/40 focus:outline-none"
+                            >
+                              <img
+                                src={musculo.url}
+                                alt={musculo.nombre}
+                                className="w-full h-32 sm:h-40 object-contain"
+                              />
+                            </button>
                           )}
                           <p className="text-xs text-white/70">
                             <span className="font-semibold">Músculo:</span>{" "}
@@ -565,11 +605,22 @@ class Ejercicio_Asignado extends Component {
                         </div>
                         <div className="flex-1">
                           {ejercicio?.url && (
-                            <img
-                              src={ejercicio.url}
-                              alt={ejercicio.nombre}
-                              className="w-full h-24 sm:h-28 object-cover rounded-xl border border-white/20 mb-1"
-                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                this.openImageModal(
+                                  ejercicio.url,
+                                  ejercicio.nombre
+                                )
+                              }
+                              className="w-full mb-1 rounded-xl overflow-hidden border border-white/20 bg-black/40 focus:outline-none"
+                            >
+                              <img
+                                src={ejercicio.url}
+                                alt={ejercicio.nombre}
+                                className="w-full h-32 sm:h-40 object-contain"
+                              />
+                            </button>
                           )}
                           <p className="text-xs text-white/70">
                             <span className="font-semibold">Ejercicio:</span>{" "}
@@ -636,6 +687,37 @@ class Ejercicio_Asignado extends Component {
             Coach Virtual &copy; {new Date().getFullYear()}
           </footer>
         </section>
+
+        {/* MODAL DE IMAGEN */}
+        {selectedImage && (
+          <div
+            className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4"
+            onClick={this.closeImageModal}
+          >
+            <div
+              className="relative max-w-3xl w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={this.closeImageModal}
+                className="absolute -top-3 -right-3 bg-white text-gray-800 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg hover:bg-gray-200"
+              >
+                ✕
+              </button>
+
+              <img
+                src={selectedImage.url}
+                alt={selectedImage.title}
+                className="w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-white/30 bg-black"
+              />
+
+              <p className="mt-3 text-center text-white/80 text-sm">
+                {selectedImage.title}
+              </p>
+            </div>
+          </div>
+        )}
       </main>
     );
   }

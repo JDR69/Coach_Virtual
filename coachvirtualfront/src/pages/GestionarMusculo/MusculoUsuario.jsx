@@ -7,6 +7,7 @@ import { useCategory } from "../../context/CategoryContext";
 const MusculoUsuario = () => {
   const [musculos, setMusculos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const { selectedMuscleIds, toggleMuscle } = useCategory();
   const navigate = useNavigate();
@@ -33,11 +34,26 @@ const MusculoUsuario = () => {
     navigate("/mis-ejercicios");
   };
 
+  const handleBack = () => {
+    navigate(-1);
+  };
+
   const isSelected = (id) => selectedMuscleIds.includes(Number(id));
 
   return (
     <main className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4">
       <section className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 md:p-12 max-w-5xl w-full text-center border border-white/20">
+        {/* Botón volver */}
+        <div className="mb-4 flex justify-start">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/30 text-sm text-white font-semibold transition"
+          >
+            ← Volver
+          </button>
+        </div>
+
         <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 mb-2">
           Músculos Disponibles
         </h1>
@@ -66,11 +82,20 @@ const MusculoUsuario = () => {
                     } text-white`}
                   >
                     {musculo.url && (
-                      <div className="mb-4">
+                      <div
+                        className="mb-4 rounded-xl overflow-hidden border border-white/20 bg-black/40 cursor-zoom-in"
+                        onClick={(e) => {
+                          e.stopPropagation(); // que no dispare el toggle
+                          setSelectedImage({
+                            url: musculo.url,
+                            title: musculo.nombre,
+                          });
+                        }}
+                      >
                         <img
                           src={musculo.url}
                           alt={musculo.nombre}
-                          className="max-w-full h-auto rounded-xl"
+                          className="w-full h-44 object-contain hover:scale-[1.02] transition-transform"
                         />
                       </div>
                     )}
@@ -108,6 +133,37 @@ const MusculoUsuario = () => {
           Coach Virtual &copy; {new Date().getFullYear()}
         </footer>
       </section>
+
+      {/* Modal de imagen grande */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div
+            className="relative max-w-3xl w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setSelectedImage(null)}
+              className="absolute -top-3 -right-3 bg-white text-gray-800 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg hover:bg-gray-200"
+            >
+              ✕
+            </button>
+
+            <img
+              src={selectedImage.url}
+              alt={selectedImage.title}
+              className="w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-white/30 bg-black"
+            />
+
+            <p className="mt-3 text-center text-white/80 text-sm">
+              {selectedImage.title}
+            </p>
+          </div>
+        </div>
+      )}
     </main>
   );
 };

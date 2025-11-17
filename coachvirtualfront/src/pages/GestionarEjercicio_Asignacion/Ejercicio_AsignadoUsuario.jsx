@@ -67,7 +67,6 @@ const Ejercicio_AsignadoUsuario = () => {
     return ejercicios.find((e) => Number(e.id) === numId);
   };
 
-  // si hay detalles seleccionados, filtramos solo esos ejercicios asignados
   const visibleAsignados =
     selectedDetalleIds.length > 0
       ? asignados.filter((a) =>
@@ -76,17 +75,32 @@ const Ejercicio_AsignadoUsuario = () => {
       : asignados;
 
   const handleGoDetector = () => {
-    navigate("/pose-test"); // o "/biceps-curl" si prefieres
+    navigate("/pose-test");
+  };
+
+  const handleBack = () => {
+    navigate(-1);
   };
 
   return (
     <main className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4">
       <section className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 md:p-12 max-w-6xl w-full border border-white/20 text-white">
+        {/* Botón volver */}
+        <div className="mb-4 flex justify-start">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/30 text-sm text-white font-semibold transition"
+          >
+            ← Volver
+          </button>
+        </div>
+
         <h1 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 mb-2 text-center">
-          Ejercicios Asignados
+          Ejercicios Seleccionados
         </h1>
         <p className="text-center text-white/70 mb-8 text-sm md:text-base">
-          Revisa los ejercicios que tienes asignados y qué músculos trabajan.
+          Estos son los ejercicios que vamos a realizar el dia de hoy, revisa las serie y repeticiones.
         </p>
 
         {loading && (
@@ -133,12 +147,12 @@ const Ejercicio_AsignadoUsuario = () => {
                         onClick={() =>
                           setSelectedImage({ url: imgUrl, title: titulo })
                         }
-                        className="mb-3 rounded-xl overflow-hidden border border-white/20 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="mb-3 rounded-xl overflow-hidden border border-white/20 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-black/40"
                       >
                         <img
                           src={imgUrl}
                           alt={titulo}
-                          className="w-full h-40 object-cover hover:scale-[1.03] transition-transform"
+                          className="w-full h-44 object-contain hover:scale-[1.02] transition-transform"
                         />
                       </button>
                     )}
@@ -191,7 +205,7 @@ const Ejercicio_AsignadoUsuario = () => {
         </footer>
       </section>
 
-      {/* MODAL / LIGHTBOX PARA LA IMAGEN AMPLIADA */}
+      {/* Modal de imagen grande */}
       {selectedImage && (
         <div
           className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4"

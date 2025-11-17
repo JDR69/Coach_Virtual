@@ -1,11 +1,10 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import {
   Home,
   UserCircle2,
   Cpu,
-  MessageSquareText,
   Users,
   Bell,
   Settings,
@@ -17,6 +16,8 @@ import {
   ListChecks,
   PlayCircle,
   Brain,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 
 const cx = (...c) => c.filter(Boolean).join(" ");
@@ -24,6 +25,7 @@ const cx = (...c) => c.filter(Boolean).join(" ");
 export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
   const { isSuper } = useAuth();
   const location = useLocation();
+  const [muscleOpen, setMuscleOpen] = useState(false); // paquete abierto por defecto
 
   useEffect(() => {
     if (closeOnNavigate && onClose) onClose();
@@ -33,57 +35,60 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
   const principal = useMemo(
     () => [
       { to: "/home", label: "Inicio", icon: Home },
-      
       { to: "/perfil", label: "Perfil", icon: UserCircle2 },
       { to: "/planes", label: "Planes Premium", icon: Crown },
       { to: "/mis-alertas", label: "Mis Alertas", icon: Bell },
 
-     /* { to: "/mis-musculos", label: "Músculo", icon: Dumbbell },
-      { to: "/mis-ejercicios", label: "Mis Ejercicios", icon: Activity },
-      {
-        to: "/mis-ejercicios-asignados",
-        label: "Mis Ejercicios Asignados",
-        icon: ListChecks,
-      },
-     */
-      
-    { to: "/chat-ia", label: "Chat IA", icon: Cpu },
-      { to: "/ia", label: "IA", icon: Brain },
-      { to: "/pose-test", label: "Entrenar con (IA)", icon: PlayCircle },
-      { to: "/biceps-curl", label: "Curl de Bíceps 🤖", icon: Dumbbell },
       { to: "/chat-ia", label: "Chat IA", icon: Cpu },
-      { to:"/seleccionar", label: "Mis Tipos", icon: ListChecks },
+      { to: "/ia", label: "IA", icon: Brain },
+      { to: "/pose-test", label: "Entrenar con IA", icon: PlayCircle },
+      { to: "/biceps-curl", label: "Curl de Bíceps 🤖", icon: Dumbbell },
+      { to: "/seleccionar", label: "Mis Tipos", icon: ListChecks },
     ],
     []
   );
 
+  // Items de administración "normales"
   const admin = useMemo(
     () =>
       isSuper
         ? [
-            
             { to: "/usuarios", label: "Gestionar Usuario", icon: Users },
             { to: "/alertas", label: "Gestionar Alerta", icon: Bell },
-            { to: "/musculos", label: "Gestionar Músculo", icon: Dumbbell },
+          ]
+        : [],
+    [isSuper]
+  );
+
+  // 🧩 Paquete de gestión de músculos (1 al 5) -> se desplegará
+  const musclePackage = useMemo(
+    () =>
+      isSuper
+        ? [
+            {
+              to: "/tipo",
+              label: "1.- Tipos & Categorías",
+              icon: ClipboardList,
+            },
+            {
+              to: "/musculos",
+              label: "2.- Atlas de Músculos",
+              icon: Dumbbell,
+            },
             {
               to: "/ejercicios",
-              label: "Gestionar Ejercicio",
+              label: "3.- Banco de Ejercicios",
               icon: Activity,
             },
             {
               to: "/detalles-musculo",
-              label: "Gestionar Detalle Músculo",
-              icon: ClipboardList,
+              label: "4.- Detalle de Músculos",
+              icon: ListChecks,
             },
             {
               to: "/ejercicios-asignados",
-              label: "Gestionar Ejercicio Asignado",
-              icon: ListChecks,
-            },
-            {
-              to: "/tipo",
-              label: "Gestionar Tipo",
-              icon: ListChecks,
+              label: "5.- Rutinas Asignadas",
+              icon: PlayCircle,
             },
           ]
         : [],
@@ -115,6 +120,7 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
       </header>
 
       <nav className="flex-1 px-2 pr-4 py-3 space-y-5">
+        {/* PRINCIPAL */}
         <SectionTitle>Principal</SectionTitle>
         <ul className="space-y-1">
           {principal.map((i) => (
@@ -126,10 +132,12 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
           ))}
         </ul>
 
+        {/* ADMINISTRACIÓN + PAQUETE DESPLEGABLE */}
         {admin.length > 0 && (
           <>
             <SectionTitle>Administración</SectionTitle>
             <ul className="space-y-1">
+              {/* items normales */}
               {admin.map((i) => (
                 <li key={i.to}>
                   <NavItem to={i.to} icon={i.icon}>
@@ -137,10 +145,46 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
                   </NavItem>
                 </li>
               ))}
+
+              {/* paquete músculos & rutinas */}
+              {musclePackage.length > 0 && (
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => setMuscleOpen((v) => !v)}
+                    className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded hover:bg-gray-700 transition-colors duration-150"
+                  >
+                    <span className="flex items-center gap-3">
+                      <Dumbbell className="w-5 h-5 shrink-0" aria-hidden />
+                      <span className="text-sm font-semibold">
+                        Músculos & Rutinas
+                      </span>
+                    </span>
+                    {muscleOpen ? (
+                      <ChevronDown className="w-4 h-4" aria-hidden />
+                    ) : (
+                      <ChevronRight className="w-4 h-4" aria-hidden />
+                    )}
+                  </button>
+
+                  {muscleOpen && (
+                    <ul className="mt-1 ml-7 space-y-1">
+                      {musclePackage.map((i) => (
+                        <li key={i.to}>
+                          <NavItem to={i.to} icon={i.icon}>
+                            {i.label}
+                          </NavItem>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              )}
             </ul>
           </>
         )}
 
+        {/* OPCIONES */}
         <SectionTitle>Opciones</SectionTitle>
         <ul className="space-y-1">
           {extras.map((i) => (

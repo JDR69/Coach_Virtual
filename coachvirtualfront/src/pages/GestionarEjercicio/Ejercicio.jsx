@@ -1,10 +1,10 @@
-import React, { Component } from 'react';
-import EjercicioService from '../../services/EjercicioService';
-import Paginacion from '../../components/Paginacion';
+import React, { Component } from "react";
+import EjercicioService from "../../services/EjercicioService";
+import Paginacion from "../../components/Paginacion";
 
 class Ejercicio extends Component {
   state = {
-    form: { nombre: '', url: '', estado: true },
+    form: { nombre: "", url: "", estado: true },
     items: [],
     loadingList: false,
     loadingSave: false,
@@ -16,6 +16,8 @@ class Ejercicio extends Component {
     editingId: null,
     currentPage: 1,
     pageSize: 5,
+
+    selectedImage: null,
   };
 
   componentDidMount() {
@@ -35,7 +37,7 @@ class Ejercicio extends Component {
   handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     this.setState((prev) => ({
-      form: { ...prev.form, [name]: type === 'checkbox' ? checked : value },
+      form: { ...prev.form, [name]: type === "checkbox" ? checked : value },
       errorsByField: { ...prev.errorsByField, [name]: undefined },
     }));
   };
@@ -48,15 +50,15 @@ class Ejercicio extends Component {
     if (!files || files.length === 0) return;
 
     const data = new FormData();
-    data.append('file', files[0]);
-    data.append('upload_preset', preset_name);
+    data.append("file", files[0]);
+    data.append("upload_preset", preset_name);
 
     this.setState({ loadingSave: true, errorSave: null });
     try {
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
         {
-          method: 'POST',
+          method: "POST",
           body: data,
         }
       );
@@ -64,11 +66,11 @@ class Ejercicio extends Component {
       this.setState((prev) => ({
         form: { ...prev.form, url: file.secure_url },
         loadingSave: false,
-        successSave: 'Imagen cargada exitosamente',
+        successSave: "Imagen cargada exitosamente",
       }));
     } catch {
       this.setState({
-        errorSave: 'Error al cargar la imagen',
+        errorSave: "Error al cargar la imagen",
         loadingSave: false,
       });
     }
@@ -77,8 +79,8 @@ class Ejercicio extends Component {
   validate = () => {
     const { nombre, url } = this.state.form;
     const errors = {};
-    if (!nombre?.trim()) errors.nombre = 'El nombre es obligatorio';
-    if (!url?.trim()) errors.url = 'La URL es obligatoria';
+    if (!nombre?.trim()) errors.nombre = "El nombre es obligatorio";
+    if (!url?.trim()) errors.url = "La URL es obligatoria";
     this.setState({ errorsByField: errors });
     return Object.keys(errors).length === 0;
   };
@@ -103,14 +105,14 @@ class Ejercicio extends Component {
           items: prev.items.map((item) =>
             item.id === savedItem.id ? savedItem : item
           ),
-          successSave: 'Ejercicio actualizado exitosamente',
+          successSave: "Ejercicio actualizado exitosamente",
           loadingSave: false,
         }));
       } else {
         savedItem = await EjercicioService.create(payload);
         this.setState((prev) => ({
           items: [...prev.items, savedItem],
-          successSave: 'Ejercicio creado exitosamente',
+          successSave: "Ejercicio creado exitosamente",
           loadingSave: false,
         }));
       }
@@ -122,7 +124,7 @@ class Ejercicio extends Component {
 
   resetForm = () => {
     this.setState({
-      form: { nombre: '', url: '', estado: true },
+      form: { nombre: "", url: "", estado: true },
       isEditing: false,
       editingId: null,
       errorSave: null,
@@ -139,7 +141,7 @@ class Ejercicio extends Component {
       errorSave: null,
       successSave: null,
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   removeRow = async (item) => {
@@ -148,7 +150,7 @@ class Ejercicio extends Component {
       await EjercicioService.delete(item.id);
       this.setState((prev) => ({
         items: prev.items.filter((x) => x.id !== item.id),
-        successSave: 'Ejercicio eliminado exitosamente',
+        successSave: "Ejercicio eliminado exitosamente",
       }));
     } catch (err) {
       this.setState({ errorSave: err.message });
@@ -161,7 +163,16 @@ class Ejercicio extends Component {
     return items.slice(start, start + pageSize);
   }
 
-  renderField(label, name, type = 'text', props = {}) {
+  openImageModal = (url, title) => {
+    if (!url) return;
+    this.setState({ selectedImage: { url, title } });
+  };
+
+  closeImageModal = () => {
+    this.setState({ selectedImage: null });
+  };
+
+  renderField(label, name, type = "text", props = {}) {
     const { form, errorsByField } = this.state;
     const hasError = Boolean(errorsByField?.[name]);
     return (
@@ -173,17 +184,17 @@ class Ejercicio extends Component {
           id={name}
           name={name}
           type={type}
-          value={form[name] || ''}
+          value={form[name] || ""}
           onChange={this.handleChange}
           className={`px-4 py-3 rounded-xl bg-white/10 border ${
-            hasError ? 'border-red-400' : 'border-white/20'
+            hasError ? "border-red-400" : "border-white/20"
           } text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/40`}
           {...props}
         />
         {hasError && (
           <span className="text-red-300 text-xs">
             {Array.isArray(errorsByField[name])
-              ? errorsByField[name].join(', ')
+              ? errorsByField[name].join(", ")
               : String(errorsByField[name])}
           </span>
         )}
@@ -201,6 +212,7 @@ class Ejercicio extends Component {
       items,
       currentPage,
       pageSize,
+      selectedImage,
     } = this.state;
 
     const pagedItems = Array.isArray(this.getPagedItems())
@@ -227,8 +239,8 @@ class Ejercicio extends Component {
 
           <form onSubmit={this.handleSubmit} className="mb-8 space-y-4">
             <div className="flex flex-col gap-4">
-              {this.renderField('Nombre', 'nombre', 'text', {
-                placeholder: 'Nombre del ejercicio',
+              {this.renderField("Nombre", "nombre", "text", {
+                placeholder: "Nombre del ejercicio",
               })}
             </div>
 
@@ -254,21 +266,29 @@ class Ejercicio extends Component {
                 onChange={this.handleChange}
                 className="w-5 h-5 rounded border-white/20 bg-white/10 focus:ring-2 focus:ring-white/40"
               />
-              <label
-                className="text-white/80 text-sm"
-                htmlFor="estado"
-              >
+              <label className="text-white/80 text-sm" htmlFor="estado">
                 Activo
               </label>
             </div>
 
             {form.url && (
               <div className="flex justify-center">
-                <img
-                  src={form.url}
-                  alt="Vista previa"
-                  className="max-w-xs h-auto rounded-xl border border-white/20"
-                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    this.openImageModal(
+                      form.url,
+                      form.nombre || "Vista previa del ejercicio"
+                    )
+                  }
+                  className="focus:outline-none"
+                >
+                  <img
+                    src={form.url}
+                    alt="Vista previa"
+                    className="max-w-xs h-52 object-contain rounded-xl border border-white/20 bg-black/40"
+                  />
+                </button>
               </div>
             )}
 
@@ -279,10 +299,10 @@ class Ejercicio extends Component {
                 className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loadingSave
-                  ? 'Guardando...'
+                  ? "Guardando..."
                   : isEditing
-                  ? 'Actualizar'
-                  : 'Crear'}
+                  ? "Actualizar"
+                  : "Crear"}
               </button>
               {isEditing && (
                 <button
@@ -303,22 +323,28 @@ class Ejercicio extends Component {
                 className="rounded-2xl p-6 bg-white/10 hover:bg-white/20 border border-white/20 transition-all shadow-lg"
               >
                 {item.url && (
-                  <img
-                    src={item.url}
-                    alt={item.nombre}
-                    className="w-full h-40 object-cover rounded-xl mb-4"
-                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      this.openImageModal(item.url, item.nombre)
+                    }
+                    className="w-full mb-4 rounded-xl overflow-hidden border border-white/20 bg-black/40 focus:outline-none"
+                  >
+                    <img
+                      src={item.url}
+                      alt={item.nombre}
+                      className="w-full h-44 object-contain"
+                    />
+                  </button>
                 )}
-                <h3 className="text-xl font-semibold mb-2">
-                  {item.nombre}
-                </h3>
+                <h3 className="text-xl font-semibold mb-2">{item.nombre}</h3>
                 <p className="text-sm text-white/70 mb-2">ID: {item.id}</p>
                 <p
                   className={`text-sm mb-4 ${
-                    item.estado ? 'text-green-400' : 'text-red-400'
+                    item.estado ? "text-green-400" : "text-red-400"
                   }`}
                 >
-                  {item.estado ? 'Activo' : 'Inactivo'}
+                  {item.estado ? "Activo" : "Inactivo"}
                 </p>
 
                 <div className="flex gap-2">
@@ -356,6 +382,36 @@ class Ejercicio extends Component {
             Coach Virtual &copy; {new Date().getFullYear()}
           </footer>
         </section>
+
+        {selectedImage && (
+          <div
+            className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4"
+            onClick={this.closeImageModal}
+          >
+            <div
+              className="relative max-w-3xl w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={this.closeImageModal}
+                className="absolute -top-3 -right-3 bg-white text-gray-800 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg hover:bg-gray-200"
+              >
+                ✕
+              </button>
+
+              <img
+                src={selectedImage.url}
+                alt={selectedImage.title}
+                className="w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-white/30 bg-black"
+              />
+
+              <p className="mt-3 text-center text-white/80 text-sm">
+                {selectedImage.title}
+              </p>
+            </div>
+          </div>
+        )}
       </main>
     );
   }

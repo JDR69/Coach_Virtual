@@ -22,14 +22,12 @@ const normalizeId = (value) => {
 const getDetalleTipoId = (detalle) => {
   if (!detalle) return null;
 
-  // 1) campo idTipo puede ser número, string u objeto
   if (detalle.idTipo != null) {
     if (typeof detalle.idTipo === "object") {
       return normalizeId(detalle.idTipo.id ?? detalle.idTipo);
     }
     return normalizeId(detalle.idTipo);
   }
-  // 2) o puede venir solo en detalle.tipo.id
   if (detalle.tipo && detalle.tipo.id != null) {
     return normalizeId(detalle.tipo.id);
   }
@@ -96,17 +94,14 @@ const DetalleMusculoUsuario = () => {
     return ejercicio ? ejercicio.url : null;
   };
 
-  // id del tipo seleccionado (desde el contexto)
   const categoryId = useMemo(() => {
     if (!category) return null;
     if (typeof category === "object" && category.id != null) {
       return normalizeId(category.id);
     }
-    // si por algún motivo quedó guardado como "3" o 3
     return normalizeId(category);
   }, [category]);
 
-  // etiqueta legible del tipo
   const selectedTipoLabel = useMemo(() => {
     if (categoryId == null) return "Todos";
     if (typeof category === "object" && category.nombre) {
@@ -115,16 +110,13 @@ const DetalleMusculoUsuario = () => {
     return `Tipo #${categoryId}`;
   }, [category, categoryId]);
 
-  // ✅ Detalles filtrados por músculos seleccionados + tipo seleccionado
   const filteredDetalles = useMemo(() => {
     return detalles.filter((d) => {
-      // filtro por músculos
       const muscMatch =
         selectedMuscleIds.length > 0
           ? selectedMuscleIds.includes(normalizeId(d.idMusculo))
           : true;
 
-      // filtro por tipo
       const detalleTipoId = getDetalleTipoId(d);
       const tipoMatch =
         categoryId == null ? true : detalleTipoId === categoryId;
@@ -144,9 +136,24 @@ const DetalleMusculoUsuario = () => {
     navigate("/mis-ejercicios-asignados");
   };
 
+  const handleBack = () => {
+    navigate(-1);
+  };
+
   return (
     <main className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4">
       <section className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 md:p-12 max-w-6xl w-full border border-white/20 text-white">
+        {/* Botón volver */}
+        <div className="mb-4 flex justify-start">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/30 text-sm text-white font-semibold transition"
+          >
+            ← Volver
+          </button>
+        </div>
+
         <h1 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 mb-2 text-center">
           Detalles de Músculos Trabajados
         </h1>
@@ -187,7 +194,6 @@ const DetalleMusculoUsuario = () => {
                 const titulo = getEjercicioNombre(detalle.idEjercicio);
                 const isSelected = selectedDetalleIds.includes(detalle.id);
 
-                // 👇 mostramos el nombre del tipo: si hay categoría seleccionada, usamos esa
                 const tipoNombre =
                   categoryId != null
                     ? selectedTipoLabel
@@ -213,12 +219,12 @@ const DetalleMusculoUsuario = () => {
                         onClick={() =>
                           setSelectedImage({ url: imgUrl, title: titulo })
                         }
-                        className="mb-3 rounded-xl overflow-hidden border border-white/20 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="mb-3 rounded-xl overflow-hidden border border-white/20 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-black/40"
                       >
                         <img
                           src={imgUrl}
                           alt={titulo}
-                          className="w-full h-32 object-cover hover:scale-[1.03] transition-transform"
+                          className="w-full h-40 object-contain hover:scale-[1.02] transition-transform"
                         />
                       </button>
                     )}

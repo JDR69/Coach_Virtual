@@ -1,4 +1,3 @@
-// src/pages/GestionarUsuario/Perfil.jsx
 import { useEffect, useMemo, useState } from "react";
 import { fetchMyProfile, updateUser } from "../../services/UsuarioService";
 
@@ -50,7 +49,9 @@ export default function Perfil() {
         if (mounted) setUser(data);
       } catch (err) {
         setError(
-          err?.response?.data?.detail || err?.message || "Error al cargar el perfil."
+          err?.response?.data?.detail ||
+            err?.message ||
+            "Error al cargar el perfil."
         );
       } finally {
         if (mounted) setLoading(false);
@@ -61,7 +62,7 @@ export default function Perfil() {
     };
   }, []);
 
-  // ======= DERIVADOS PARA UI (solo lo que mostramos) =======
+  // ======= DERIVADOS PARA UI =======
   const ui = useMemo(() => {
     if (!user) return null;
 
@@ -71,6 +72,11 @@ export default function Perfil() {
     const generoRaw = user.genero || "";
     const alturaRaw = user.altura ?? "";
     const pesoRaw = user.peso ?? "";
+
+    const planActualRaw = user.plan_actual || "";
+    const fechaPlanRaw = user.fecha_expiracion_plan || "";
+    const tienePlanActivoRaw = !!user.tiene_plan_activo;
+    const puedeEntrenarRaw = !!user.puede_entrenar;
 
     const avatar =
       user.avatar ||
@@ -86,6 +92,13 @@ export default function Perfil() {
       genero: labelGenero(generoRaw) || "—",
       altura: alturaRaw ? `${alturaRaw} m` : "—",
       peso: pesoRaw ? `${pesoRaw} kg` : "—",
+
+      // 👇 campos de plan / suscripción
+      planActual: planActualRaw || "Sin plan",
+      fechaExpiracionPlan: fechaPlanRaw ? formatDate(fechaPlanRaw) : "—",
+      tienePlanActivo: tienePlanActivoRaw,
+      puedeEntrenar: puedeEntrenarRaw,
+
       editable: {
         fecha_nacimiento: formatDate(fechaNacimientoRaw) || "",
         genero: typeof generoRaw === "string" ? generoRaw : "",
@@ -123,16 +136,16 @@ export default function Perfil() {
     }
 
     const updates = {
-      fecha_nacimiento: form.fecha_nacimiento || null, // YYYY-MM-DD
+      fecha_nacimiento: form.fecha_nacimiento || null,
       genero: form.genero || null,
       altura: (form.altura ?? "").toString().trim() || null,
       peso: (form.peso ?? "").toString().trim() || null,
-      // No tocamos email, username, etc.
+      // no tocamos plan_actual ni fecha_expiracion_plan aquí
     };
 
     try {
       const data = await updateUser(ui.id, updates, {
-        mergeWith: user,   // conserva el resto
+        mergeWith: user,
         sanitize: true,
       });
       setUser(data);
@@ -142,7 +155,9 @@ export default function Perfil() {
       const msg =
         err?.response?.data
           ? Object.entries(err.response.data)
-              .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`)
+              .map(([k, v]) =>
+                `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`
+              )
               .join(" | ")
           : err?.message || "No se pudieron guardar los cambios.";
       setSaveError(msg);
@@ -151,10 +166,10 @@ export default function Perfil() {
     }
   }
 
-  // ======= UI (solo los 5 datos) =======
+  // ======= UI =======
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4">
-      <section className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 max-w-lg w-full text-center border border-white/20 animate-fade-in">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4 sm:p-6">
+      <section className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-6 sm:p-8 max-w-lg w-full text-center border border-white/20 animate-fade-in">
         {loading ? (
           <LoaderSkeleton />
         ) : error ? (
@@ -168,18 +183,20 @@ export default function Perfil() {
               <img
                 src={ui.avatar}
                 alt="Avatar"
-                className="w-32 h-32 rounded-full border-4 border-white shadow-lg mb-4 object-cover"
+                className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-lg mb-4 object-cover"
                 onError={(e) => {
                   e.currentTarget.src =
                     "https://randomuser.me/api/portraits/lego/1.jpg";
                 }}
               />
-              {/* Título: email centrado como en tu imagen */}
-              <span className="text-white/70 text-sm">{ui.email}</span>
+              <span className="text-white/70 text-sm break-all">{ui.email}</span>
             </div>
 
             {isEditing ? (
-              <form onSubmit={saveChanges} className="grid grid-cols-1 gap-4 text-left mb-4">
+              <form
+                onSubmit={saveChanges}
+                className="grid grid-cols-1 gap-4 text-left mb-4"
+              >
                 {saveError && (
                   <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-lg">
                     {saveError}
@@ -191,13 +208,30 @@ export default function Perfil() {
                   </div>
                 )}
 
+                {/* Campos solo lectura (identidad / plan) */}
                 <ReadOnlyRow label="Email" value={ui.email} />
+                <ReadOnlyRow label="Plan actual" value={ui.planActual} />
+                <ReadOnlyRow
+                  label="Vence el"
+                  value={ui.fechaExpiracionPlan}
+                />
+                <ReadOnlyRow
+                  label="Plan activo"
+                  value={ui.tienePlanActivo ? "Sí" : "No"}
+                />
+                <ReadOnlyRow
+                  label="Puede entrenar"
+                  value={ui.puedeEntrenar ? "Sí" : "No"}
+                />
 
+                {/* Campos editables */}
                 <Input
                   label="Fecha de nacimiento"
                   type="date"
                   value={form.fecha_nacimiento}
-                  onChange={(v) => setForm((s) => ({ ...s, fecha_nacimiento: v }))}
+                  onChange={(v) =>
+                    setForm((s) => ({ ...s, fecha_nacimiento: v }))
+                  }
                 />
 
                 <Select
@@ -218,21 +252,25 @@ export default function Perfil() {
                   label="Altura (m)"
                   type="text"
                   value={String(form.altura ?? "")}
-                  onChange={(v) => setForm((s) => ({ ...s, altura: v }))}
+                  onChange={(v) =>
+                    setForm((s) => ({ ...s, altura: v }))
+                  }
                   placeholder="Ej: 1.75"
                 />
                 <Input
                   label="Peso (kg)"
                   type="text"
                   value={String(form.peso ?? "")}
-                  onChange={(v) => setForm((s) => ({ ...s, peso: v }))}
+                  onChange={(v) =>
+                    setForm((s) => ({ ...s, peso: v }))
+                  }
                   placeholder="Ej: 70.5"
                 />
 
-                <div className="flex items-center justify-end gap-3 pt-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-2">
                   <button
                     type="button"
-                    className="px-4 py-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition"
+                    className="px-4 py-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition w-full sm:w-auto"
                     onClick={() => {
                       setIsEditing(false);
                       setSaveError("");
@@ -245,7 +283,7 @@ export default function Perfil() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg transition"
+                    className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg transition w-full sm:w-auto"
                   >
                     {saving ? "Guardando..." : "Guardar cambios"}
                   </button>
@@ -259,6 +297,16 @@ export default function Perfil() {
                   <Row label="Género" value={ui.genero} />
                   <Row label="Altura" value={ui.altura} />
                   <Row label="Peso" value={ui.peso} />
+                  <Row label="Plan actual" value={ui.planActual} />
+                  <Row label="Vence el" value={ui.fechaExpiracionPlan} />
+                  <Row
+                    label="Plan activo"
+                    value={ui.tienePlanActivo ? "Sí" : "No"}
+                  />
+                  <Row
+                    label="Puede entrenar"
+                    value={ui.puedeEntrenar ? "Sí" : "No"}
+                  />
                 </div>
 
                 <button
@@ -271,7 +319,9 @@ export default function Perfil() {
             )}
           </>
         ) : (
-          <p className="text-white/80">No se encontró información del usuario.</p>
+          <p className="text-white/80">
+            No se encontró información del usuario.
+          </p>
         )}
       </section>
     </main>
@@ -299,7 +349,14 @@ function ReadOnlyRow({ label, value }) {
   );
 }
 
-function Input({ label, value, onChange, type = "text", placeholder = "", ...rest }) {
+function Input({
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder = "",
+  ...rest
+}) {
   return (
     <label className="block">
       <span className="text-white/80 text-sm">{label}</span>

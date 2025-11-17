@@ -452,10 +452,10 @@ class Alerta extends Component {
               </div>
 
               <Paginacion
-                page={currentPage}
-                total={total}
+                currentPage={currentPage}
+                totalItems={total}
                 pageSize={pageSize}
-                onChange={this.goToPage}
+                onPageChange={this.goToPage}
               />
             </>
           )}

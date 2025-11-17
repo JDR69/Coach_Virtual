@@ -3,7 +3,7 @@ import { useAuth } from "../auth/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useCategory } from "../context/CategoryContext";
 
-const Header = ({ sidebarOpen, onMenuClick }) => {
+const Header = ({ onMenuClick }) => {
   const { user, isAuthenticated, signOut } = useAuth();
   const { category, clearCategory } = useCategory();
   const navigate = useNavigate();

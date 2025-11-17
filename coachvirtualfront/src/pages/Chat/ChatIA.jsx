@@ -26,13 +26,19 @@ export default function ChatIA() {
   }, [messages]);
 
   return (
-    <div style={{ position: "fixed", top: '4rem', right: 0, zIndex: 40 }}>
+    <div className="fixed top-16 right-0 z-40">
       {/* Botón para abrir/cerrar el chat */}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-xs px-3 py-2 text-center inline-flex items-center me-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 shadow-lg"
-        style={{ position: "absolute", right: open ? 320 : 0, top: 48, zIndex: 41, transition: 'right 0.5s cubic-bezier(0.4,0,0.2,1)' }}
+        style={{ 
+          position: "fixed", 
+          right: open ? "calc(min(100vw, 320px))" : 0, 
+          top: 80, 
+          zIndex: 41, 
+          transition: 'right 0.5s cubic-bezier(0.4,0,0.2,1)' 
+        }}
       >
         <svg
           className="w-3 h-3 mr-1"
@@ -52,9 +58,9 @@ export default function ChatIA() {
 
       {/* Panel del chat */}
       <div
-        className={`fixed top-[4rem] right-0 z-40`} // fixed para animación más suave
+        className="fixed top-16 right-0 z-40"
         style={{
-          width: 320,
+          width: "min(100vw, 320px)",
           height: "calc(100vh - 4rem)",
           background: "rgba(30, 41, 59, 0.95)",
           boxShadow: "-2px 0 16px rgba(0,0,0,0.2)",

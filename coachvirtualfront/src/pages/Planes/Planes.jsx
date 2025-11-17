@@ -26,20 +26,20 @@ export default function Planes() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 sm:py-12 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-4">
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-4">
             Elige tu Plan
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-lg sm:text-xl text-gray-600">
             Mejora tu entrenamiento con Coach Virtual
           </p>
           
           {!subscriptionsEnabled && (
             <div className="mt-6 bg-yellow-100 border border-yellow-300 rounded-lg p-4 max-w-2xl mx-auto">
-              <p className="text-yellow-800 font-semibold">
+              <p className="text-sm sm:text-base text-yellow-800 font-semibold">
                 ⚠️ Sistema de suscripciones en preparación - Por ahora todo es gratis
               </p>
             </div>
@@ -48,13 +48,13 @@ export default function Planes() {
           {planActual && (
             <div className="mt-6 bg-white border-2 border-purple-200 rounded-lg p-4 max-w-md mx-auto">
               <p className="text-sm text-gray-600">Tu plan actual:</p>
-              <p className="text-2xl font-bold text-purple-600">{planActual.plan_nombre}</p>
+              <p className="text-xl sm:text-2xl font-bold text-purple-600">{planActual.plan_nombre}</p>
             </div>
           )}
         </div>
 
         {/* Plan Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
           {planCards.map((card) => {
             const plan = PLANES[card.key];
             const isCurrentPlan = planActual?.plan_actual === card.key;
@@ -80,13 +80,13 @@ export default function Planes() {
                   </div>
                 )}
 
-                <div className="p-8">
+                <div className="p-6 sm:p-8">
                   {/* Icon & Title */}
                   <div className="text-center mb-6">
-                    <div className="text-6xl mb-3">{card.icon}</div>
-                    <h3 className="text-3xl font-bold text-gray-800">{plan.nombre}</h3>
+                    <div className="text-5xl sm:text-6xl mb-3">{card.icon}</div>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-gray-800">{plan.nombre}</h3>
                     <div className="mt-4">
-                      <span className="text-5xl font-extrabold text-gray-900">Bs. {plan.precio}</span>
+                      <span className="text-4xl sm:text-5xl font-extrabold text-gray-900">Bs. {plan.precio}</span>
                       <span className="text-gray-500">/mes</span>
                     </div>
                   </div>
@@ -151,7 +151,7 @@ export default function Planes() {
         </div>
 
         {/* Footer info */}
-        <div className="mt-16 text-center text-gray-500 text-sm">
+        <div className="mt-12 sm:mt-16 text-center text-gray-500 text-xs sm:text-sm px-4">
           <p>✨ Todos los planes incluyen acceso a ejercicios de gimnasio y fisioterapia</p>
           <p className="mt-2">💳 Próximamente: Pagos con QR boliviano, tarjetas y más</p>
         </div>
