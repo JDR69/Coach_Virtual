@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import BicepsCurl from './BicepsCurl';
 import Squats from './Squats';
+import Flexiones from './Flexiones';
+import RotacionTronco from './RotacionTronco';
+import Plancha from './Plancha';
 
 export default function EjerciciosPage() {
   const [selectedExercise, setSelectedExercise] = useState('biceps');
@@ -20,6 +23,27 @@ export default function EjerciciosPage() {
       icon: '🦵',
       color: 'emerald',
       description: 'Fortalece piernas y glúteos'
+    },
+    { 
+      id: 'flexiones', 
+      name: 'Flexiones de Pecho', 
+      icon: '🏋️',
+      color: 'orange',
+      description: 'Fortalece pecho y tríceps'
+    },
+    { 
+      id: 'plancha', 
+      name: 'Plancha', 
+      icon: '⏱️',
+      color: 'teal',
+      description: 'Resistencia de core'
+    },
+    { 
+      id: 'rotacion', 
+      name: 'Rotación de Tronco', 
+      icon: '🔄',
+      color: 'purple',
+      description: 'Movilidad de columna (Fisioterapia)'
     }
   ];
 
@@ -29,6 +53,12 @@ export default function EjerciciosPage() {
         return <BicepsCurl />;
       case 'squats':
         return <Squats />;
+      case 'flexiones':
+        return <Flexiones />;
+      case 'plancha':
+        return <Plancha />;
+      case 'rotacion':
+        return <RotacionTronco />;
       default:
         return <BicepsCurl />;
     }
@@ -49,6 +79,9 @@ export default function EjerciciosPage() {
                 const bgColor = isActive 
                   ? exercise.color === 'indigo' ? 'bg-indigo-50 border-indigo-600'
                   : exercise.color === 'emerald' ? 'bg-emerald-50 border-emerald-600'
+                  : exercise.color === 'orange' ? 'bg-orange-50 border-orange-600'
+                  : exercise.color === 'teal' ? 'bg-teal-50 border-teal-600'
+                  : exercise.color === 'purple' ? 'bg-purple-50 border-purple-600'
                   : 'bg-gray-50 border-gray-600'
                   : 'border-gray-200 hover:border-gray-400';
                 

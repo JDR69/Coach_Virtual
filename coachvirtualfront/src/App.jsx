@@ -13,7 +13,7 @@ function AppContent({ sidebarOpen, setSidebarOpen }) {
   // Ocultar sidebar en login, seleccionar y SOLO en /musculo (no en subrutas)
   const hideSidebar =
     location.pathname === "/login" ||
-    location.pathname === "/seleccionar" ||
+    // location.pathname === "/seleccionar" ||  // Comentado temporalmente para desarrollo
     location.pathname === "/musculo";
 
   return (

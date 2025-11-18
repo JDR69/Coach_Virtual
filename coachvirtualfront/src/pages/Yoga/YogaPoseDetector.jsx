@@ -19,7 +19,7 @@ export default function YogaPoseDetector({ onPoseDetected, highlightedAngles = [
   }, [onPoseDetected, highlightedAngles]);
 
   // Función de suavizado exponencial (EMA - Exponential Moving Average)
-  const smoothLandmarks = (newLandmarks, smoothingFactor = 0.5) => {
+  const smoothLandmarks = (newLandmarks, smoothingFactor = 0.2) => {
     if (!smoothedLandmarksRef.current) {
       smoothedLandmarksRef.current = newLandmarks;
       return newLandmarks;
@@ -59,10 +59,10 @@ export default function YogaPoseDetector({ onPoseDetected, highlightedAngles = [
           },
           runningMode: 'VIDEO',
           numPoses: 1,
-          minDetectionConfidence: 0.8,
-          minTrackingConfidence: 0.8,
-          minPoseDetectionConfidence: 0.8,
-          minPosePresenceConfidence: 0.8
+          minDetectionConfidence: 0.7,
+          minTrackingConfidence: 0.7,
+          minPoseDetectionConfidence: 0.7,
+          minPosePresenceConfidence: 0.7
         });
         
         poseLandmarkerRef.current = poseLandmarker;
@@ -147,8 +147,8 @@ export default function YogaPoseDetector({ onPoseDetected, highlightedAngles = [
           if (results.landmarks && results.landmarks.length > 0) {
             const rawLandmarks = results.landmarks[0];
             
-            // Aplicar suavizado para reducir distorsión
-            const landmarks = smoothLandmarks(rawLandmarks, 0.7);
+            // Aplicar suavizado ligero para reducir jitter sin añadir lag
+            const landmarks = smoothLandmarks(rawLandmarks, 0.2);
             
             // Convertir todos los landmarks a coordenadas de píxeles
             const points = landmarks.map(l => normalizedToPixel(l, width, height));
