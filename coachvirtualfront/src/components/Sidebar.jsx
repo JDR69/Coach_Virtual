@@ -18,6 +18,7 @@ import {
   Brain,
   ChevronDown,
   ChevronRight,
+  Flower2,
 } from "lucide-react";
 
 const cx = (...c) => c.filter(Boolean).join(" ");
@@ -42,7 +43,8 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
       { to: "/chat-ia", label: "Chat IA", icon: Cpu },
       { to: "/ia", label: "IA", icon: Brain },
       { to: "/pose-test", label: "Entrenar con IA", icon: PlayCircle },
-      { to: "/biceps-curl", label: "Curl de Bíceps 🤖", icon: Dumbbell },
+      { to: "/ejercicios", label: "Ejercicios 💪", icon: Activity },
+      { to: "/yoga", label: "Yoga 🧘", icon: Flower2 },
       { to: "/seleccionar", label: "Mis Tipos", icon: ListChecks },
     ],
     []

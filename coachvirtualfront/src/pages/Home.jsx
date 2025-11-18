@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Home = () => {
   return (
@@ -12,12 +13,24 @@ const Home = () => {
           Esta es una página de inicio moderna, minimalista y lista para personalizar.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-          <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 shadow-lg hover:scale-105">
-            Empezar
-          </button>
-          <button className="border-2 border-white/30 hover:border-white/60 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 hover:bg-white/10">
-            Saber más
-          </button>
+          <Link to="/yoga">
+            <button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 shadow-lg hover:scale-105 flex items-center gap-2">
+              <span>🧘</span>
+              <span>Yoga</span>
+            </button>
+          </Link>
+          <Link to="/ejercicios">
+            <button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 shadow-lg hover:scale-105 flex items-center gap-2">
+              <span>💪</span>
+              <span>Ejercicios</span>
+            </button>
+          </Link>
+          <Link to="/pose-test">
+            <button className="border-2 border-white/30 hover:border-white/60 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 hover:bg-white/10 flex items-center gap-2">
+              <span>🤖</span>
+              <span>Detector IA</span>
+            </button>
+          </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           <div className="bg-white/10 rounded-xl p-6 flex flex-col items-center hover:bg-white/20 transition">
