@@ -91,7 +91,7 @@ const IniciarSesion = ({ signIn, onSuccess /*, onSwitchToRegister*/ }) => {
 
       // Redirección por rol:
       if (isSuper) {
-        navigate("/perfil", { replace: true });
+        navigate("/home", { replace: true });
       } else {
         const next = localStorage.getItem("cv.category") ? "/musculo" : "/seleccionar";
         navigate(next, { replace: true });

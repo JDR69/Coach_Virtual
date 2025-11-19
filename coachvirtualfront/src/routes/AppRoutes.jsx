@@ -53,7 +53,7 @@ function GuestOnly() {
   if (initializing) return <div style={{ padding: 24 }}>Verificando sesión…</div>;
 
   if (isAuthenticated) {
-    if (isSuper) return <Navigate to="/perfil" replace />;
+    if (isSuper) return <Navigate to="/home" replace />;
     // usuario normal: respetar flujo
     const fromRoot = location.pathname === "/" || location.pathname === "/login";
     if (fromRoot) {
@@ -77,7 +77,7 @@ function RootRedirect() {
   if (initializing) return <div style={{ padding: 24 }}>Verificando sesión…</div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  if (isSuper) return <Navigate to="/perfil" replace />;
+  if (isSuper) return <Navigate to="/home" replace />;
   return (
     <Navigate
       to={category ? "/mis-musculos" : "/seleccionar"}
@@ -156,7 +156,7 @@ export default function AppRoutes() {
             <Route path="/musculos" element={<Musculo />} />
             <Route path="/usuarios" element={<Usuario />} />
             <Route path="/alertas" element={<Alerta />} />
-            <Route path="/ejercicios" element={<Ejercicio />} />
+            <Route path="/banca-de-ejercicios" element={<Ejercicio />} />
             <Route path="/detalles-musculo" element={<Detalle_Musculo />} />
             <Route path="/ejercicios-asignados" element={<Ejercicio_Asignado />} />
             <Route path="/tipo" element={<GestionarTipo />} />

@@ -1,10 +1,8 @@
+// src/pages/Login/LoginPage.jsx
 import { useState } from "react";
 import { useAuth } from "../../auth/useAuth";
 import IniciarSesion from "./IniciarSesion";
 import Register from "./Register";
-
-/** Altura aproximada del header si lo tienes fijo */
-const NAV_H = 64;
 
 const LoginPage = () => {
   const { signIn } = useAuth();
@@ -16,8 +14,7 @@ const LoginPage = () => {
 
   return (
     <div
-      className="min-h-[calc(100svh-64px)] flex items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 px-4"
-      style={{ minHeight: `calc(100svh - ${NAV_H}px)` }}
+      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 px-4"
     >
       <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-0 rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-black/60">
         {/* Imagen (arriba en móvil, a la izquierda en desktop) */}
@@ -68,12 +65,12 @@ const LoginPage = () => {
             </button>
           </div>
 
-          {/* Título único: evita duplicados */}
+          {/* Título único */}
           <h2 className="text-2xl sm:text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-yellow-500 mb-6">
             {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
           </h2>
 
-          {/* Formulario centrado y consistente */}
+          {/* Formulario centrado */}
           <div className="flex-1 flex items-center justify-center">
             <div className="w-full max-w-md">
               {mode === "login" ? (
@@ -92,7 +89,7 @@ const LoginPage = () => {
             </div>
           </div>
 
-          {/* ÚNICO enlace alterno (no hay link dentro de los formularios) */}
+          {/* Enlace alterno abajo */}
           <div className="mt-6 text-center">
             {mode === "login" ? (
               <button

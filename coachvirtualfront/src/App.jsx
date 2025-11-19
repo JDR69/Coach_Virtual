@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+// src/App.jsx
+import React, { useEffect, useState } from "react";
 import { BrowserRouter, useLocation } from "react-router-dom";
 import AppRoutes from "./routes/AppRoutes";
 import Header from "./components/Header";
@@ -11,33 +12,39 @@ import Dispositivo from "./components/Dispositivo";
 function AppContent({ sidebarOpen, setSidebarOpen }) {
   const location = useLocation();
 
-  // Ocultar sidebar en login, seleccionar y SOLO en /musculo (no en subrutas)
+  // ⬇️ Ocultar header SOLO en la página de login
+  const hideHeader = location.pathname === "/login";
+
+  // ⬇️ Ocultar sidebar (y panel de dispositivo) en login y en /musculo
   const hideSidebar =
     location.pathname === "/login" ||
-    // location.pathname === "/seleccionar" ||  // Comentado temporalmente para desarrollo
+    // location.pathname === "/seleccionar" ||  // Si luego quieres ocultar ahí, descomenta
     location.pathname === "/musculo";
 
   return (
     <>
-      {/* Header en lugar de Navbar */}
-      <Header
-        sidebarOpen={!hideSidebar && sidebarOpen}
-        onMenuClick={() => setSidebarOpen(!sidebarOpen)}
-      />
+      {/* Header en lugar de Navbar (NO se muestra en /login) */}
+      {!hideHeader && (
+        <Header
+          onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+        />
+      )}
 
+      {/* Sidebar (no se muestra en /login ni en /musculo) */}
       {!hideSidebar && (
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       )}
 
+      {/* Contenido principal */}
       <div
-        className={`pt-16 transition-all duration-300 ${
+        className={`${hideHeader ? "" : "pt-16"} transition-all duration-300 ${
           !hideSidebar && sidebarOpen ? "ml-56 max-md:ml-0" : "ml-0"
         }`}
       >
         <AppRoutes />
       </div>
 
-      {/* Panel de Google Fit fijo al costado (ocultar donde no hay sidebar, p.ej. login) */}
+      {/* Panel Google Fit (solo cuando hay sidebar) */}
       {!hideSidebar && <Dispositivo />}
     </>
   );
