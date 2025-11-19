@@ -23,6 +23,8 @@ class GoogleFitClient:
     TOKEN_URL = "https://oauth2.googleapis.com/token"
 
     CACHE_TOKEN_KEY = "google_fit_access_token"
+    CACHE_STATS_KEY = "google_fit_stats"
+    CACHE_STATS_TTL = 15  # segundos
 
     def __init__(self):
         self.client_id = config("GOOGLE_FIT_CLIENT_ID", default="")
@@ -84,6 +86,11 @@ class GoogleFitClient:
         return int(start.timestamp() * 1000), int(time.time() * 1000)
 
     def get_today_stats(self) -> Dict[str, Any]:
+        # 1) Intentar servir desde cache inmediato para reducir latencia percibida
+        cached = cache.get(self.CACHE_STATS_KEY)
+        if cached:
+            return cached
+
         start_ms, end_ms = self._start_end_today_ms()
         body = {
             "aggregateBy": [
@@ -129,7 +136,7 @@ class GoogleFitClient:
                     if avg_items:
                         hr_avg = int(round(avg_items[0].get("value", {}).get("fpVal", 0)))
 
-        return {
+        result = {
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "steps": steps,
             "calories": calories,
@@ -137,3 +144,7 @@ class GoogleFitClient:
             "owner": "joandanielrr@gmail.com",
             "fuente": "Google Fit",
         }
+
+        # Guardar en cache por unos segundos para responder más rápido
+        cache.set(self.CACHE_STATS_KEY, result, self.CACHE_STATS_TTL)
+        return result
