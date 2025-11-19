@@ -6,6 +6,7 @@ import Sidebar from "./components/Sidebar";
 import { AuthProvider } from "./auth/AuthProvider.jsx";
 import { CategoryProvider } from "./context/CategoryContext";
 import { SubscriptionProvider } from "./context/SubscriptionContext";
+import Dispositivo from "./components/Dispositivo";
 
 function AppContent({ sidebarOpen, setSidebarOpen }) {
   const location = useLocation();
@@ -35,6 +36,9 @@ function AppContent({ sidebarOpen, setSidebarOpen }) {
       >
         <AppRoutes />
       </div>
+
+      {/* Panel de Google Fit fijo al costado (ocultar donde no hay sidebar, p.ej. login) */}
+      {!hideSidebar && <Dispositivo />}
     </>
   );
 }

@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "musculos",
+    "dispositivo",
 ]
 
 REST_FRAMEWORK = {
