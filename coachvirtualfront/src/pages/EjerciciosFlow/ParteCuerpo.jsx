@@ -1,61 +1,84 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, User, Activity, Footprints, Zap, Brain } from 'lucide-react';
+import { ArrowLeft, User, Activity, Footprints, Zap, Brain, Loader2 } from 'lucide-react';
+import MusculoService from '../../services/MusculoService';
 
 /**
  * Vista de selección de parte del cuerpo
+ * Las partes del cuerpo se cargan dinámicamente desde el backend usando MusculoService
  */
 export default function ParteCuerpo() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const categoria = searchParams.get('categoria');
   const [selectedCategoria, setSelectedCategoria] = useState('');
+  const [partesCuerpo, setPartesCuerpo] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Mapeo de iconos por nombre de músculo (puedes extender esto según necesites)
+  const iconMapping = {
+    'brazos': Activity,
+    'piernas': Footprints,
+    'espalda': User,
+    'cintura': Zap,
+    'cabeza': Brain,
+    'default': Activity
+  };
+
+  // Colores predefinidos para las partes del cuerpo (se asignan cíclicamente)
+  const colorOptions = [
+    'from-red-400 to-red-600',
+    'from-yellow-400 to-yellow-600',
+    'from-purple-400 to-purple-600',
+    'from-blue-400 to-blue-600',
+    'from-green-400 to-green-600',
+    'from-pink-400 to-pink-600',
+    'from-indigo-400 to-indigo-600',
+    'from-orange-400 to-orange-600'
+  ];
+
+  const fetchPartesCuerpo = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Obtener todos los músculos del backend
+      const musculos = await MusculoService.getAll();
+
+      // Transformar los músculos del backend al formato de partes del cuerpo
+      const partesFormateadas = musculos.map((musculo, index) => {
+        const nombreLower = musculo.nombre.toLowerCase();
+        const icon = iconMapping[nombreLower] || iconMapping['default'];
+        const color = colorOptions[index % colorOptions.length];
+
+        return {
+          id: musculo.id,
+          nombre: musculo.nombre,
+          descripcion: `Ejercicios de ${musculo.nombre}`,
+          icon: icon,
+          color: color,
+          url: musculo.url
+        };
+      });
+
+      setPartesCuerpo(partesFormateadas);
+    } catch (err) {
+      console.error('Error al cargar partes del cuerpo:', err);
+      setError('No se pudieron cargar las partes del cuerpo. Por favor, intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!categoria) {
       navigate('/ejercicios/categoria');
     } else {
       setSelectedCategoria(categoria === 'gimnasio' ? 'Gimnasio' : 'Fisioterapia');
+      fetchPartesCuerpo();
     }
   }, [categoria, navigate]);
-
-  const partesCuerpo = [
-    {
-      id: 'brazos',
-      nombre: 'Brazos',
-      descripcion: 'Bíceps, tríceps, antebrazos',
-      icon: Activity,
-      color: 'from-red-400 to-red-600'
-    },
-    {
-      id: 'piernas',
-      nombre: 'Piernas',
-      descripcion: 'Cuádriceps, isquiotibiales, pantorrillas',
-      icon: Footprints,
-      color: 'from-yellow-400 to-yellow-600'
-    },
-    {
-      id: 'espalda',
-      nombre: 'Espalda',
-      descripcion: 'Dorsales, lumbares, trapecio',
-      icon: User,
-      color: 'from-purple-400 to-purple-600'
-    },
-    {
-      id: 'cintura',
-      nombre: 'Cintura',
-      descripcion: 'Abdominales, oblicuos, core',
-      icon: Zap,
-      color: 'from-blue-400 to-blue-600'
-    },
-    {
-      id: 'cabeza',
-      nombre: 'Cabeza',
-      descripcion: 'Cuello, trapecio superior',
-      icon: Brain,
-      color: 'from-green-400 to-green-600'
-    }
-  ];
 
   const handleSelectParte = (parteId) => {
     navigate(`/ejercicios/seleccion?categoria=${categoria}&parte=${parteId}`);
@@ -90,45 +113,76 @@ export default function ParteCuerpo() {
           </p>
         </div>
 
-        {/* Grid de partes del cuerpo */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {partesCuerpo.map((parte) => {
-            const Icon = parte.icon;
-            return (
-              <button
-                key={parte.id}
-                onClick={() => handleSelectParte(parte.id)}
-                className="group relative bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
-              >
-                {/* Gradient top bar */}
-                <div className={`h-2 bg-gradient-to-r ${parte.color}`} />
-                
-                {/* Content */}
-                <div className="p-6">
-                  <div className={`inline-flex p-3 rounded-lg bg-gradient-to-br ${parte.color} mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="w-8 h-8 text-white" />
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">
-                    {parte.nombre}
-                  </h3>
-                  
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    {parte.descripcion}
-                  </p>
+        {/* Loading state */}
+        {loading && (
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+          </div>
+        )}
 
-                  {/* Hover effect */}
-                  <div className="mt-4 flex items-center text-blue-600 font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <span>Ver ejercicios</span>
-                    <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+        {/* Error state */}
+        {error && !loading && (
+          <div className="bg-red-50 border border-red-300 rounded-lg p-6 text-center">
+            <p className="text-red-700 mb-4">{error}</p>
+            <button
+              onClick={fetchPartesCuerpo}
+              className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            >
+              Reintentar
+            </button>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && !error && partesCuerpo.length === 0 && (
+          <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-6 text-center">
+            <p className="text-yellow-700">
+              No hay partes del cuerpo disponibles en este momento.
+            </p>
+          </div>
+        )}
+
+        {/* Grid de partes del cuerpo */}
+        {!loading && !error && partesCuerpo.length > 0 && (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {partesCuerpo.map((parte) => {
+              const Icon = parte.icon;
+              return (
+                <button
+                  key={parte.id}
+                  onClick={() => handleSelectParte(parte.id)}
+                  className="group relative bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
+                >
+                  {/* Gradient top bar */}
+                  <div className={`h-2 bg-gradient-to-r ${parte.color}`} />
+
+                  {/* Content */}
+                  <div className="p-6">
+                    <div className={`inline-flex p-3 rounded-lg bg-gradient-to-br ${parte.color} mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                      <Icon className="w-8 h-8 text-white" />
+                    </div>
+
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">
+                      {parte.nombre}
+                    </h3>
+
+                    <p className="text-gray-600 text-sm leading-relaxed">
+                      {parte.descripcion}
+                    </p>
+
+                    {/* Hover effect */}
+                    <div className="mt-4 flex items-center text-blue-600 font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span>Ver ejercicios</span>
+                      <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
                   </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Footer info */}
         <div className="mt-12 text-center">

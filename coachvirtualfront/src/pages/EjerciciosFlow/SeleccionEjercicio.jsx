@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Play, Clock, Target, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Play, Clock, Target, TrendingUp, Loader2 } from 'lucide-react';
+import DetalleMusculoService from '../../services/DetalleMusculoService';
+import EjercicioService from '../../services/EjercicioService';
 
 /**
  * Vista de selección de ejercicio específico
+ * Los ejercicios se cargan dinámicamente desde el backend usando DetalleMusculoService y EjercicioService
  */
 export default function SeleccionEjercicio() {
   const navigate = useNavigate();
@@ -11,6 +14,9 @@ export default function SeleccionEjercicio() {
   const categoria = searchParams.get('categoria');
   const parte = searchParams.get('parte');
   const [breadcrumb, setBreadcrumb] = useState({ categoria: '', parte: '' });
+  const [ejercicios, setEjercicios] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!categoria || !parte) {
@@ -20,128 +26,74 @@ export default function SeleccionEjercicio() {
         categoria: categoria === 'gimnasio' ? 'Gimnasio' : 'Fisioterapia',
         parte: parte.charAt(0).toUpperCase() + parte.slice(1)
       });
+      fetchEjercicios();
     }
   }, [categoria, parte, navigate]);
 
-  // Datos de ejemplo - aquí podrías hacer fetch a tu API
-  const ejerciciosPorParte = {
-    brazos: [
-      {
-        id: 'biceps',
-        nombre: 'Bíceps',
-        descripcion: 'Curl de bíceps con mancuernas',
-        duracion: '15 min',
-        dificultad: 'Intermedio',
-        calorias: '120 kcal',
-        imagen: '💪'
-      },
-      {
-        id: 'triceps',
-        nombre: 'Tríceps',
-        descripcion: 'Extensiones y fondos de tríceps',
-        duracion: '12 min',
-        dificultad: 'Intermedio',
-        calorias: '100 kcal',
-        imagen: '🦾'
-      },
-      {
-        id: 'antebrazos',
-        nombre: 'Antebrazos',
-        descripcion: 'Curl de muñeca y agarre',
-        duracion: '10 min',
-        dificultad: 'Principiante',
-        calorias: '80 kcal',
-        imagen: '💪'
-      }
-    ],
-    piernas: [
-      {
-        id: 'cuadriceps',
-        nombre: 'Cuádriceps',
-        descripcion: 'Sentadillas y extensiones',
-        duracion: '20 min',
-        dificultad: 'Intermedio',
-        calorias: '180 kcal',
-        imagen: '🦵'
-      },
-      {
-        id: 'isquiotibiales',
-        nombre: 'Isquiotibiales',
-        descripcion: 'Peso muerto y curl femoral',
-        duracion: '18 min',
-        dificultad: 'Avanzado',
-        calorias: '160 kcal',
-        imagen: '🦵'
-      }
-    ],
-    espalda: [
-      {
-        id: 'dorsales',
-        nombre: 'Dorsales',
-        descripcion: 'Dominadas y remo',
-        duracion: '20 min',
-        dificultad: 'Intermedio',
-        calorias: '150 kcal',
-        imagen: '💪'
-      },
-      {
-        id: 'lumbares',
-        nombre: 'Lumbares',
-        descripcion: 'Hiperextensiones y buenos días',
-        duracion: '15 min',
-        dificultad: 'Intermedio',
-        calorias: '110 kcal',
-        imagen: '🔥'
-      }
-    ],
-    cintura: [
-      {
-        id: 'abdominales',
-        nombre: 'Abdominales',
-        descripcion: 'Crunches y plancha',
-        duracion: '15 min',
-        dificultad: 'Principiante',
-        calorias: '100 kcal',
-        imagen: '🔥'
-      },
-      {
-        id: 'oblicuos',
-        nombre: 'Oblicuos',
-        descripcion: 'Giros rusos y plancha lateral',
-        duracion: '12 min',
-        dificultad: 'Intermedio',
-        calorias: '90 kcal',
-        imagen: '⚡'
-      }
-    ],
-    cabeza: [
-      {
-        id: 'cuello',
-        nombre: 'Cuello',
-        descripcion: 'Estiramientos y fortalecimiento',
-        duracion: '10 min',
-        dificultad: 'Principiante',
-        calorias: '50 kcal',
-        imagen: '🧘'
-      },
-      {
-        id: 'trapecio',
-        nombre: 'Trapecio',
-        descripcion: 'Encogimientos y elevaciones',
-        duracion: '12 min',
-        dificultad: 'Intermedio',
-        calorias: '80 kcal',
-        imagen: '💪'
-      }
-    ]
+  const fetchEjercicios = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Obtener todos los detalles de músculos y ejercicios del backend
+      const [detalles, ejerciciosData] = await Promise.all([
+        DetalleMusculoService.getAll(),
+        EjercicioService.getAll()
+      ]);
+
+      // Filtrar por la parte del cuerpo (músculo) seleccionada y la categoría (tipo)
+      const ejerciciosFiltrados = detalles
+        .filter(detalle => {
+          // Filtrar por el ID del músculo (parte) y el ID del tipo (categoría)
+          return detalle.idMusculo === parseInt(parte) && detalle.idTipo === parseInt(categoria);
+        })
+        .map((detalle, index) => {
+          // Buscar el ejercicio completo por ID
+          const ejercicioCompleto = ejerciciosData.find(ej => ej.id === detalle.idEjercicio);
+
+          return {
+            id: detalle.idEjercicio,
+            detalleId: detalle.id,
+            nombre: ejercicioCompleto?.nombre || `Ejercicio ${detalle.idEjercicio}`,
+            descripcion: `Porcentaje de trabajo: ${detalle.porcentaje}%`,
+            porcentaje: detalle.porcentaje,
+            url: ejercicioCompleto?.url || '', // URL de la imagen del ejercicio
+            // Datos adicionales calculados
+            duracion: '15 min',
+            dificultad: getDificultadByPorcentaje(detalle.porcentaje),
+            calorias: calcularCalorias(detalle.porcentaje)
+          };
+        });
+
+      setEjercicios(ejerciciosFiltrados);
+    } catch (err) {
+      console.error('Error al cargar ejercicios:', err);
+      setError('No se pudieron cargar los ejercicios. Por favor, intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const ejercicios = ejerciciosPorParte[parte] || [];
+  // Determinar dificultad basada en el porcentaje
+  const getDificultadByPorcentaje = (porcentaje) => {
+    const percent = parseInt(porcentaje);
+    if (percent < 50) return 'Principiante';
+    if (percent < 75) return 'Intermedio';
+    return 'Avanzado';
+  };
 
-  const handleSelectEjercicio = (ejercicioId) => {
-    // Aquí podrías navegar a la página del ejercicio específico
-    alert(`Ejercicio seleccionado: ${ejercicioId}\nCategoría: ${categoria}\nParte: ${parte}`);
-    // Ejemplo: navigate(`/ejercicios/entrenar/${ejercicioId}`);
+  // Calcular calorías aproximadas basadas en el porcentaje
+  const calcularCalorias = (porcentaje) => {
+    const percent = parseInt(porcentaje);
+    const calorias = Math.round((percent / 100) * 200);
+    return `${calorias} kcal`;
+  };
+
+  const handleSelectEjercicio = (ejercicio) => {
+    // Aquí podrías navegar a la página del ejercicio específico o guardar la selección
+    console.log('Ejercicio seleccionado:', ejercicio);
+    alert(`Ejercicio seleccionado: ${ejercicio.nombre}\nCategoría: ${categoria}\nParte: ${parte}\nDetalle ID: ${ejercicio.detalleId}`);
+    // Ejemplo: navigate(`/ejercicios/entrenar/${ejercicio.id}`);
   };
 
   const handleBack = () => {
@@ -186,23 +138,54 @@ export default function SeleccionEjercicio() {
           </p>
         </div>
 
-        {/* Grid de ejercicios */}
-        {ejercicios.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">
-              No hay ejercicios disponibles para esta parte del cuerpo
+        {/* Loading state */}
+        {loading && (
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+          </div>
+        )}
+
+        {/* Error state */}
+        {error && !loading && (
+          <div className="bg-red-50 border border-red-300 rounded-lg p-6 text-center">
+            <p className="text-red-700 mb-4">{error}</p>
+            <button
+              onClick={fetchEjercicios}
+              className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            >
+              Reintentar
+            </button>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && !error && ejercicios.length === 0 && (
+          <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-6 text-center">
+            <p className="text-yellow-700 text-lg">
+              No hay ejercicios disponibles para esta parte del cuerpo en esta categoría.
             </p>
           </div>
-        ) : (
+        )}
+
+        {/* Grid de ejercicios */}
+        {!loading && !error && ejercicios.length > 0 && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {ejercicios.map((ejercicio) => (
               <div
-                key={ejercicio.id}
+                key={ejercicio.detalleId}
                 className="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col"
               >
-                {/* Image placeholder */}
-                <div className="h-40 bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-6xl">
-                  {ejercicio.imagen}
+                {/* Image from URL or gradient placeholder */}
+                <div className="h-40 bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center overflow-hidden">
+                  {ejercicio.url ? (
+                    <img
+                      src={ejercicio.url}
+                      alt={ejercicio.nombre}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-6xl">💪</span>
+                  )}
                 </div>
 
                 {/* Content */}
@@ -211,7 +194,7 @@ export default function SeleccionEjercicio() {
                     <h3 className="text-xl font-bold text-gray-800 mb-2">
                       {ejercicio.nombre}
                     </h3>
-                    
+
                     <p className="text-gray-600 text-sm mb-4 leading-relaxed">
                       {ejercicio.descripcion}
                     </p>
@@ -237,7 +220,7 @@ export default function SeleccionEjercicio() {
 
                   {/* Button */}
                   <button
-                    onClick={() => handleSelectEjercicio(ejercicio.id)}
+                    onClick={() => handleSelectEjercicio(ejercicio)}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 group"
                   >
                     <Play className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
