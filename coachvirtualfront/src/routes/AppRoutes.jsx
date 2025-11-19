@@ -20,6 +20,11 @@ import Pago from "../pages/Planes/Pago";
 
 import AlertNotifier from "../pages/GestionarAlerta/AlertNotifier";
 
+// Flujo de ejercicios limpio
+import CategoriaEjercicios from "../pages/EjerciciosFlow/CategoriaEjercicios";
+import ParteCuerpo from "../pages/EjerciciosFlow/ParteCuerpo";
+import SeleccionEjercicio from "../pages/EjerciciosFlow/SeleccionEjercicio";
+
 // Flujo categoría / músculo / ejercicios
 import SelectCategory from "../pages/Categoria/SelectCategory";
 import CategoryGate from "./CategoryGate";
@@ -138,6 +143,11 @@ export default function AppRoutes() {
           <Route path="/ejercicios" element={<EjerciciosPage />} />
           <Route path="/ia" element={<IAPage />} />
           <Route path="/chat-ia" element={<ChatIA />} />
+          
+          {/* Flujo limpio de ejercicios */}
+          <Route path="/ejercicios/categoria" element={<CategoriaEjercicios />} />
+          <Route path="/ejercicios/parte-cuerpo" element={<ParteCuerpo />} />
+          <Route path="/ejercicios/seleccion" element={<SeleccionEjercicio />} />
           <Route path="/mis-alertas" element={<AlertaUsuario />} />
           <Route path="/seleccionar" element={<GestionarTipoUsuario />} />
 
