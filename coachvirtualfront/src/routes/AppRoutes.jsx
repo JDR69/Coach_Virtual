@@ -10,7 +10,8 @@ import Alerta from "../pages/GestionarAlerta/Alerta";
 import AlertaUsuario from "../pages/GestionarAlerta/AlertaUsuario";
 import LoginPage from "../pages/Login/LoginPage";
 import PoseTest from "../pages/Detector/PoseTest";
-import BicepsCurlTrainer from "../pages/Detector/BicepsCurlTrainer";
+// Nueva ruta reorganizada de rutina bíceps dentro de categoría gimnasio
+import BicepsCurl from "../pages/categoria/gimnasio/brazos/BicepsCurl";
 import YogaPage from "../pages/Yoga/YogaPage";
 import EjerciciosPage from "../pages/Ejercicios/EjerciciosPage";
 import IAPage from "../pages/IAPage/IAPage";
@@ -138,7 +139,8 @@ export default function AppRoutes() {
           <Route path="/planes" element={<Planes />} />
           <Route path="/planes/pago" element={<Pago />} />
           <Route path="/pose-test" element={<PoseTest />} />
-          <Route path="/biceps-curl" element={<BicepsCurlTrainer />} />
+          {/* Rutina específica reorganizada */}
+          <Route path="/categoria/gimnasio/brazos/biceps-curl" element={<BicepsCurl />} />
           <Route path="/yoga" element={<YogaPage />} />
           <Route path="/ejercicios" element={<EjerciciosPage />} />
           <Route path="/ia" element={<IAPage />} />

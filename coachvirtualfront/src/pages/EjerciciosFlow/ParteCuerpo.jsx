@@ -1,6 +1,15 @@
+// src/view/ejercicios/ParteCuerpo.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, User, Activity, Footprints, Zap, Brain, Loader2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  User,
+  Activity,
+  Footprints,
+  Zap,
+  Brain,
+  Loader2,
+} from 'lucide-react';
 import MusculoService from '../../services/MusculoService';
 
 /**
@@ -18,12 +27,12 @@ export default function ParteCuerpo() {
 
   // Mapeo de iconos por nombre de músculo (puedes extender esto según necesites)
   const iconMapping = {
-    'brazos': Activity,
-    'piernas': Footprints,
-    'espalda': User,
-    'cintura': Zap,
-    'cabeza': Brain,
-    'default': Activity
+    brazos: Activity,
+    piernas: Footprints,
+    espalda: User,
+    cintura: Zap,
+    cabeza: Brain,
+    default: Activity,
   };
 
   // Colores predefinidos para las partes del cuerpo (se asignan cíclicamente)
@@ -35,7 +44,7 @@ export default function ParteCuerpo() {
     'from-green-400 to-green-600',
     'from-pink-400 to-pink-600',
     'from-indigo-400 to-indigo-600',
-    'from-orange-400 to-orange-600'
+    'from-orange-400 to-orange-600',
   ];
 
   const fetchPartesCuerpo = async () => {
@@ -56,16 +65,18 @@ export default function ParteCuerpo() {
           id: musculo.id,
           nombre: musculo.nombre,
           descripcion: `Ejercicios de ${musculo.nombre}`,
-          icon: icon,
-          color: color,
-          url: musculo.url
+          icon,
+          color,
+          url: musculo.url, // 👈 aquí traemos la URL del backend
         };
       });
 
       setPartesCuerpo(partesFormateadas);
     } catch (err) {
       console.error('Error al cargar partes del cuerpo:', err);
-      setError('No se pudieron cargar las partes del cuerpo. Por favor, intenta de nuevo.');
+      setError(
+        'No se pudieron cargar las partes del cuerpo. Por favor, intenta de nuevo.'
+      );
     } finally {
       setLoading(false);
     }
@@ -75,9 +86,12 @@ export default function ParteCuerpo() {
     if (!categoria) {
       navigate('/ejercicios/categoria');
     } else {
-      setSelectedCategoria(categoria === 'gimnasio' ? 'Gimnasio' : 'Fisioterapia');
+      setSelectedCategoria(
+        categoria === 'gimnasio' ? 'Gimnasio' : 'Fisioterapia'
+      );
       fetchPartesCuerpo();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoria, navigate]);
 
   const handleSelectParte = (parteId) => {
@@ -103,13 +117,13 @@ export default function ParteCuerpo() {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-block bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-            {selectedCategoria}
+            {selectedCategoria || 'Selecciona una categoría'}
           </div>
           <h1 className="text-4xl font-bold text-gray-800 mb-3">
             Selecciona la Parte del Cuerpo
           </h1>
           <p className="text-gray-600 text-lg">
-            Elige el área que deseas trabajar
+            Elige la zona muscular que deseas trabajar
           </p>
         </div>
 
@@ -147,35 +161,75 @@ export default function ParteCuerpo() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {partesCuerpo.map((parte) => {
               const Icon = parte.icon;
+
               return (
                 <button
                   key={parte.id}
                   onClick={() => handleSelectParte(parte.id)}
-                  className="group relative bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
+                  className="group text-left"
                 >
-                  {/* Gradient top bar */}
-                  <div className={`h-2 bg-gradient-to-r ${parte.color}`} />
+                  <div className="relative bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+                    {/* Imagen de cabecera */}
+                    <div className="relative h-40 w-full overflow-hidden">
+                      {parte.url ? (
+                        <img
+                          src={parte.url}
+                          alt={parte.nombre}
+                          loading="lazy"
+                          className="h-full w-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div
+                          className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${parte.color}`}
+                        >
+                          <Icon className="w-10 h-10 text-white" />
+                        </div>
+                      )}
 
-                  {/* Content */}
-                  <div className="p-6">
-                    <div className={`inline-flex p-3 rounded-lg bg-gradient-to-br ${parte.color} mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                      <Icon className="w-8 h-8 text-white" />
+                      {/* Overlay para mejor contraste de texto */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+                      {/* Nombre + icono sobre la imagen */}
+                      <div className="absolute bottom-3 left-4 flex items-center gap-2">
+                        <div className="inline-flex p-2 rounded-xl bg-white/15 border border-white/40 backdrop-blur">
+                          <Icon className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="text-white font-semibold text-lg drop-shadow">
+                          {parte.nombre}
+                        </span>
+                      </div>
                     </div>
 
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">
-                      {parte.nombre}
-                    </h3>
+                    {/* Contenido de la tarjeta */}
+                    <div className="p-5">
+                      <p className="text-gray-600 text-sm leading-relaxed mb-3">
+                        {parte.descripcion}
+                      </p>
 
-                    <p className="text-gray-600 text-sm leading-relaxed">
-                      {parte.descripcion}
-                    </p>
+                      {/* Etiqueta categoría */}
+                      {selectedCategoria && (
+                        <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 mb-3">
+                          {selectedCategoria}
+                        </span>
+                      )}
 
-                    {/* Hover effect */}
-                    <div className="mt-4 flex items-center text-blue-600 font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <span>Ver ejercicios</span>
-                      <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+                      {/* CTA */}
+                      <div className="flex items-center text-blue-600 font-medium text-sm mt-1">
+                        <span>Ver ejercicios</span>
+                        <svg
+                          className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </div>
                     </div>
                   </div>
                 </button>
@@ -187,7 +241,7 @@ export default function ParteCuerpo() {
         {/* Footer info */}
         <div className="mt-12 text-center">
           <p className="text-gray-500 text-sm">
-            💪 Selecciona una zona para ver los ejercicios disponibles
+            💪 Selecciona una zona para ver los ejercicios disponibles.
           </p>
         </div>
       </div>

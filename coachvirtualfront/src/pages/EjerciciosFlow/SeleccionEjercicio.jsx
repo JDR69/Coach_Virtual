@@ -90,10 +90,23 @@ export default function SeleccionEjercicio() {
   };
 
   const handleSelectEjercicio = (ejercicio) => {
-    // Aquí podrías navegar a la página del ejercicio específico o guardar la selección
-    console.log('Ejercicio seleccionado:', ejercicio);
-    alert(`Ejercicio seleccionado: ${ejercicio.nombre}\nCategoría: ${categoria}\nParte: ${parte}\nDetalle ID: ${ejercicio.detalleId}`);
-    // Ejemplo: navigate(`/ejercicios/entrenar/${ejercicio.id}`);
+    // Normalizar nombre para coincidencias simples (sin tildes / mayúsculas)
+    const nombreNorm = ejercicio.nombre
+      .toLowerCase()
+      .replace(/á/g, 'a')
+      .replace(/é/g, 'e')
+      .replace(/í/g, 'i')
+      .replace(/ó/g, 'o')
+      .replace(/ú/g, 'u');
+
+    // Mapear a rutas según el ejercicio (por ahora solo bíceps)
+    if (nombreNorm.includes('bicep') || nombreNorm.includes('curl')) {
+      navigate('/categoria/gimnasio/brazos/biceps-curl');
+      return;
+    }
+
+    // Fallback si no hay ruta específica aún
+    alert('Ruta de rutina no implementada para: ' + ejercicio.nombre);
   };
 
   const handleBack = () => {
@@ -222,6 +235,7 @@ export default function SeleccionEjercicio() {
                   <button
                     onClick={() => handleSelectEjercicio(ejercicio)}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 group"
+                    title="Iniciar rutina"
                   >
                     <Play className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
                     <span>Comenzar</span>

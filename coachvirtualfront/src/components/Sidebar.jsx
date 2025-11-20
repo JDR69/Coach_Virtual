@@ -40,12 +40,12 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
       { to: "/planes", label: "Planes Premium", icon: Crown },
       { to: "/mis-alertas", label: "Mis Alertas", icon: Bell },
 
-      { to: "/chat-ia", label: "Chat IA", icon: Cpu },
-      { to: "/ia", label: "IA", icon: Brain },
-      { to: "/pose-test", label: "Entrenar con IA", icon: PlayCircle },
-      { to: "/ejercicios", label: "Ejercicios 💪", icon: Activity },
-      { to: "/yoga", label: "Yoga 🧘", icon: Flower2 },
-      { to: "/seleccionar", label: "Mis Tipos", icon: ListChecks },
+      // { to: "/chat-ia", label: "Chat IA", icon: Cpu },
+      // { to: "/ia", label: "IA", icon: Brain },
+      // { to: "/pose-test", label: "Entrenar con IA", icon: PlayCircle },
+      // { to: "/ejercicios", label: "Ejercicios 💪", icon: Activity },
+      // { to: "/yoga", label: "Yoga 🧘", icon: Flower2 },
+      // { to: "/seleccionar", label: "Mis Tipos", icon: ListChecks },
     ],
     []
   );
@@ -55,9 +55,9 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
     () =>
       isSuper
         ? [
-            { to: "/usuarios", label: "Gestionar Usuario", icon: Users },
-            { to: "/alertas", label: "Gestionar Alerta", icon: Bell },
-          ]
+          { to: "/usuarios", label: "Gestionar Usuario", icon: Users },
+          { to: "/alertas", label: "Gestionar Alerta", icon: Bell },
+        ]
         : [],
     [isSuper]
   );
@@ -67,32 +67,32 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
     () =>
       isSuper
         ? [
-            {
-              to: "/tipo",
-              label: "1.- Tipos & Categorías",
-              icon: ClipboardList,
-            },
-            {
-              to: "/musculos",
-              label: "2.- Atlas de Músculos",
-              icon: Dumbbell,
-            },
-            {
-              to: "/banca-de-ejercicios",
-              label: "3.- Banco de Ejercicios",
-              icon: Activity,
-            },
-            {
-              to: "/detalles-musculo",
-              label: "4.- Detalle de Músculos",
-              icon: ListChecks,
-            },
-            {
-              to: "/ejercicios-asignados",
-              label: "5.- Rutinas Asignadas",
-              icon: PlayCircle,
-            },
-          ]
+          {
+            to: "/tipo",
+            label: "1.- Tipos & Categorías",
+            icon: ClipboardList,
+          },
+          {
+            to: "/musculos",
+            label: "2.- Atlas de Músculos",
+            icon: Dumbbell,
+          },
+          {
+            to: "/ejercicios",
+            label: "3.- Banco de Ejercicios",
+            icon: Activity,
+          },
+          {
+            to: "/detalles-musculo",
+            label: "4.- Detalle de Músculos",
+            icon: ListChecks,
+          },
+          {
+            to: "/ejercicios-asignados",
+            label: "5.- Rutinas Asignadas",
+            icon: PlayCircle,
+          },
+        ]
         : [],
     [isSuper]
   );
@@ -134,12 +134,11 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
           ))}
         </ul>
 
-        {/* ADMINISTRACIÓN + PAQUETE DESPLEGABLE */}
-        {admin.length > 0 && (
+
+        {/* {admin.length > 0 && (
           <>
             <SectionTitle>Administración</SectionTitle>
             <ul className="space-y-1">
-              {/* items normales */}
               {admin.map((i) => (
                 <li key={i.to}>
                   <NavItem to={i.to} icon={i.icon}>
@@ -148,8 +147,7 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
                 </li>
               ))}
 
-              {/* paquete músculos & rutinas */}
-              {musclePackage.length > 0 && (
+              {/* {musclePackage.length > 0 && (
                 <li>
                   <button
                     type="button"
@@ -181,13 +179,13 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
                     </ul>
                   )}
                 </li>
-              )}
+              )} 
             </ul>
           </>
-        )}
+        )} */}
 
-        {/* OPCIONES */}
-        <SectionTitle>Opciones</SectionTitle>
+
+        <SectionTitle>Configuraciones</SectionTitle>
         <ul className="space-y-1">
           {extras.map((i) => (
             <li key={i.href}>
