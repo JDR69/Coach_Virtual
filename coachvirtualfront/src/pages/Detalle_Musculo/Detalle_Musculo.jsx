@@ -6,9 +6,18 @@ import EjercicioService from "../../services/EjercicioService";
 import TipoService from "../../services/TipoService";
 import Paginacion from "../../components/Paginacion";
 
+/**
+ * DetalleMusculo (NUEVA BD):
+ *  - porcentaje
+ *  - musculo (FK)
+ *  - ejercicio (FK)
+ *
+ * NO se guarda tipo en DetalleMusculo.
+ * El tipo se obtiene automáticamente desde el músculo seleccionado (musculo.tipo).
+ */
 class Detalle_Musculo extends Component {
   state = {
-    form: { porcentaje: "", idMusculo: "", idEjercicio: "", idTipo: "" },
+    form: { porcentaje: "", musculo: "", ejercicio: "" },
     items: [],
     musculos: [],
     ejercicios: [],
@@ -33,17 +42,13 @@ class Detalle_Musculo extends Component {
   fetchAll = async () => {
     this.setState({ loadingList: true, errorList: null });
     try {
-      const [
-        detallesData,
-        musculosData,
-        ejerciciosData,
-        tiposData,
-      ] = await Promise.all([
-        DetalleMusculoService.getAll(),
-        MusculoService.getAll(),
-        EjercicioService.getAll(),
-        TipoService.getAll(), // o listActivos() si quieres solo activos
-      ]);
+      const [detallesData, musculosData, ejerciciosData, tiposData] =
+        await Promise.all([
+          DetalleMusculoService.getAll(),
+          MusculoService.getAll(),
+          EjercicioService.getAll(),
+          TipoService.getAll(), // solo para mostrar nombres de tipo
+        ]);
 
       this.setState({
         items: Array.isArray(detallesData) ? detallesData : [],
@@ -97,21 +102,33 @@ class Detalle_Musculo extends Component {
     return tipos.find((t) => Number(t.id) === numId);
   };
 
-  getMusculoNombre = (id) => {
-    const musculo = this.findMusculo(id);
-    return musculo ? musculo.nombre : id;
+  getTipoNombreFromMusculo = (musculoObj) => {
+    if (!musculoObj) return "—";
+    // 1) si backend manda tipo_data completo (MusculoSerializer)
+    if (musculoObj.tipo_data?.nombre) return musculoObj.tipo_data.nombre;
+    // 2) si solo manda tipo (id)
+    const tipo = this.findTipo(musculoObj.tipo);
+    return tipo?.nombre || musculoObj.tipo || "—";
   };
 
-  getEjercicioNombre = (id) => {
-    const ejercicio = this.findEjercicio(id);
-    return ejercicio ? ejercicio.nombre : id;
-  };
+  getTipoNombreFromItem = (item) => {
+    // item puede traer tipo embebido por serializer de detalle
+    if (item?.tipo?.nombre) return item.tipo.nombre;
 
-  getTipoNombre = (id, rawItem) => {
-    // por si el backend devuelve también item.tipo.nombre
-    if (rawItem?.tipo?.nombre) return rawItem.tipo.nombre;
-    const tipo = this.findTipo(id);
-    return tipo ? tipo.nombre : id;
+    // o item.musculo_data con tipo
+    const tipoId =
+      item?.musculo_data?.tipo ??
+      item?.musculo_data?.tipo_data?.id ??
+      null;
+
+    if (tipoId != null) {
+      const tipo = this.findTipo(tipoId);
+      return tipo?.nombre || tipoId;
+    }
+
+    // fallback: buscar musculo en cache
+    const musculoObj = this.findMusculo(item?.musculo);
+    return this.getTipoNombreFromMusculo(musculoObj);
   };
 
   // ================== FORM ==================
@@ -126,12 +143,11 @@ class Detalle_Musculo extends Component {
   };
 
   validate = () => {
-    const { porcentaje, idMusculo, idEjercicio, idTipo } = this.state.form;
+    const { porcentaje, musculo, ejercicio } = this.state.form;
     const errors = {};
     if (!porcentaje?.trim()) errors.porcentaje = "El porcentaje es obligatorio";
-    if (!idMusculo?.trim()) errors.idMusculo = "El músculo es obligatorio";
-    if (!idEjercicio?.trim()) errors.idEjercicio = "El ejercicio es obligatorio";
-    if (!idTipo?.trim()) errors.idTipo = "El tipo es obligatorio";
+    if (!musculo?.trim()) errors.musculo = "El músculo es obligatorio";
+    if (!ejercicio?.trim()) errors.ejercicio = "El ejercicio es obligatorio";
     this.setState({ errorsByField: errors });
     return Object.keys(errors).length === 0;
   };
@@ -142,11 +158,11 @@ class Detalle_Musculo extends Component {
 
     this.setState({ loadingSave: true, errorSave: null, successSave: null });
 
+    // ✅ Payload sin tipo
     const payload = {
       porcentaje: this.state.form.porcentaje.trim(),
-      idMusculo: this.state.form.idMusculo.trim(),
-      idEjercicio: this.state.form.idEjercicio.trim(),
-      idTipo: this.state.form.idTipo.trim(),
+      musculo: Number(this.state.form.musculo),
+      ejercicio: Number(this.state.form.ejercicio),
     };
 
     try {
@@ -185,7 +201,7 @@ class Detalle_Musculo extends Component {
 
   resetForm = () => {
     this.setState({
-      form: { porcentaje: "", idMusculo: "", idEjercicio: "", idTipo: "" },
+      form: { porcentaje: "", musculo: "", ejercicio: "" },
       isEditing: false,
       editingId: null,
       errorSave: null,
@@ -195,21 +211,16 @@ class Detalle_Musculo extends Component {
   };
 
   editRow = (item) => {
-    const safeIdMusculo =
-      typeof item.idMusculo === "object" ? item.idMusculo.id : item.idMusculo;
-    const safeIdEjercicio =
-      typeof item.idEjercicio === "object"
-        ? item.idEjercicio.id
-        : item.idEjercicio;
-    const safeIdTipo =
-      typeof item.idTipo === "object" ? item.idTipo.id : item.idTipo;
+    const safeMusculo =
+      typeof item.musculo === "object" ? item.musculo.id : item.musculo;
+    const safeEjercicio =
+      typeof item.ejercicio === "object" ? item.ejercicio.id : item.ejercicio;
 
     this.setState({
       form: {
         porcentaje: item.porcentaje ?? "",
-        idMusculo: safeIdMusculo != null ? String(safeIdMusculo) : "",
-        idEjercicio: safeIdEjercicio != null ? String(safeIdEjercicio) : "",
-        idTipo: safeIdTipo != null ? String(safeIdTipo) : "",
+        musculo: safeMusculo != null ? String(safeMusculo) : "",
+        ejercicio: safeEjercicio != null ? String(safeEjercicio) : "",
       },
       isEditing: true,
       editingId: item.id,
@@ -269,7 +280,7 @@ class Detalle_Musculo extends Component {
     );
   }
 
-  renderSelect(label, name, options, valueKey, labelKey) {
+  renderSelect(label, name, options, valueKey, labelKey, extraLabelFn) {
     const { form, errorsByField } = this.state;
     const hasError = Boolean(errorsByField?.[name]);
     const safeOptions = Array.isArray(options) ? options : [];
@@ -301,16 +312,21 @@ class Detalle_Musculo extends Component {
           <option value="" style={optionStyle}>
             Seleccione una opción
           </option>
-          {safeOptions.map((option) => (
-            <option
-              key={option[valueKey]}
-              value={option[valueKey]}
-              style={optionStyle}
-            >
-              {option[labelKey]}
-            </option>
-          ))}
+          {safeOptions.map((option) => {
+            const baseLabel = option[labelKey];
+            const extra = extraLabelFn ? extraLabelFn(option) : "";
+            return (
+              <option
+                key={option[valueKey]}
+                value={option[valueKey]}
+                style={optionStyle}
+              >
+                {extra ? `${baseLabel} — ${extra}` : baseLabel}
+              </option>
+            );
+          })}
         </select>
+
         {hasError && (
           <span className="text-red-300 text-xs">
             {Array.isArray(errorsByField[name])
@@ -331,7 +347,6 @@ class Detalle_Musculo extends Component {
       isEditing,
       musculos,
       ejercicios,
-      tipos,
       items,
       currentPage,
       pageSize,
@@ -343,12 +358,14 @@ class Detalle_Musculo extends Component {
       ? this.getPagedItems()
       : [];
 
-    const selectedMusculo = form.idMusculo
-      ? this.findMusculo(form.idMusculo)
+    const selectedMusculo = form.musculo
+      ? this.findMusculo(form.musculo)
       : null;
-    const selectedEjercicio = form.idEjercicio
-      ? this.findEjercicio(form.idEjercicio)
+    const selectedEjercicio = form.ejercicio
+      ? this.findEjercicio(form.ejercicio)
       : null;
+
+    const selectedTipoNombre = this.getTipoNombreFromMusculo(selectedMusculo);
 
     return (
       <main className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4">
@@ -373,22 +390,34 @@ class Detalle_Musculo extends Component {
           <form onSubmit={this.handleSubmit} className="mb-8 space-y-6">
             <div className="grid md:grid-cols-2 gap-4">
               {this.renderField("Porcentaje", "porcentaje", "text", {
-                placeholder: "Ej: 75%",
+                placeholder: "Ej: 75",
               })}
-              {this.renderSelect("Tipo", "idTipo", tipos, "id", "nombre")}
+
+              {/* Tipo automático */}
+              <div className="flex flex-col gap-1">
+                <label className="text-white/80 text-sm">Tipo (automático)</label>
+                <div className="px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white/90">
+                  {selectedTipoNombre}
+                </div>
+                <span className="text-white/50 text-xs">
+                  El tipo se define por el músculo seleccionado.
+                </span>
+              </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
               {this.renderSelect(
                 "Músculo",
-                "idMusculo",
+                "musculo",
                 musculos,
                 "id",
-                "nombre"
+                "nombre",
+                (m) => this.getTipoNombreFromMusculo(m) // ✅ muestra tipo al lado del músculo
               )}
+
               {this.renderSelect(
                 "Ejercicio",
-                "idEjercicio",
+                "ejercicio",
                 ejercicios,
                 "id",
                 "nombre"
@@ -412,6 +441,9 @@ class Detalle_Musculo extends Component {
                     )}
                     <p className="text-white font-semibold">
                       {selectedMusculo.nombre}
+                    </p>
+                    <p className="text-white/70 text-xs mt-1">
+                      Tipo: {selectedTipoNombre}
                     </p>
                   </>
                 ) : (
@@ -458,6 +490,7 @@ class Detalle_Musculo extends Component {
                   ? "Actualizar"
                   : "Crear"}
               </button>
+
               {isEditing && (
                 <button
                   type="button"
@@ -479,9 +512,9 @@ class Detalle_Musculo extends Component {
             <>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-left">
                 {pagedItems.map((item) => {
-                  const musculo = this.findMusculo(item.idMusculo);
-                  const ejercicio = this.findEjercicio(item.idEjercicio);
-                  const tipoNombre = this.getTipoNombre(item.idTipo, item);
+                  const musculo = this.findMusculo(item.musculo);
+                  const ejercicio = this.findEjercicio(item.ejercicio);
+                  const tipoNombre = this.getTipoNombreFromItem(item);
 
                   return (
                     <div
@@ -503,9 +536,13 @@ class Detalle_Musculo extends Component {
                           )}
                           <p className="text-xs text-white/70">
                             <span className="font-semibold">Músculo:</span>{" "}
-                            {musculo ? musculo.nombre : item.idMusculo}
+                            {musculo ? musculo.nombre : item.musculo}
+                          </p>
+                          <p className="text-[11px] text-white/60">
+                            Tipo: {tipoNombre}
                           </p>
                         </div>
+
                         <div className="flex-1">
                           {ejercicio?.url && (
                             <img
@@ -516,18 +553,14 @@ class Detalle_Musculo extends Component {
                           )}
                           <p className="text-xs text-white/70">
                             <span className="font-semibold">Ejercicio:</span>{" "}
-                            {ejercicio ? ejercicio.nombre : item.idEjercicio}
+                            {ejercicio ? ejercicio.nombre : item.ejercicio}
                           </p>
                         </div>
                       </div>
 
-                      <p className="text-sm text-white/80 mb-1">
+                      <p className="text-sm text-white/80 mb-4">
                         <span className="font-semibold">Porcentaje:</span>{" "}
                         {item.porcentaje}
-                      </p>
-                      <p className="text-sm text-white/80 mb-4">
-                        <span className="font-semibold">Tipo:</span>{" "}
-                        {tipoNombre}
                       </p>
 
                       <div className="flex gap-2">

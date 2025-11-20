@@ -7,15 +7,22 @@ class Tipo(models.Model):
     estado = models.BooleanField(default=True)
 
     def __str__(self):
-        return str(self.nombre)
+        return self.nombre
 
 
 class Musculo(models.Model):
     nombre = models.CharField(max_length=255)
     url = models.URLField()
 
+    # ✅ Relación Tipo -> Musculo (1 Tipo tiene muchos músculos)
+    tipo = models.ForeignKey(
+        Tipo,
+        on_delete=models.CASCADE,
+        related_name="musculos"
+    )
+
     def __str__(self):
-        return str(self.nombre)
+        return self.nombre
 
 
 class Ejercicio(models.Model):
@@ -24,28 +31,43 @@ class Ejercicio(models.Model):
     estado = models.BooleanField(default=True)
 
     def __str__(self):
-        return str(self.nombre)
+        return self.nombre
 
 
 class DetalleMusculo(models.Model):
     porcentaje = models.CharField(max_length=255)
-    idMusculo = models.ForeignKey(Musculo, on_delete=models.CASCADE)
-    idEjercicio = models.ForeignKey(Ejercicio, on_delete=models.CASCADE)
-    # 🔹 Nuevo: referencia al tipo
-    idTipo = models.ForeignKey(Tipo, on_delete=models.CASCADE)
+
+    # ✅ Musculo -> DetalleMusculo (1 musculo tiene muchos detalles)
+    musculo = models.ForeignKey(
+        Musculo,
+        on_delete=models.CASCADE,
+        related_name="detalles"
+    )
+
+    # ✅ Ejercicio -> DetalleMusculo (1 ejercicio aparece en muchos detalles)
+    ejercicio = models.ForeignKey(
+        Ejercicio,
+        on_delete=models.CASCADE,
+        related_name="detalles_musculo"
+    )
+
+    class Meta:
+        # Evita duplicados del mismo musculo-ejercicio
+        unique_together = ("musculo", "ejercicio")
 
     def __str__(self):
-        return f"{self.idMusculo} - {self.idEjercicio} ({self.porcentaje}) - {self.idTipo}"
+        return f"{self.musculo} - {self.ejercicio} ({self.porcentaje})"
 
 
 class EjercicioAsignado(models.Model):
-    idDetalleMusculo = models.ForeignKey(
+    # ✅ DetalleMusculo -> EjercicioAsignado (1 detalle tiene muchos asignados)
+    detalle_musculo = models.ForeignKey(
         DetalleMusculo,
         on_delete=models.CASCADE,
-        related_name='ejercicios_asignados',
+        related_name="ejercicios_asignados",
     )
     series = models.IntegerField()
     repeticiones = models.IntegerField()
 
     def __str__(self):
-        return f"{self.series}x{self.repeticiones} (Detalle {self.idDetalleMusculo_id})"
+        return f"{self.series}x{self.repeticiones} (Detalle {self.detalle_musculo_id})"

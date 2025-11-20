@@ -78,7 +78,7 @@ export default function Sidebar({ open, onClose, closeOnNavigate = false }) {
             icon: Dumbbell,
           },
           {
-            to: "/ejercicios",
+            to: "/banca-de-ejercicios",
             label: "3.- Banco de Ejercicios",
             icon: Activity,
           },

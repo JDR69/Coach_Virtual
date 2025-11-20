@@ -8,13 +8,19 @@ import MusculoService from '../../services/MusculoService';
 
 /**
  * Vista de selección de ejercicio específico
- * Los ejercicios se cargan dinámicamente desde el backend usando DetalleMusculoService y EjercicioService
+ * Ahora DetalleMusculo ya NO tiene idTipo / idMusculo / idEjercicio.
+ * Estructura nueva desde backend:
+ *  - detalle.musculo  -> id del musculo (FK)
+ *  - detalle.ejercicio -> id del ejercicio (FK)
+ *  - detalle.porcentaje
+ *  - detalle.tipo (read-only) viene desde musculo.tipo, o detalle.musculo_data.tipo
  */
 export default function SeleccionEjercicio() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const categoria = searchParams.get('categoria');
-  const parte = searchParams.get('parte');
+  const categoria = searchParams.get('categoria'); // id tipo
+  const parte = searchParams.get('parte');         // id musculo
+
   const [breadcrumb, setBreadcrumb] = useState({ categoria: '', parte: '' });
   const [ejercicios, setEjercicios] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,30 +53,47 @@ export default function SeleccionEjercicio() {
         parte: musculoActual?.nombre || 'Parte'
       });
 
-      // Obtener todos los detalles de músculos y ejercicios del backend
+      // Obtener todos los detalles y ejercicios
       const [detalles, ejerciciosData] = await Promise.all([
         DetalleMusculoService.getAll(),
         EjercicioService.getAll()
       ]);
 
-      // Filtrar por la parte del cuerpo (músculo) seleccionada y la categoría (tipo)
+      const categoriaId = parseInt(categoria);
+      const parteId = parseInt(parte);
+
+      // Filtrar por musculo y por tipo (que viene desde el musculo)
       const ejerciciosFiltrados = detalles
-        .filter(detalle => {
-          // Filtrar por el ID del músculo (parte) y el ID del tipo (categoría)
-          return detalle.idMusculo === parseInt(parte) && detalle.idTipo === parseInt(categoria);
+        .filter((detalle) => {
+          const musculoOk = detalle.musculo === parteId;
+
+          // tipo puede venir como:
+          // 1) detalle.tipo.id (serializer lo incluye)
+          // 2) detalle.musculo_data.tipo (id del tipo dentro del musculo)
+          const tipoIdDetalle =
+            detalle?.tipo?.id ??
+            detalle?.musculo_data?.tipo ??
+            detalle?.musculo_data?.tipo_data?.id;
+
+          const tipoOk = tipoIdDetalle === categoriaId;
+
+          return musculoOk && tipoOk;
         })
-        .map((detalle, index) => {
+        .map((detalle) => {
+          const ejercicioId = detalle.ejercicio;
+
           // Buscar el ejercicio completo por ID
-          const ejercicioCompleto = ejerciciosData.find(ej => ej.id === detalle.idEjercicio);
+          const ejercicioCompleto =
+            ejerciciosData.find(ej => ej.id === ejercicioId) ||
+            detalle?.ejercicio_data; // fallback si vino embebido
 
           return {
-            id: detalle.idEjercicio,
+            id: ejercicioId,
             detalleId: detalle.id,
-            nombre: ejercicioCompleto?.nombre || `Ejercicio ${detalle.idEjercicio}`,
+            nombre: ejercicioCompleto?.nombre || `Ejercicio ${ejercicioId}`,
             descripcion: `Porcentaje de trabajo: ${detalle.porcentaje}%`,
             porcentaje: detalle.porcentaje,
-            url: ejercicioCompleto?.url || '', // URL de la imagen del ejercicio
-            // Datos adicionales calculados
+            url: ejercicioCompleto?.url || '',
             duracion: '15 min',
             dificultad: getDificultadByPorcentaje(detalle.porcentaje),
             calorias: calcularCalorias(detalle.porcentaje)
@@ -102,7 +125,6 @@ export default function SeleccionEjercicio() {
   };
 
   const handleSelectEjercicio = (ejercicio) => {
-    // Normalizar nombre para coincidencias simples (sin tildes / mayúsculas)
     const nombreNorm = ejercicio.nombre
       .toLowerCase()
       .replace(/á/g, 'a')
@@ -111,7 +133,6 @@ export default function SeleccionEjercicio() {
       .replace(/ó/g, 'o')
       .replace(/ú/g, 'u');
 
-    // Mapear a rutas según el ejercicio
     if (nombreNorm.includes('bicep') || nombreNorm.includes('curl')) {
       navigate('/categoria/gimnasio/brazos/biceps-curl');
       return;
@@ -122,7 +143,6 @@ export default function SeleccionEjercicio() {
       return;
     }
 
-    // Fallback si no hay ruta específica aún
     alert('Ruta de rutina no implementada para: ' + ejercicio.nombre);
   };
 

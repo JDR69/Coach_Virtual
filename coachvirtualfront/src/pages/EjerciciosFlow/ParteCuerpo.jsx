@@ -1,6 +1,6 @@
 // src/view/ejercicios/ParteCuerpo.jsx
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   User,
@@ -9,24 +9,26 @@ import {
   Zap,
   Brain,
   Loader2,
-} from 'lucide-react';
-import MusculoService from '../../services/MusculoService';
-import TipoService from '../../services/TipoService';
+} from "lucide-react";
+import MusculoService from "../../services/MusculoService";
+import TipoService from "../../services/TipoService";
 
 /**
  * Vista de selección de parte del cuerpo
- * Las partes del cuerpo se cargan dinámicamente desde el backend usando MusculoService
+ * - Trae TODOS los músculos
+ * - Filtra en frontend por la categoría seleccionada (?categoria=id)
  */
 export default function ParteCuerpo() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const categoria = searchParams.get('categoria');
-  const [selectedCategoria, setSelectedCategoria] = useState('');
+  const categoria = searchParams.get("categoria");
+
+  const [selectedCategoria, setSelectedCategoria] = useState("");
   const [partesCuerpo, setPartesCuerpo] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Mapeo de iconos por nombre de músculo (puedes extender esto según necesites)
+  // Mapeo de iconos por nombre de músculo (puedes extender esto)
   const iconMapping = {
     brazos: Activity,
     piernas: Footprints,
@@ -36,16 +38,16 @@ export default function ParteCuerpo() {
     default: Activity,
   };
 
-  // Colores predefinidos para las partes del cuerpo (se asignan cíclicamente)
+  // Colores predefinidos para las partes del cuerpo (cíclico)
   const colorOptions = [
-    'from-red-400 to-red-600',
-    'from-yellow-400 to-yellow-600',
-    'from-purple-400 to-purple-600',
-    'from-blue-400 to-blue-600',
-    'from-green-400 to-green-600',
-    'from-pink-400 to-pink-600',
-    'from-indigo-400 to-indigo-600',
-    'from-orange-400 to-orange-600',
+    "from-red-400 to-red-600",
+    "from-yellow-400 to-yellow-600",
+    "from-purple-400 to-purple-600",
+    "from-blue-400 to-blue-600",
+    "from-green-400 to-green-600",
+    "from-pink-400 to-pink-600",
+    "from-indigo-400 to-indigo-600",
+    "from-orange-400 to-orange-600",
   ];
 
   const fetchPartesCuerpo = async () => {
@@ -53,20 +55,44 @@ export default function ParteCuerpo() {
       setLoading(true);
       setError(null);
 
-      // Obtener el nombre de la categoría desde el backend
+      const categoriaId = parseInt(categoria, 10);
+
+      // 1) Obtener el nombre de la categoría (solo para mostrar arriba)
       const tipos = await TipoService.getAll();
-      const tipoActual = tipos.find(t => t.id === parseInt(categoria));
+      const tipoActual = tipos.find((t) => t.id === categoriaId);
       if (tipoActual) {
         setSelectedCategoria(tipoActual.nombre);
       }
 
-      // Obtener todos los músculos del backend
-      const musculos = await MusculoService.getAll();
+      // 2) Obtener TODOS los músculos
+      const musculosAll = await MusculoService.getAll();
 
-      // Transformar los músculos del backend al formato de partes del cuerpo
-      const partesFormateadas = musculos.map((musculo, index) => {
+      // ✅ Helper para sacar el idTipo sin importar cómo venga
+      const getTipoId = (m) => {
+        // caso común: m.tipo es un número o string
+        if (m.tipo !== undefined && m.tipo !== null) {
+          return parseInt(m.tipo, 10);
+        }
+        // si te llega anidado como objeto {id, ...}
+        if (m.tipo && typeof m.tipo === "object" && m.tipo.id) {
+          return parseInt(m.tipo.id, 10);
+        }
+        // si te llega como tipo_data {id,...}
+        if (m.tipo_data && m.tipo_data.id) {
+          return parseInt(m.tipo_data.id, 10);
+        }
+        return null;
+      };
+
+      // 3) Filtrar por categoría en frontend
+      const musculosFiltrados = musculosAll.filter(
+        (m) => getTipoId(m) === categoriaId
+      );
+
+      // 4) Transformar al formato de tarjetas
+      const partesFormateadas = musculosFiltrados.map((musculo, index) => {
         const nombreLower = musculo.nombre.toLowerCase();
-        const icon = iconMapping[nombreLower] || iconMapping['default'];
+        const icon = iconMapping[nombreLower] || iconMapping["default"];
         const color = colorOptions[index % colorOptions.length];
 
         return {
@@ -75,15 +101,15 @@ export default function ParteCuerpo() {
           descripcion: `Ejercicios de ${musculo.nombre}`,
           icon,
           color,
-          url: musculo.url, // 👈 aquí traemos la URL del backend
+          url: musculo.url,
         };
       });
 
       setPartesCuerpo(partesFormateadas);
     } catch (err) {
-      console.error('Error al cargar partes del cuerpo:', err);
+      console.error("Error al cargar partes del cuerpo:", err);
       setError(
-        'No se pudieron cargar las partes del cuerpo. Por favor, intenta de nuevo.'
+        "No se pudieron cargar las partes del cuerpo. Por favor, intenta de nuevo."
       );
     } finally {
       setLoading(false);
@@ -92,10 +118,10 @@ export default function ParteCuerpo() {
 
   useEffect(() => {
     if (!categoria) {
-      navigate('/ejercicios/categoria');
-    } else {
-      fetchPartesCuerpo();
+      navigate("/ejercicios/categoria");
+      return;
     }
+    fetchPartesCuerpo();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoria, navigate]);
 
@@ -104,7 +130,7 @@ export default function ParteCuerpo() {
   };
 
   const handleBack = () => {
-    navigate('/ejercicios/categoria');
+    navigate("/ejercicios/categoria");
   };
 
   return (
@@ -122,7 +148,7 @@ export default function ParteCuerpo() {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-block bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-            {selectedCategoria || 'Selecciona una categoría'}
+            {selectedCategoria || "Selecciona una categoría"}
           </div>
           <h1 className="text-4xl font-bold text-gray-800 mb-3">
             Selecciona la Parte del Cuerpo
@@ -156,7 +182,7 @@ export default function ParteCuerpo() {
         {!loading && !error && partesCuerpo.length === 0 && (
           <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-6 text-center">
             <p className="text-yellow-700">
-              No hay partes del cuerpo disponibles en este momento.
+              No hay partes del cuerpo para esta categoría.
             </p>
           </div>
         )}
@@ -191,7 +217,7 @@ export default function ParteCuerpo() {
                         </div>
                       )}
 
-                      {/* Overlay para mejor contraste de texto */}
+                      {/* Overlay para contraste */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
                       {/* Nombre + icono sobre la imagen */}
@@ -205,7 +231,7 @@ export default function ParteCuerpo() {
                       </div>
                     </div>
 
-                    {/* Contenido de la tarjeta */}
+                    {/* Contenido */}
                     <div className="p-5">
                       <p className="text-gray-600 text-sm leading-relaxed mb-3">
                         {parte.descripcion}
@@ -252,5 +278,4 @@ export default function ParteCuerpo() {
       </div>
     </div>
   );
-
 }
