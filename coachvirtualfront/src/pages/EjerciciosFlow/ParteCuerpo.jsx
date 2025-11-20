@@ -11,6 +11,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import MusculoService from '../../services/MusculoService';
+import TipoService from '../../services/TipoService';
 
 /**
  * Vista de selección de parte del cuerpo
@@ -52,6 +53,13 @@ export default function ParteCuerpo() {
       setLoading(true);
       setError(null);
 
+      // Obtener el nombre de la categoría desde el backend
+      const tipos = await TipoService.getAll();
+      const tipoActual = tipos.find(t => t.id === parseInt(categoria));
+      if (tipoActual) {
+        setSelectedCategoria(tipoActual.nombre);
+      }
+
       // Obtener todos los músculos del backend
       const musculos = await MusculoService.getAll();
 
@@ -86,9 +94,6 @@ export default function ParteCuerpo() {
     if (!categoria) {
       navigate('/ejercicios/categoria');
     } else {
-      setSelectedCategoria(
-        categoria === 'gimnasio' ? 'Gimnasio' : 'Fisioterapia'
-      );
       fetchPartesCuerpo();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -247,4 +252,5 @@ export default function ParteCuerpo() {
       </div>
     </div>
   );
+
 }

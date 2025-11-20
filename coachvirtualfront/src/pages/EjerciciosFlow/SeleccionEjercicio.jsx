@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Play, Clock, Target, TrendingUp, Loader2 } from 'lucide-react';
 import DetalleMusculoService from '../../services/DetalleMusculoService';
 import EjercicioService from '../../services/EjercicioService';
+import TipoService from '../../services/TipoService';
+import MusculoService from '../../services/MusculoService';
 
 /**
  * Vista de selección de ejercicio específico
@@ -22,10 +24,6 @@ export default function SeleccionEjercicio() {
     if (!categoria || !parte) {
       navigate('/ejercicios/categoria');
     } else {
-      setBreadcrumb({
-        categoria: categoria === 'gimnasio' ? 'Gimnasio' : 'Fisioterapia',
-        parte: parte.charAt(0).toUpperCase() + parte.slice(1)
-      });
       fetchEjercicios();
     }
   }, [categoria, parte, navigate]);
@@ -34,6 +32,20 @@ export default function SeleccionEjercicio() {
     try {
       setLoading(true);
       setError(null);
+
+      // Obtener el nombre de la categoría y parte desde el backend
+      const [tipos, musculos] = await Promise.all([
+        TipoService.getAll(),
+        MusculoService.getAll()
+      ]);
+
+      const tipoActual = tipos.find(t => t.id === parseInt(categoria));
+      const musculoActual = musculos.find(m => m.id === parseInt(parte));
+
+      setBreadcrumb({
+        categoria: tipoActual?.nombre || 'Categoría',
+        parte: musculoActual?.nombre || 'Parte'
+      });
 
       // Obtener todos los detalles de músculos y ejercicios del backend
       const [detalles, ejerciciosData] = await Promise.all([
@@ -99,9 +111,14 @@ export default function SeleccionEjercicio() {
       .replace(/ó/g, 'o')
       .replace(/ú/g, 'u');
 
-    // Mapear a rutas según el ejercicio (por ahora solo bíceps)
+    // Mapear a rutas según el ejercicio
     if (nombreNorm.includes('bicep') || nombreNorm.includes('curl')) {
       navigate('/categoria/gimnasio/brazos/biceps-curl');
+      return;
+    }
+
+    if (nombreNorm.includes('flexion')) {
+      navigate('/categoria/gimnasio/pectorales/flexiones');
       return;
     }
 
