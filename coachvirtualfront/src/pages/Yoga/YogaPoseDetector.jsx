@@ -47,7 +47,7 @@ export default function YogaPoseDetector({ onPoseDetected, highlightedAngles = [
     const initializePoseDetector = async () => {
       try {
         setIsLoading(true);
-        
+
         // 1. Verificar si hay cámara disponible
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           throw new Error('Tu navegador no soporta acceso a la cámara');
@@ -56,7 +56,7 @@ export default function YogaPoseDetector({ onPoseDetected, highlightedAngles = [
         // 2. Solicitar acceso a la cámara PRIMERO (antes de cargar modelos pesados)
         console.log('Solicitando acceso a la cámara...');
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { 
+          video: {
             width: { ideal: 1280, min: 640 },
             height: { ideal: 720, min: 480 },
             facingMode: 'user',
@@ -70,7 +70,7 @@ export default function YogaPoseDetector({ onPoseDetected, highlightedAngles = [
         const vision = await FilesetResolver.forVisionTasks(
           'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm'
         );
-        
+
         const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
           baseOptions: {
             modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
@@ -82,31 +82,41 @@ export default function YogaPoseDetector({ onPoseDetected, highlightedAngles = [
           minTrackingConfidence: 0.5
         });
         console.log('✅ MediaPipe cargado');
-        
+
         poseLandmarkerRef.current = poseLandmarker;
 
         // 4. Configurar el video y esperar a que esté listo
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          
-          // Esperar a que el video tenga datos antes de continuar
-          if (videoRef.current.readyState >= 2) {
-            // Video ya tiene datos, iniciar inmediatamente
+
+          try {
+            // Llamar explícitamente a play() y ESPERAR a que comience
+            await videoRef.current.play();
+            console.log('✅ Video reproduciendo');
+
+            // Esperar a que el video tenga metadata
+            await new Promise((resolve) => {
+              if (videoRef.current.readyState >= 2) {
+                resolve();
+              } else {
+                videoRef.current.addEventListener('loadedmetadata', resolve, { once: true });
+              }
+            });
+
+            console.log(`Video resolution: ${videoRef.current.videoWidth}x${videoRef.current.videoHeight}`);
             setIsLoading(false);
             startDetection();
-          } else {
-            // Esperar el evento loadeddata
-            videoRef.current.addEventListener('loadeddata', () => {
-              setIsLoading(false);
-              startDetection();
-            }, { once: true });
+          } catch (err) {
+            console.error('Error al iniciar el video:', err);
+            setError('No se pudo iniciar la cámara. Intenta recargar la página.');
+            setIsLoading(false);
           }
         } else {
           setIsLoading(false);
         }
       } catch (err) {
         console.error('❌ Error al inicializar:', err);
-        
+
         // Mensajes de error más específicos
         let errorMsg = 'Error desconocido';
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
@@ -120,7 +130,7 @@ export default function YogaPoseDetector({ onPoseDetected, highlightedAngles = [
         } else {
           errorMsg = `Error al cargar: ${err.message || 'Verifica tu conexión y permisos de cámara'}`;
         }
-        
+
         setError(errorMsg);
         setIsLoading(false);
       }
@@ -161,7 +171,7 @@ export default function YogaPoseDetector({ onPoseDetected, highlightedAngles = [
     const detectPose = async () => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
-      
+
       if (!video || !canvas || !poseLandmarkerRef.current) return;
 
       // Ajustar tamaño del canvas
@@ -182,10 +192,10 @@ export default function YogaPoseDetector({ onPoseDetected, highlightedAngles = [
 
           if (results.landmarks && results.landmarks.length > 0) {
             const rawLandmarks = results.landmarks[0];
-            
+
             // Aplicar suavizado ligero para reducir jitter sin añadir lag
             const landmarks = smoothLandmarks(rawLandmarks, 0.2);
-            
+
             // Convertir todos los landmarks a coordenadas de píxeles
             const points = landmarks.map(l => normalizedToPixel(l, width, height));
 
@@ -194,10 +204,10 @@ export default function YogaPoseDetector({ onPoseDetected, highlightedAngles = [
 
             // Dibujar conexiones específicas para yoga con colores según validación
             const drawConnection = (indices, isValid = null) => {
-              const color = isValid === null ? '#00FF00' 
-                          : isValid ? 'green' 
-                          : 'red';
-              
+              const color = isValid === null ? '#00FF00'
+                : isValid ? 'green'
+                  : 'red';
+
               for (let i = 0; i < indices.length - 1; i++) {
                 drawLine(ctx, points[indices[i]], points[indices[i + 1]], color, 8);
               }
@@ -213,13 +223,13 @@ export default function YogaPoseDetector({ onPoseDetected, highlightedAngles = [
               // Brazos
               drawConnection([11, 13, 15]); // Brazo izquierdo
               drawConnection([12, 14, 16]); // Brazo derecho
-              
+
               // Torso
               drawConnection([11, 12]); // Hombros
               drawConnection([11, 23]); // Lado izquierdo
               drawConnection([12, 24]); // Lado derecho
               drawConnection([23, 24]); // Caderas
-              
+
               // Piernas
               drawConnection([23, 25, 27]); // Pierna izquierda
               drawConnection([24, 26, 28]); // Pierna derecha
@@ -237,7 +247,7 @@ export default function YogaPoseDetector({ onPoseDetected, highlightedAngles = [
               if (angle !== undefined && indices.length >= 3) {
                 const middlePoint = points[indices[1]];
                 const landmarkVisible = landmarks[indices[1]].visibility > 0.5;
-                
+
                 if (middlePoint && landmarkVisible) {
                   ctx.fillStyle = isValid ? '#00FF00' : '#FF0000';
                   ctx.font = 'bold 28px Arial';
@@ -246,7 +256,7 @@ export default function YogaPoseDetector({ onPoseDetected, highlightedAngles = [
                   const text = `${Math.round(angle)}°`;
                   const x = middlePoint.x + 15;
                   const y = middlePoint.y + 40;
-                  
+
                   // Contorno negro para mejor legibilidad
                   ctx.strokeText(text, x, y);
                   ctx.fillText(text, x, y);
