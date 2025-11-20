@@ -21,6 +21,9 @@ function AppContent({ sidebarOpen, setSidebarOpen }) {
     // location.pathname === "/seleccionar" ||  // Si luego quieres ocultar ahí, descomenta
     location.pathname === "/musculo";
 
+  // ⬇️ Mostrar panel de stats SOLO en páginas de ejercicios activos
+  const showStatsPanel = location.pathname.startsWith("/categoria/");
+
   return (
     <>
       {/* Header en lugar de Navbar (NO se muestra en /login) */}
@@ -37,15 +40,14 @@ function AppContent({ sidebarOpen, setSidebarOpen }) {
 
       {/* Contenido principal */}
       <div
-        className={`${hideHeader ? "" : "pt-16"} transition-all duration-300 ${
-          !hideSidebar && sidebarOpen ? "ml-56 max-md:ml-0" : "ml-0"
-        }`}
+        className={`${hideHeader ? "" : "pt-16"} transition-all duration-300 ${!hideSidebar && sidebarOpen ? "ml-56 max-md:ml-0" : "ml-0"
+          }`}
       >
         <AppRoutes />
       </div>
 
-      {/* Panel Google Fit (solo cuando hay sidebar) */}
-      {!hideSidebar && <Dispositivo />}
+      {/* Panel Google Fit (solo en páginas de ejercicios) */}
+      {showStatsPanel && <Dispositivo />}
     </>
   );
 }
