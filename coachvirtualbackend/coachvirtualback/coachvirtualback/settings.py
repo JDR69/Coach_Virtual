@@ -193,6 +193,11 @@ CORS_ALLOWED_ORIGINS = [
     "https://magical-stroopwafel-40b85c.netlify.app",  # Frontend en producción (alternativo)
 ]
 
+# Permitir cualquier subdominio de ngrok
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.ngrok-free\.app$",
+]
+
 CORS_ALLOW_CREDENTIALS = True
 
 # CSRF
@@ -201,4 +206,5 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:5173",
     "https://coachvirtual.netlify.app",
     "https://magical-stroopwafel-40b85c.netlify.app",
+    "https://*.ngrok-free.app",
 ]
