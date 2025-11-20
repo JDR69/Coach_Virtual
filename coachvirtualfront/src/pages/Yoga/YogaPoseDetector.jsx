@@ -48,27 +48,13 @@ export default function YogaPoseDetector({ onPoseDetected, highlightedAngles = [
       try {
         setIsLoading(true);
         
-        const vision = await FilesetResolver.forVisionTasks(
-          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm'
-        );
-        
-        const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
-          baseOptions: {
-          //  modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task',
-            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
-            delegate: 'GPU'
-          },
-          runningMode: 'VIDEO',
-          numPoses: 1,
-          minDetectionConfidence: 0.7,
-          minTrackingConfidence: 0.7,
-          minPoseDetectionConfidence: 0.7,
-          minPosePresenceConfidence: 0.7
-        });
-        
-        poseLandmarkerRef.current = poseLandmarker;
+        // 1. Verificar si hay cámara disponible
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('Tu navegador no soporta acceso a la cámara');
+        }
 
-        // Access camera con mejor resolución y configuración
+        // 2. Solicitar acceso a la cámara PRIMERO (antes de cargar modelos pesados)
+        console.log('Solicitando acceso a la cámara...');
         stream = await navigator.mediaDevices.getUserMedia({
           video: { 
             width: { ideal: 1280, min: 640 },
@@ -77,16 +63,65 @@ export default function YogaPoseDetector({ onPoseDetected, highlightedAngles = [
             frameRate: { ideal: 30, max: 30 }
           }
         });
+        console.log('✅ Cámara autorizada');
 
+        // 3. Cargar MediaPipe mientras la cámara está lista
+        console.log('Cargando modelo MediaPipe...');
+        const vision = await FilesetResolver.forVisionTasks(
+          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm'
+        );
+        
+        const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+            delegate: 'GPU'
+          },
+          runningMode: 'VIDEO',
+          numPoses: 1,
+          minDetectionConfidence: 0.5,
+          minTrackingConfidence: 0.5
+        });
+        console.log('✅ MediaPipe cargado');
+        
+        poseLandmarkerRef.current = poseLandmarker;
+
+        // 4. Configurar el video y esperar a que esté listo
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.addEventListener('loadeddata', startDetection);
+          
+          // Esperar a que el video tenga datos antes de continuar
+          if (videoRef.current.readyState >= 2) {
+            // Video ya tiene datos, iniciar inmediatamente
+            setIsLoading(false);
+            startDetection();
+          } else {
+            // Esperar el evento loadeddata
+            videoRef.current.addEventListener('loadeddata', () => {
+              setIsLoading(false);
+              startDetection();
+            }, { once: true });
+          }
+        } else {
+          setIsLoading(false);
         }
-
-        setIsLoading(false);
       } catch (err) {
-        console.error('Error al inicializar:', err);
-        setError('No se pudo cargar el detector. Verifica tu cámara y conexión.');
+        console.error('❌ Error al inicializar:', err);
+        
+        // Mensajes de error más específicos
+        let errorMsg = 'Error desconocido';
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          errorMsg = '🚫 Permiso de cámara denegado. Por favor, autoriza el acceso a la cámara en tu navegador.';
+        } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+          errorMsg = '📷 No se encontró ninguna cámara en tu dispositivo.';
+        } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+          errorMsg = '⚠️ La cámara está siendo usada por otra aplicación. Cierra otras apps que usen la cámara.';
+        } else if (err.message && err.message.includes('soporta')) {
+          errorMsg = err.message;
+        } else {
+          errorMsg = `Error al cargar: ${err.message || 'Verifica tu conexión y permisos de cámara'}`;
+        }
+        
+        setError(errorMsg);
         setIsLoading(false);
       }
     };
