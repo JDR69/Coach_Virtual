@@ -2,6 +2,7 @@
 import { Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import { useCategory } from "../context/CategoryContext";
+import WizardRutinaIA from "../pages/RutinasIA/WizardRutinaIA";
 
 import Home from "../pages/Home";
 import Perfil from "../pages/GestionarUsuario/Perfil";
@@ -190,6 +191,7 @@ export default function AppRoutes() {
           <Route path="/planes" element={<Planes />} />
           <Route path="/planes/pago" element={<Pago />} />
           <Route path="/pose-test" element={<PoseTest />} />
+          <Route path="/rutinas/crear-ia" element={<WizardRutinaIA />} />
           {/* Rutina específica reorganizada */}
           <Route path="/categoria/gimnasio/brazos/biceps-curl" element={<BicepsCurl />} />
           <Route path="/categoria/gimnasio/brazos/flexiones" element={<Flexiones />} />
@@ -241,6 +243,7 @@ export default function AppRoutes() {
           <Route path="/categoria/gimnasio/espalda/remo-inclinado-mancuernas" element={<RemoInclinadoMancuernas />} />
           <Route path="/yoga" element={<YogaPage />} />
           <Route path="/rutinas/:id" element={<DetalleRutina />} />
+          <Route path="/generar-rutina-ia" element={<WizardRutinaIA />} />
           <Route path="/ejercicio/generico" element={<EjercicioDetalleGenerico />} />
           {/* Abdominales */}
           <Route path="/categoria/gimnasio/abdominales/plancha" element={<Plancha />} />

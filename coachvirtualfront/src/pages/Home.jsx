@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  TrendingUp, 
-  Calendar, 
-  Target, 
-  Clock, 
-  Flame, 
+import {
+  TrendingUp,
+  Calendar,
+  Target,
+  Clock,
+  Flame,
   Trophy,
   Plus,
   ChevronRight,
@@ -35,12 +35,12 @@ const Home = () => {
   const [rutinas, setRutinas] = useState([]);
   const [loadingRutinas, setLoadingRutinas] = useState(true);
 
-  // Create routine modal state
+  // Estado para modal de creación manual
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [availableExercises, setAvailableExercises] = useState([]);
   const [selectedExercises, setSelectedExercises] = useState([]);
   const [newRutinaNombre, setNewRutinaNombre] = useState('');
-  const [newRutinaDuracion, setNewRutinaDuracion] = useState('45'); // minutos por defecto
+  const [newRutinaDuracion, setNewRutinaDuracion] = useState('45');
   const [newRutinaCategoria, setNewRutinaCategoria] = useState('Gimnasio');
 
   // Datos de ejemplo para estadísticas - reemplazar con API
@@ -104,7 +104,6 @@ const Home = () => {
   const openCreateModal = async () => {
     setShowCreateModal(true);
     setSelectedExercises([]);
-    // cargar ejercicios disponibles (detalle + ejercicio)
     try {
       const [detalles, ejercicios] = await Promise.all([
         DetalleMusculoService.getAll().catch(() => []),
@@ -124,7 +123,6 @@ const Home = () => {
         };
       });
 
-      // quitar duplicados por id
       const uniq = [];
       const byId = {};
       for (const e of list) {
@@ -135,7 +133,7 @@ const Home = () => {
       }
       setAvailableExercises(uniq);
     } catch (err) {
-      console.error('No se pudieron cargar ejercicios para selección:', err);
+      console.error('No se pudieron cargar ejercicios:', err);
       setAvailableExercises([]);
     }
   };
@@ -167,7 +165,6 @@ const Home = () => {
 
     try {
       const created = await RoutineService.create(payload);
-      // normalizar y añadir a lista
       const item = {
         id: created.id || Date.now(),
         nombre: created.nombre || payload.nombre,
@@ -198,9 +195,10 @@ const Home = () => {
     }
   };
 
-  return ( 
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6">
-      <div className="max-w-7xl mx-auto">
+  return (
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6">
+        <div className="max-w-7xl mx-auto">
         {/* Header con animación */}
         <div className={`mb-8 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           <div className="flex items-center gap-3 mb-2">
@@ -299,27 +297,26 @@ const Home = () => {
                 const altura = (dato.minutos / maxMinutos) * 100;
                 const isHovered = hoveredBar === index;
                 return (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className="flex-1 flex flex-col items-center gap-2"
                     onMouseEnter={() => setHoveredBar(index)}
                     onMouseLeave={() => setHoveredBar(null)}
                   >
                     <div className="relative w-full flex items-end justify-center" style={{ height: '200px' }}>
                       <div
-                        className={`w-full rounded-t-xl transition-all duration-500 cursor-pointer relative overflow-hidden ${
-                          isHovered 
-                            ? 'bg-gradient-to-t from-purple-600 via-blue-500 to-cyan-400 shadow-lg scale-105' 
+                        className={`w-full rounded-t-xl transition-all duration-500 cursor-pointer relative overflow-hidden ${isHovered
+                            ? 'bg-gradient-to-t from-purple-600 via-blue-500 to-cyan-400 shadow-lg scale-105'
                             : 'bg-gradient-to-t from-blue-500 via-blue-400 to-blue-300'
-                        }`}
-                        style={{ 
+                          }`}
+                        style={{
                           height: mounted ? `${altura}%` : '0%',
                           transitionDelay: `${600 + index * 100}ms`
                         }}
                       >
                         {/* Efecto de brillo */}
                         <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/20 to-transparent"></div>
-                        
+
                         {/* Tooltip mejorado */}
                         <div className={`absolute -top-16 left-1/2 transform -translate-x-1/2 transition-all duration-300 ${isHovered ? 'opacity-100 -translate-y-2' : 'opacity-0 translate-y-0'}`}>
                           <div className="bg-gray-800 text-white px-3 py-2 rounded-lg shadow-xl text-sm font-semibold whitespace-nowrap">
@@ -353,7 +350,7 @@ const Home = () => {
             {/* Efectos de fondo animados */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 animate-pulse"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 animate-pulse" style={{ animationDelay: '1s' }}></div>
-            
+
             <div className="relative z-10">
               <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 inline-block mb-4 animate-bounce">
                 <Sparkles className="w-10 h-10" />
@@ -399,34 +396,31 @@ const Home = () => {
               </div>
               Mis Rutinas
             </h2>
-            <div className="flex items-center gap-2">
+            <div className="flex gap-2">
               <button
                 onClick={openCreateModal}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl"
               >
-                <Plus className="w-4 h-4" />
-                Crear rutina
+                <Plus className="w-5 h-5" />
+                Crear Manual
               </button>
-              {rutinas.length > 0 && (
-                <button
-                  onClick={handleExplorarEjercicios}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
-                >
-                  <Plus className="w-4 h-4" />
-                  Explorar ejercicios
-                </button>
-              )}
+              <button
+                onClick={() => navigate('/rutinas/crear-ia')}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl"
+              >
+                <Sparkles className="w-5 h-5" />
+                Crear con IA
+              </button>
             </div>
           </div>
 
           {loadingRutinas ? (
-            <div className="text-center py-8">Cargando rutinas...</div>
+            <div className="text-center py-16">Cargando rutinas...</div>
           ) : rutinas.length === 0 ? (
-            /* Estado vacío mejorado */
             <div className="text-center py-16 relative">
               {/* Efectos de fondo */}
               <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl opacity-50"></div>
-              
+
               <div className="relative z-10">
                 <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-full w-28 h-28 mx-auto mb-6 flex items-center justify-center shadow-xl animate-pulse">
                   <Activity className="w-14 h-14 text-white" />
@@ -435,7 +429,7 @@ const Home = () => {
                   ¡Tu aventura fitness comienza aquí! 🚀
                 </h3>
                 <p className="text-gray-600 mb-8 max-w-md mx-auto leading-relaxed">
-                  Explora nuestro catálogo y crea tu primera rutina personalizada. 
+                  Explora nuestro catálogo y crea tu primera rutina personalizada.
                   <span className="font-semibold"> ¡Es momento de empezar!</span>
                 </p>
                 <button
@@ -533,13 +527,14 @@ const Home = () => {
             </div>
           )}
         </div>
-        {/* Modal creación de rutina */}
+
+        {/* Modal creación manual de rutina */}
         {showCreateModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-xl p-6 w-full max-w-4xl shadow-2xl">
+            <div className="bg-white rounded-xl p-6 w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold">Crear nueva rutina</h3>
-                <button onClick={closeCreateModal} className="text-gray-500">Cerrar</button>
+                <h3 className="text-lg font-bold">Crear nueva rutina (Manual)</h3>
+                <button onClick={closeCreateModal} className="text-gray-500 hover:text-gray-700">✕</button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -576,10 +571,10 @@ const Home = () => {
                 <h4 className="font-semibold mb-2">Seleccionar ejercicios</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-64 overflow-auto">
                   {availableExercises.length === 0 ? (
-                    <div className="text-sm text-gray-500">No hay ejercicios cargados. Intenta abrir de nuevo o explorar ejercicios.</div>
+                    <div className="text-sm text-gray-500">No hay ejercicios cargados. Intenta abrir de nuevo.</div>
                   ) : (
                     availableExercises.map((ej) => (
-                      <label key={ej.detalleId || ej.id} className={`flex items-center gap-3 p-2 border rounded-md ${selectedExercises.find(s => s.id === ej.id) ? 'bg-blue-50 border-blue-200' : 'bg-white'}`}>
+                      <label key={ej.detalleId || ej.id} className={`flex items-center gap-3 p-2 border rounded-md cursor-pointer ${selectedExercises.find(s => s.id === ej.id) ? 'bg-blue-50 border-blue-200' : 'bg-white'}`}>
                         <input type="checkbox" checked={!!selectedExercises.find(s => s.id === ej.id)} onChange={() => toggleSelectExercise(ej)} />
                         <div className="flex-1">
                           <div className="font-semibold">{ej.nombre}</div>
@@ -593,14 +588,15 @@ const Home = () => {
               </div>
 
               <div className="flex items-center justify-end gap-3">
-                <button onClick={closeCreateModal} className="px-4 py-2 rounded-md border">Cancelar</button>
-                <button onClick={handleCreateRoutine} className="px-4 py-2 rounded-md bg-blue-600 text-white">Guardar rutina</button>
+                <button onClick={closeCreateModal} className="px-4 py-2 rounded-md border hover:bg-gray-100">Cancelar</button>
+                <button onClick={handleCreateRoutine} className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Guardar rutina</button>
               </div>
             </div>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
