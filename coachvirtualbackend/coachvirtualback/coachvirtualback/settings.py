@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from decouple import config
 import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -92,27 +93,18 @@ WSGI_APPLICATION = "coachvirtualback.wsgi.application"
 """Configuración de base de datos.
 
 Se prioriza el uso de una URL completa (DATABASE_URL) si está definida en el entorno
-para facilitar despliegues (como Railway). Si no existe, se usan variables separadas.
+para facilitar despliegues (como Railway/Render). Si no existe, se usan variables separadas.
 
 Ejemplo de .env:
 DATABASE_URL=postgresql://postgres:pass@host:port/railway
 """
 
-from urllib.parse import urlparse
-
-database_url = config("DATABASE_URL", default="postgresql://postgres:rGuCuRzXLXRjtqTuipAFEPBMVbEhWrej@yamanote.proxy.rlwy.net:41329/railway")
+database_url = config("DATABASE_URL", default=None)
 
 if database_url:
-    parsed = urlparse(database_url)
+    # Usar dj_database_url para parsear la URL
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": parsed.path.lstrip("/"),
-            "USER": parsed.username,
-            "PASSWORD": parsed.password,
-            "HOST": parsed.hostname,
-            "PORT": str(parsed.port),
-        }
+        "default": dj_database_url.parse(database_url)
     }
 else:
     # Fallback a variables individuales (mantiene compatibilidad previa)
