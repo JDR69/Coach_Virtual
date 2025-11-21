@@ -17,6 +17,9 @@ import {
   Award,
   TrendingDown
 } from 'lucide-react';
+import RoutineService from '../services/RoutineService';
+import EjercicioService from '../services/EjercicioService';
+import DetalleMusculoService from '../services/DetalleMusculoService';
 
 /**
  * Dashboard principal del usuario - Versión dinámica y atractiva
@@ -29,29 +32,16 @@ const Home = () => {
   const navigate = useNavigate();
   const [mounted, setMounted] = useState(false);
   const [hoveredBar, setHoveredBar] = useState(null);
-  const [rutinas, setRutinas] = useState([
-    // Datos de ejemplo - reemplazar con llamada a API
-    {
-      id: 1,
-      nombre: 'Rutina de Brazos',
-      categoria: 'Gimnasio',
-      parte: 'Brazos',
-      ejercicios: 5,
-      duracion: '45 min',
-      progreso: 60,
-      ultimoEntrenamiento: '2024-11-15'
-    },
-    {
-      id: 2,
-      nombre: 'Recuperación Espalda',
-      categoria: 'Fisioterapia',
-      parte: 'Espalda',
-      ejercicios: 3,
-      duracion: '30 min',
-      progreso: 30,
-      ultimoEntrenamiento: '2024-11-10'
-    }
-  ]);
+  const [rutinas, setRutinas] = useState([]);
+  const [loadingRutinas, setLoadingRutinas] = useState(true);
+
+  // Create routine modal state
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [availableExercises, setAvailableExercises] = useState([]);
+  const [selectedExercises, setSelectedExercises] = useState([]);
+  const [newRutinaNombre, setNewRutinaNombre] = useState('');
+  const [newRutinaDuracion, setNewRutinaDuracion] = useState('45'); // minutos por defecto
+  const [newRutinaCategoria, setNewRutinaCategoria] = useState('Gimnasio');
 
   // Datos de ejemplo para estadísticas - reemplazar con API
   const estadisticas = {
@@ -76,18 +66,139 @@ const Home = () => {
 
   useEffect(() => {
     setMounted(true);
+    // cargar rutinas desde backend o localStorage
+    (async () => {
+      try {
+        setLoadingRutinas(true);
+        const data = await RoutineService.list();
+        if (Array.isArray(data) && data.length > 0) {
+          // normalizar a estructura que usa la UI
+          const normalized = data.map((r) => ({
+            id: r.id,
+            nombre: r.nombre || r.title || r.nombre || 'Rutina',
+            categoria: r.categoria || (r.categoria === 'fisioterapia' ? 'Fisioterapia' : (r.categoria || 'Gimnasio')),
+            parte: r.parte_cuerpo || r.parte || 'General',
+            ejercicios: Array.isArray(r.datos_rutina) ? r.datos_rutina.length : (r.ejercicios || 0),
+            duracion: r.duracion_minutos ? `${r.duracion_minutos} min` : (r.duracion || '45 min'),
+            progreso: r.progreso ?? 0,
+            datos_rutina: r.datos_rutina || r.exercises || []
+          }));
+          setRutinas(normalized);
+        } else {
+          // si no hay datos, mantenemos vacío
+          setRutinas([]);
+        }
+      } catch (err) {
+        console.error('Error cargando rutinas:', err);
+        setRutinas([]);
+      } finally {
+        setLoadingRutinas(false);
+      }
+    })();
   }, []);
 
   const handleExplorarEjercicios = () => {
     navigate('/ejercicios/categoria');
   };
 
-  const handleIniciarRutina = (rutinaId) => {
-    // Aquí navegarías a la página de entrenamiento
-    alert(`Iniciando rutina ${rutinaId}\n(Próximamente: página de entrenamiento)`);
+  const openCreateModal = async () => {
+    setShowCreateModal(true);
+    setSelectedExercises([]);
+    // cargar ejercicios disponibles (detalle + ejercicio)
+    try {
+      const [detalles, ejercicios] = await Promise.all([
+        DetalleMusculoService.getAll().catch(() => []),
+        EjercicioService.getAll().catch(() => [])
+      ]);
+
+      const list = detalles.map((detalle) => {
+        const ejercicio = ejercicios.find(e => e.id === detalle.ejercicio) || detalle.ejercicio_data || {};
+        return {
+          id: detalle.ejercicio,
+          detalleId: detalle.id,
+          nombre: ejercicio.nombre || `Ejercicio ${detalle.ejercicio}`,
+          descripcion: `Porcentaje: ${detalle.porcentaje}%`,
+          url: ejercicio.url || ejercicio.image || '',
+          duracion: '15 min',
+          porcentaje: detalle.porcentaje
+        };
+      });
+
+      // quitar duplicados por id
+      const uniq = [];
+      const byId = {};
+      for (const e of list) {
+        if (!byId[e.id]) {
+          byId[e.id] = true;
+          uniq.push(e);
+        }
+      }
+      setAvailableExercises(uniq);
+    } catch (err) {
+      console.error('No se pudieron cargar ejercicios para selección:', err);
+      setAvailableExercises([]);
+    }
   };
 
-  return (
+  const closeCreateModal = () => {
+    setShowCreateModal(false);
+  };
+
+  const toggleSelectExercise = (exercise) => {
+    const exists = selectedExercises.find(e => e.id === exercise.id);
+    if (exists) {
+      setSelectedExercises(prev => prev.filter(e => e.id !== exercise.id));
+    } else {
+      setSelectedExercises(prev => [...prev, exercise]);
+    }
+  };
+
+  const handleCreateRoutine = async () => {
+    if (!newRutinaNombre.trim()) return alert('Escribe un nombre para la rutina');
+    if (selectedExercises.length === 0) return alert('Selecciona al menos un ejercicio');
+
+    const payload = {
+      nombre: newRutinaNombre,
+      duracion_minutos: parseInt(newRutinaDuracion) || 45,
+      categoria: newRutinaCategoria.toLowerCase(),
+      parte_cuerpo: selectedExercises[0]?.parte || 'General',
+      datos_rutina: selectedExercises.map(e => ({ nombre: e.nombre, url: e.url, id: e.id }))
+    };
+
+    try {
+      const created = await RoutineService.create(payload);
+      // normalizar y añadir a lista
+      const item = {
+        id: created.id || Date.now(),
+        nombre: created.nombre || payload.nombre,
+        categoria: (created.categoria || payload.categoria) === 'fisioterapia' ? 'Fisioterapia' : 'Gimnasio',
+        parte: created.parte_cuerpo || payload.parte_cuerpo,
+        ejercicios: Array.isArray(created.datos_rutina) ? created.datos_rutina.length : selectedExercises.length,
+        duracion: (created.duracion_minutos ? `${created.duracion_minutos} min` : `${payload.duracion_minutos || newRutinaDuracion} min`),
+        progreso: created.progreso ?? 0,
+        datos_rutina: created.datos_rutina || payload.datos_rutina
+      };
+      setRutinas(prev => [item, ...prev]);
+      setShowCreateModal(false);
+      setNewRutinaNombre('');
+      setSelectedExercises([]);
+    } catch (err) {
+      console.error('Error creando rutina:', err);
+      alert('No se pudo crear la rutina. Intenta de nuevo.');
+    }
+  };
+
+  const handleIniciarRutina = (rutinaId) => {
+    // Navegar a la vista de detalle de la rutina que muestra solo los ejercicios seleccionados
+    try {
+      navigate(`/rutinas/${rutinaId}`);
+    } catch (err) {
+      console.error('Error navegando a rutina:', err);
+      alert(`Iniciando rutina ${rutinaId}\n(Próximamente: página de entrenamiento)`);
+    }
+  };
+
+  return ( 
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header con animación */}
@@ -288,18 +399,29 @@ const Home = () => {
               </div>
               Mis Rutinas
             </h2>
-            {rutinas.length > 0 && (
+            <div className="flex items-center gap-2">
               <button
-                onClick={handleExplorarEjercicios}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+                onClick={openCreateModal}
+                className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
               >
                 <Plus className="w-4 h-4" />
-                Añadir rutina
+                Crear rutina
               </button>
-            )}
+              {rutinas.length > 0 && (
+                <button
+                  onClick={handleExplorarEjercicios}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+                >
+                  <Plus className="w-4 h-4" />
+                  Explorar ejercicios
+                </button>
+              )}
+            </div>
           </div>
 
-          {rutinas.length === 0 ? (
+          {loadingRutinas ? (
+            <div className="text-center py-8">Cargando rutinas...</div>
+          ) : rutinas.length === 0 ? (
             /* Estado vacío mejorado */
             <div className="text-center py-16 relative">
               {/* Efectos de fondo */}
@@ -411,6 +533,72 @@ const Home = () => {
             </div>
           )}
         </div>
+        {/* Modal creación de rutina */}
+        {showCreateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-xl p-6 w-full max-w-4xl shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold">Crear nueva rutina</h3>
+                <button onClick={closeCreateModal} className="text-gray-500">Cerrar</button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Nombre</label>
+                  <input value={newRutinaNombre} onChange={(e) => setNewRutinaNombre(e.target.value)} className="mt-1 block w-full border rounded-md p-2" placeholder="Ej: Full Body A" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Duración (min)</label>
+                  <select value={newRutinaDuracion} onChange={(e) => setNewRutinaDuracion(e.target.value)} className="mt-1 block w-full border rounded-md p-2">
+                    <option value="15">15</option>
+                    <option value="30">30</option>
+                    <option value="45">45</option>
+                    <option value="60">60</option>
+                    <option value="43200">1 mes</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Categoría</label>
+                  <select value={newRutinaCategoria} onChange={(e) => setNewRutinaCategoria(e.target.value)} className="mt-1 block w-full border rounded-md p-2">
+                    <option>Gimnasio</option>
+                    <option>Fisioterapia</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Ejercicios seleccionados</label>
+                  <div className="mt-1 p-2 border rounded-md h-20 overflow-auto">
+                    {selectedExercises.length === 0 ? <span className="text-sm text-gray-500">Ninguno</span> : selectedExercises.map(e => <div key={e.id} className="text-sm">• {e.nombre}</div>)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h4 className="font-semibold mb-2">Seleccionar ejercicios</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-64 overflow-auto">
+                  {availableExercises.length === 0 ? (
+                    <div className="text-sm text-gray-500">No hay ejercicios cargados. Intenta abrir de nuevo o explorar ejercicios.</div>
+                  ) : (
+                    availableExercises.map((ej) => (
+                      <label key={ej.detalleId || ej.id} className={`flex items-center gap-3 p-2 border rounded-md ${selectedExercises.find(s => s.id === ej.id) ? 'bg-blue-50 border-blue-200' : 'bg-white'}`}>
+                        <input type="checkbox" checked={!!selectedExercises.find(s => s.id === ej.id)} onChange={() => toggleSelectExercise(ej)} />
+                        <div className="flex-1">
+                          <div className="font-semibold">{ej.nombre}</div>
+                          <div className="text-xs text-gray-500">{ej.descripcion}</div>
+                        </div>
+                        {ej.url && <img src={ej.url} alt={ej.nombre} className="w-16 h-12 object-cover rounded-md" />}
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3">
+                <button onClick={closeCreateModal} className="px-4 py-2 rounded-md border">Cancelar</button>
+                <button onClick={handleCreateRoutine} className="px-4 py-2 rounded-md bg-blue-600 text-white">Guardar rutina</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

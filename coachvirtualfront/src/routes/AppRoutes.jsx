@@ -24,6 +24,8 @@ import PressBancaPectorales from "../pages/Categoria/gimnasio/pectorales/PressBa
 import AperturasInclinadoPectorales from "../pages/Categoria/gimnasio/pectorales/AperturasInclinadoPectorales";
 import PressInclinadoPectorales from "../pages/Categoria/gimnasio/pectorales/PressInclinadoPectorales";
 import AperturasMariposa from "../pages/Categoria/gimnasio/pectorales/AperturasMariposa";
+import DetalleRutina from "../pages/Rutina/DetalleRutina";
+import EjercicioDetalleGenerico from "../pages/EjercicioDetalleGenerico";
 // Fisioterapia (brazos)
 import AduccionHombros from "../pages/Categoria/fisioterapia/brazos/AduccionHombros";
 import CurlBicepsSentado from "../pages/Categoria/fisioterapia/brazos/CurlBicepsSentado";
@@ -238,6 +240,8 @@ export default function AppRoutes() {
           <Route path="/categoria/gimnasio/espalda/remo-unilateral-pie-polea" element={<RemoUnilateralPiePolea />} />
           <Route path="/categoria/gimnasio/espalda/remo-inclinado-mancuernas" element={<RemoInclinadoMancuernas />} />
           <Route path="/yoga" element={<YogaPage />} />
+          <Route path="/rutinas/:id" element={<DetalleRutina />} />
+          <Route path="/ejercicio/generico" element={<EjercicioDetalleGenerico />} />
           {/* Abdominales */}
           <Route path="/categoria/gimnasio/abdominales/plancha" element={<Plancha />} />
           <Route path="/categoria/gimnasio/abdominales/elevacion-piernas-suelo" element={<ElevacionPiernasSuelo />} />
