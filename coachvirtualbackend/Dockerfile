@@ -12,10 +12,10 @@ RUN pip install --upgrade pip && pip install -r /app/requirements.txt
 # Copia el código
 COPY . /app
 
-# Variables por defecto (pueden ser sobrescritas por Railway)
+# Puerto por defecto (puede sobrescribirse en runtime por Railway)
 ENV PORT=8000
 
-# Pre-collectstatic (requiere SECRET_KEY; Railway env vars pueden sobrescribir en tiempo de build)
-RUN python manage.py collectstatic --noinput || true
-
-CMD ["gunicorn", "coachvirtualback.wsgi:application", "--bind", "0.0.0.0:8000"]
+# No ejecutar collectstatic en build (puede necesitar SECRET_KEY en tiempo de build)
+# Ejecutamos migraciones y collectstatic al arrancar el contenedor para asegurar
+# que las variables de entorno de Railway estén disponibles.
+ENTRYPOINT ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn coachvirtualback.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]
