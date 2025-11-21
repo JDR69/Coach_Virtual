@@ -87,19 +87,43 @@ WSGI_APPLICATION = "coachvirtualback.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("DB_NAME"),
-        "USER": config("DB_USER"),
-        "PASSWORD": config("DB_PASSWORD"),
-        "HOST": config("DB_HOST", default="127.0.0.1"),
-        "PORT": config("DB_PORT", default="5432"),
-        "OPTIONS": {
-            "client_encoding": "UTF8",
-        },
+"""Configuración de base de datos.
+
+Se prioriza el uso de una URL completa (DATABASE_URL) si está definida en el entorno
+para facilitar despliegues (como Railway). Si no existe, se usan variables separadas.
+
+Ejemplo de .env:
+DATABASE_URL=postgresql://postgres:pass@host:port/railway
+"""
+
+from urllib.parse import urlparse
+
+database_url = config("DATABASE_URL", default="postgresql://postgres:rGuCuRzXLXRjtqTuipAFEPBMVbEhWrej@yamanote.proxy.rlwy.net:41329/railway")
+
+if database_url:
+    parsed = urlparse(database_url)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": parsed.path.lstrip("/"),
+            "USER": parsed.username,
+            "PASSWORD": parsed.password,
+            "HOST": parsed.hostname,
+            "PORT": str(parsed.port),
+        }
     }
-}
+else:
+    # Fallback a variables individuales (mantiene compatibilidad previa)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config("DB_NAME"),
+            "USER": config("DB_USER"),
+            "PASSWORD": config("DB_PASSWORD"),
+            "HOST": config("DB_HOST", default="127.0.0.1"),
+            "PORT": config("DB_PORT", default="5432"),
+        }
+    }
 
 
 # Password validation
