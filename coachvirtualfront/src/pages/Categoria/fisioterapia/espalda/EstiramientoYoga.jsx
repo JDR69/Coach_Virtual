@@ -35,9 +35,9 @@ export default function EstiramientoYoga() {
   const lastRepTimeRef = useRef(0);
 
   // Constantes de umbral
-  const ARM_UP_ANGLE = 150;      // Ángulo de hombro (abierto hacia arriba)
-  const ELBOW_STRAIGHT = 150;    // Brazo estirado
-  const BODY_STRAIGHT = 160;     // Cuerpo recto (cadera)
+  const ARM_UP_ANGLE = 140;      // Ángulo de hombro (más permisivo)
+  const ELBOW_STRAIGHT = 140;    // Brazo estirado (más permisivo)
+  const BODY_STRAIGHT = 140;     // Cuerpo recto (más permisivo)
   const HOLD_DURATION_MS = 5000; // 5 segundos de estiramiento
 
   const handlePoseDetected = (landmarks) => {
@@ -79,6 +79,7 @@ export default function EstiramientoYoga() {
         // Iniciar hold
         if (!holdStartTimeRef.current) {
           holdStartTimeRef.current = now;
+          lastRepTimeRef.current = now; // Usamos esto como "última vez correcto" también
           setStage('holding');
           setFeedback('Mantén la postura...');
           speak('Mantén la postura');
@@ -95,6 +96,8 @@ export default function EstiramientoYoga() {
     }
     else if (stage === 'holding') {
       if (isPoseCorrect) {
+        lastRepTimeRef.current = now; // Actualizar tiempo de última postura correcta
+
         const elapsed = now - holdStartTimeRef.current;
         const remaining = Math.ceil((HOLD_DURATION_MS - elapsed) / 1000);
         setHoldTimer(remaining);
@@ -107,14 +110,21 @@ export default function EstiramientoYoga() {
           setRepCount(c => c + 1);
           holdStartTimeRef.current = null;
           setHoldTimer(0);
-          lastRepTimeRef.current = now;
         }
       } else {
-        // Perdió la postura
-        setStage('start');
-        setFeedback('Postura perdida, intenta de nuevo');
-        holdStartTimeRef.current = null;
-        setHoldTimer(0);
+        // Verificar periodo de gracia (1 segundo)
+        const timeSinceLastCorrect = now - lastRepTimeRef.current;
+
+        if (timeSinceLastCorrect > 1000) {
+          // Perdió la postura después de la gracia
+          setStage('start');
+          setFeedback('Postura perdida, intenta de nuevo');
+          holdStartTimeRef.current = null;
+          setHoldTimer(0);
+        } else {
+          // En periodo de gracia, mantener feedback pero advertir visualmente si se desea
+          // Por ahora mantenemos el estado 'holding'
+        }
       }
     }
   };
@@ -243,7 +253,7 @@ export default function EstiramientoYoga() {
 
             {/* Tarjeta de Feedback */}
             <div className={`rounded-xl shadow-lg p-6 text-center transition-colors duration-300 ${stage === 'holding' ? 'bg-green-100 border-2 border-green-400' :
-                stage === 'relax' ? 'bg-blue-100 border-2 border-blue-400' : 'bg-white'
+              stage === 'relax' ? 'bg-blue-100 border-2 border-blue-400' : 'bg-white'
               }`}>
               <h3 className="text-gray-500 font-medium mb-2">Instrucción IA</h3>
               <div className="text-2xl font-bold text-gray-800">

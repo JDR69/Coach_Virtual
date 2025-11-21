@@ -221,10 +221,7 @@ export default function SeleccionEjercicio() {
           navigate('/categoria/fisioterapia/espalda/espalda-recta', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
           return;
         }
-        if (nombreNorm.includes('band') || nombreNorm.includes('pull') || nombreNorm.includes('apart')) {
-          navigate('/categoria/fisioterapia/espalda/band-pull-apart', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
-          return;
-        }
+
         if (nombreNorm.includes('later') || nombreNorm.includes('cintura') || nombreNorm.includes('lateral')) {
           navigate('/categoria/fisioterapia/espalda/estiramiento-laterales-cintura', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
           return;
@@ -237,14 +234,20 @@ export default function SeleccionEjercicio() {
           navigate('/categoria/fisioterapia/espalda/rotacion-tronco-sentado', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
           return;
         }
-        if (nombreNorm.includes('yoga') || nombreNorm.includes('estiramiento yoga') || nombreNorm.includes('estiramiento')) {
-          navigate('/categoria/fisioterapia/espalda/estiramiento-yoga', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
-          return;
-        }
         if (nombreNorm.includes('flex') && (nombreNorm.includes('espalda') || nombreNorm.includes('pierna') || nombreNorm.includes('abdomen'))) {
           navigate('/categoria/fisioterapia/espalda/flexion-espalda-pierna-abdomen', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
           return;
         }
+      }
+
+      // Check for Yoga independent of 'espalda' keyword in name
+      if (nombreNorm.includes('yoga') || nombreNorm.includes('estiramiento yoga')) {
+        navigate('/categoria/fisioterapia/espalda/estiramiento-yoga', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
+      }
+      if (nombreNorm.includes('band') || nombreNorm.includes('pull') || nombreNorm.includes('apart')) {
+        navigate('/categoria/fisioterapia/espalda/band-pull-apart', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
       }
       if (nombreNorm.includes('curl') && nombreNorm.includes('sentad')) {
         navigate('/categoria/fisioterapia/brazos/curl-biceps-sentado', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
