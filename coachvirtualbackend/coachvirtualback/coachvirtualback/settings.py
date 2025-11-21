@@ -189,24 +189,16 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:5173",  # Puerto por defecto de Vite
     "http://127.0.0.1:5173",
-    "http://192.168.1.2:3000",
-    "http://192.168.1.2:5173",
-    "http://192.168.1.5:3000",  # tu IP actual
-    "http://192.168.1.5:5173",  # tu IP actual
+    "https://coachvirtual.netlify.app",  # Frontend en producción
+    "https://magical-stroopwafel-40b85c.netlify.app",  # Frontend en producción (alternativo)
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
-# Para desarrollo - permite todos los orígenes (NO usar en producción)
-# CORS_ALLOW_ALL_ORIGINS = True
-# --- CSRF (relevante si usas cookies/CSRF desde navegador) ---
+# CSRF
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://192.168.1.2:3000",
-    "http://192.168.1.2:5173",
-    "http://192.168.1.5:3000",  # tu IP
-    "http://192.168.1.5:5173",  # tu IP
+    "https://coachvirtual.netlify.app",
+    "https://magical-stroopwafel-40b85c.netlify.app",
 ]
