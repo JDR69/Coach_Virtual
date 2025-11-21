@@ -20,6 +20,13 @@ import RemoConMancuernas from "../pages/Categoria/gimnasio/espalda/RemoConMancue
 import RemoSentadoPoleaBaja from "../pages/Categoria/gimnasio/espalda/RemoSentadoPoleaBaja";
 import RemoUnilateralPiePolea from "../pages/Categoria/gimnasio/espalda/RemoUnilateralPiePolea";
 import RemoInclinadoMancuernas from "../pages/Categoria/gimnasio/espalda/RemoInclinadoMancuernas";
+import PressBancaPectorales from "../pages/Categoria/gimnasio/pectorales/PressBancaPectorales";
+import AperturasInclinadoPectorales from "../pages/Categoria/gimnasio/pectorales/AperturasInclinadoPectorales";
+import PressInclinadoPectorales from "../pages/Categoria/gimnasio/pectorales/PressInclinadoPectorales";
+import AperturasMariposa from "../pages/Categoria/gimnasio/pectorales/AperturasMariposa";
+import Plancha from "../pages/Categoria/gimnasio/abdominales/Plancha";
+import ElevacionPiernasSuelo from "../pages/Categoria/gimnasio/abdominales/ElevacionPiernasSuelo";
+import ElevacionPiernasBanco from "../pages/Categoria/gimnasio/abdominales/ElevacionPiernasBanco";
 import YogaPage from "../pages/Yoga/YogaPage";
 import EjerciciosPage from "../pages/Ejercicios/EjerciciosPage";
 import IAPage from "../pages/IAPage/IAPage";
@@ -152,6 +159,12 @@ export default function AppRoutes() {
           <Route path="/categoria/gimnasio/brazos/flexiones" element={<Flexiones />} />
           <Route path="/categoria/gimnasio/brazos/press-banca" element={<PressBanca />} />
           <Route path="/categoria/gimnasio/brazos/press-inclinado" element={<PressInclinado />} />
+          {/* Pectorales */}
+          <Route path="/categoria/gimnasio/pectorales/flexiones" element={<Flexiones />} />
+          <Route path="/categoria/gimnasio/pectorales/press-banca" element={<PressBancaPectorales />} />
+          <Route path="/categoria/gimnasio/pectorales/aperturas-inclinado" element={<AperturasInclinadoPectorales />} />
+          <Route path="/categoria/gimnasio/pectorales/press-inclinado" element={<PressInclinadoPectorales />} />
+          <Route path="/categoria/gimnasio/pectorales/aperturas-mariposa" element={<AperturasMariposa />} />
           {/* Espalda */}
           <Route path="/categoria/gimnasio/espalda/remo-sentado-maquina" element={<RemoSentadoMaquina />} />
           <Route path="/categoria/gimnasio/espalda/remo-con-mancuernas" element={<RemoConMancuernas />} />
@@ -159,6 +172,10 @@ export default function AppRoutes() {
           <Route path="/categoria/gimnasio/espalda/remo-unilateral-pie-polea" element={<RemoUnilateralPiePolea />} />
           <Route path="/categoria/gimnasio/espalda/remo-inclinado-mancuernas" element={<RemoInclinadoMancuernas />} />
           <Route path="/yoga" element={<YogaPage />} />
+          {/* Abdominales */}
+          <Route path="/categoria/gimnasio/abdominales/plancha" element={<Plancha />} />
+          <Route path="/categoria/gimnasio/abdominales/elevacion-piernas-suelo" element={<ElevacionPiernasSuelo />} />
+          <Route path="/categoria/gimnasio/abdominales/elevacion-piernas-banco" element={<ElevacionPiernasBanco />} />
           <Route path="/ejercicios" element={<EjerciciosPage />} />
           <Route path="/ia" element={<IAPage />} />
           <Route path="/chat-ia" element={<ChatIA />} />

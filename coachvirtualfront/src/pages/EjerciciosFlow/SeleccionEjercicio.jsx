@@ -133,24 +133,55 @@ export default function SeleccionEjercicio() {
       .replace(/ó/g, 'o')
       .replace(/ú/g, 'u');
 
+    const parteNombre = (breadcrumb.parte || '').toLowerCase();
+    const isPectoral = parteNombre.includes('pecho') || parteNombre.includes('pectoral') || parteNombre.includes('pectorales');
+    const isAbdominal = parteNombre.includes('abdominal') || parteNombre.includes('abdomen') || parteNombre.includes('abdominales');
+
     if (nombreNorm.includes('bicep') || nombreNorm.includes('curl')) {
       navigate('/categoria/gimnasio/brazos/biceps-curl', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
       return;
     }
 
     if (nombreNorm.includes('flexion') || nombreNorm.includes('flexiones')) {
-      navigate('/categoria/gimnasio/brazos/flexiones', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+      if (isPectoral) {
+        navigate('/categoria/gimnasio/pectorales/flexiones', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+      } else {
+        navigate('/categoria/gimnasio/brazos/flexiones', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+      }
       return;
     }
 
     if (nombreNorm.includes('press') && nombreNorm.includes('banca')) {
-      navigate('/categoria/gimnasio/brazos/press-banca', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+      if (isPectoral) {
+        navigate('/categoria/gimnasio/pectorales/press-banca', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+      } else {
+        navigate('/categoria/gimnasio/brazos/press-banca', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+      }
       return;
     }
 
     if (nombreNorm.includes('inclinado') || nombreNorm.includes('incline')) {
-      navigate('/categoria/gimnasio/brazos/press-inclinado', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+      if (isPectoral) {
+        navigate('/categoria/gimnasio/pectorales/press-inclinado', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+      } else {
+        navigate('/categoria/gimnasio/brazos/press-inclinado', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+      }
       return;
+    }
+
+    // Aperturas (pectoral)
+    if (nombreNorm.includes('apertur') || nombreNorm.includes('apertura')) {
+      if (isPectoral) {
+        if (nombreNorm.includes('mariposa') || nombreNorm.includes('maquina')) {
+          navigate('/categoria/gimnasio/pectorales/aperturas-mariposa', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        } else if (nombreNorm.includes('inclin')) {
+          navigate('/categoria/gimnasio/pectorales/aperturas-inclinado', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        } else {
+          // default to inclinadas if unspecified
+          navigate('/categoria/gimnasio/pectorales/aperturas-inclinado', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        }
+        return;
+      }
     }
 
     // Espalda - mapeo a nuevas rutas
@@ -173,6 +204,22 @@ export default function SeleccionEjercicio() {
       }
       if (nombreNorm.includes('inclinado') || nombreNorm.includes('incline')) {
         navigate('/categoria/gimnasio/espalda/remo-inclinado-mancuernas', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
+      }
+    }
+
+    // Abdominales
+    if (isAbdominal) {
+      if (nombreNorm.includes('plancha') || nombreNorm.includes('plancha')) {
+        navigate('/categoria/gimnasio/abdominales/plancha', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
+      }
+      if (nombreNorm.includes('elev') && nombreNorm.includes('suelo')) {
+        navigate('/categoria/gimnasio/abdominales/elevacion-piernas-suelo', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
+      }
+      if (nombreNorm.includes('elev') && nombreNorm.includes('banco')) {
+        navigate('/categoria/gimnasio/abdominales/elevacion-piernas-banco', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
         return;
       }
     }
