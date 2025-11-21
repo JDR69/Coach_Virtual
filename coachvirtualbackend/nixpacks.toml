@@ -5,7 +5,7 @@ python = "3.12"
 cmds = ["pip install -r requirements.txt"]
 
 [phases.build]
-cmds = ["python coachvirtualback/manage.py collectstatic --noinput"]
+cmds = ["cd coachvirtualback && python manage.py collectstatic --noinput"]
 
 [start]
-cmd = "python coachvirtualback/manage.py migrate --noinput && gunicorn coachvirtualback.wsgi:application --bind 0.0.0.0:$PORT"
+cmd = "cd coachvirtualback && python manage.py migrate --noinput && gunicorn coachvirtualback.wsgi:application --bind 0.0.0.0:$PORT"
