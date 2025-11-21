@@ -24,6 +24,40 @@ import PressBancaPectorales from "../pages/Categoria/gimnasio/pectorales/PressBa
 import AperturasInclinadoPectorales from "../pages/Categoria/gimnasio/pectorales/AperturasInclinadoPectorales";
 import PressInclinadoPectorales from "../pages/Categoria/gimnasio/pectorales/PressInclinadoPectorales";
 import AperturasMariposa from "../pages/Categoria/gimnasio/pectorales/AperturasMariposa";
+// Fisioterapia (brazos)
+import AduccionHombros from "../pages/Categoria/fisioterapia/brazos/AduccionHombros";
+import CurlBicepsSentado from "../pages/Categoria/fisioterapia/brazos/CurlBicepsSentado";
+import ElevacionBrazos from "../pages/Categoria/fisioterapia/brazos/ElevacionBrazos";
+import ElevacionLateralBrazos from "../pages/Categoria/fisioterapia/brazos/ElevacionLateralBrazos";
+import PressHombrosMancuernas from "../pages/Categoria/fisioterapia/brazos/PressHombrosMancuernas";
+import RotacionAntebrazoBaston from "../pages/Categoria/fisioterapia/brazos/RotacionAntebrazoBaston";
+import EstiramientoManosJuntas from "../pages/Categoria/fisioterapia/brazos/EstiramientoManosJuntas";
+import FlexionesFisio from "../pages/Categoria/fisioterapia/brazos/FlexionesFisio";
+// Fisioterapia (rodilla)
+import FlexionCortaPiernaRodilla from "../pages/Categoria/fisioterapia/rodilla/FlexionCortaPiernaRodilla";
+import FlexionCortaPierna from "../pages/Categoria/fisioterapia/rodilla/FlexionCortaPierna";
+import ExtensionPiernasAtras from "../pages/Categoria/fisioterapia/rodilla/ExtensionPiernasAtras";
+import EstiramientoPiernasFlexionRodillas from "../pages/Categoria/fisioterapia/rodilla/EstiramientoPiernasFlexionRodillas";
+import SentadillasRodilla from "../pages/Categoria/fisioterapia/rodilla/SentadillasRodilla";
+import ElevacionRodillas from "../pages/Categoria/fisioterapia/rodilla/ElevacionRodillas";
+// Fisioterapia (espalda)
+import EspaldaRecta from "../pages/Categoria/fisioterapia/espalda/EspaldaRecta";
+import BandPullApart from "../pages/Categoria/fisioterapia/espalda/BandPullApart";
+import EstiramientoLateralesCintura from "../pages/Categoria/fisioterapia/espalda/EstiramientoLateralesCintura";
+import InclinacionLateralTronco from "../pages/Categoria/fisioterapia/espalda/InclinacionLateralTronco";
+import RotacionTroncoSentado from "../pages/Categoria/fisioterapia/espalda/RotacionTroncoSentado";
+import EstiramientoYoga from "../pages/Categoria/fisioterapia/espalda/EstiramientoYoga";
+import FlexionEspaldaPiernaAbdomen from "../pages/Categoria/fisioterapia/espalda/FlexionEspaldaPiernaAbdomen";
+// Fisioterapia - pierna
+import Sentadillas from "../pages/Categoria/fisioterapia/pierna/Sentadillas";
+import ElevacionGluteosSuelo from "../pages/Categoria/fisioterapia/pierna/ElevacionGluteosSuelo";
+import PuenteGluteos from "../pages/Categoria/fisioterapia/pierna/PuenteGluteos";
+import ElevacionCortaPiernas from "../pages/Categoria/fisioterapia/pierna/ElevacionCortaPiernas";
+import ElevacionPiernas from "../pages/Categoria/fisioterapia/pierna/ElevacionPiernas";
+import ElevacionPuntasSentado from "../pages/Categoria/fisioterapia/pierna/ElevacionPuntasSentado";
+import ElevacionTalonesSentado from "../pages/Categoria/fisioterapia/pierna/ElevacionTalonesSentado";
+import CrunchInverso from "../pages/Categoria/fisioterapia/abdominales/CrunchInverso";
+import ElevacionPiernasAbd from "../pages/Categoria/fisioterapia/abdominales/ElevacionPiernasAbd";
 import Plancha from "../pages/Categoria/gimnasio/abdominales/Plancha";
 import ElevacionPiernasSuelo from "../pages/Categoria/gimnasio/abdominales/ElevacionPiernasSuelo";
 import ElevacionPiernasBanco from "../pages/Categoria/gimnasio/abdominales/ElevacionPiernasBanco";
@@ -159,6 +193,38 @@ export default function AppRoutes() {
           <Route path="/categoria/gimnasio/brazos/flexiones" element={<Flexiones />} />
           <Route path="/categoria/gimnasio/brazos/press-banca" element={<PressBanca />} />
           <Route path="/categoria/gimnasio/brazos/press-inclinado" element={<PressInclinado />} />
+          {/* Fisioterapia - brazos */}
+          <Route path="/categoria/fisioterapia/brazos/aduccion-hombros" element={<AduccionHombros />} />
+          <Route path="/categoria/fisioterapia/brazos/curl-biceps-sentado" element={<CurlBicepsSentado />} />
+          <Route path="/categoria/fisioterapia/brazos/elevacion-brazos" element={<ElevacionBrazos />} />
+          <Route path="/categoria/fisioterapia/brazos/elevacion-lateral-brazos" element={<ElevacionLateralBrazos />} />
+          <Route path="/categoria/fisioterapia/brazos/press-hombros-mancuernas" element={<PressHombrosMancuernas />} />
+          <Route path="/categoria/fisioterapia/brazos/rotacion-antebrazo-baston" element={<RotacionAntebrazoBaston />} />
+          <Route path="/categoria/fisioterapia/brazos/estiramiento-manos-juntas" element={<EstiramientoManosJuntas />} />
+          <Route path="/categoria/fisioterapia/brazos/flexiones" element={<FlexionesFisio />} />
+          {/* Fisioterapia - rodilla */}
+          <Route path="/categoria/fisioterapia/rodilla/flexion-corta-pierna-rodilla" element={<FlexionCortaPiernaRodilla />} />
+          <Route path="/categoria/fisioterapia/rodilla/flexion-corta-pierna" element={<FlexionCortaPierna />} />
+          <Route path="/categoria/fisioterapia/rodilla/extension-piernas-atras" element={<ExtensionPiernasAtras />} />
+          <Route path="/categoria/fisioterapia/rodilla/estiramiento-piernas-flexion-rodillas" element={<EstiramientoPiernasFlexionRodillas />} />
+          <Route path="/categoria/fisioterapia/rodilla/sentadillas" element={<SentadillasRodilla />} />
+          <Route path="/categoria/fisioterapia/rodilla/elevacion-rodillas" element={<ElevacionRodillas />} />
+          {/* Fisioterapia - espalda */}
+          <Route path="/categoria/fisioterapia/espalda/espalda-recta" element={<EspaldaRecta />} />
+          <Route path="/categoria/fisioterapia/espalda/band-pull-apart" element={<BandPullApart />} />
+          <Route path="/categoria/fisioterapia/espalda/estiramiento-laterales-cintura" element={<EstiramientoLateralesCintura />} />
+          <Route path="/categoria/fisioterapia/espalda/inclinacion-lateral-tronco" element={<InclinacionLateralTronco />} />
+          <Route path="/categoria/fisioterapia/espalda/rotacion-tronco-sentado" element={<RotacionTroncoSentado />} />
+          <Route path="/categoria/fisioterapia/espalda/estiramiento-yoga" element={<EstiramientoYoga />} />
+          <Route path="/categoria/fisioterapia/espalda/flexion-espalda-pierna-abdomen" element={<FlexionEspaldaPiernaAbdomen />} />
+          {/* Fisioterapia - pierna */}
+          <Route path="/categoria/fisioterapia/pierna/sentadillas" element={<Sentadillas />} />
+          <Route path="/categoria/fisioterapia/pierna/elevacion-gluteos-suelo" element={<ElevacionGluteosSuelo />} />
+          <Route path="/categoria/fisioterapia/pierna/puente-gluteos" element={<PuenteGluteos />} />
+          <Route path="/categoria/fisioterapia/pierna/elevacion-corta-piernas" element={<ElevacionCortaPiernas />} />
+          <Route path="/categoria/fisioterapia/pierna/elevacion-piernas" element={<ElevacionPiernas />} />
+          <Route path="/categoria/fisioterapia/pierna/elevacion-puntas-sentado" element={<ElevacionPuntasSentado />} />
+          <Route path="/categoria/fisioterapia/pierna/elevacion-talones-sentado" element={<ElevacionTalonesSentado />} />
           {/* Pectorales */}
           <Route path="/categoria/gimnasio/pectorales/flexiones" element={<Flexiones />} />
           <Route path="/categoria/gimnasio/pectorales/press-banca" element={<PressBancaPectorales />} />
@@ -176,6 +242,9 @@ export default function AppRoutes() {
           <Route path="/categoria/gimnasio/abdominales/plancha" element={<Plancha />} />
           <Route path="/categoria/gimnasio/abdominales/elevacion-piernas-suelo" element={<ElevacionPiernasSuelo />} />
           <Route path="/categoria/gimnasio/abdominales/elevacion-piernas-banco" element={<ElevacionPiernasBanco />} />
+          {/* Fisioterapia - abdominales */}
+          <Route path="/categoria/fisioterapia/abdominales/crunch-inverso" element={<CrunchInverso />} />
+          <Route path="/categoria/fisioterapia/abdominales/elevacion-piernas" element={<ElevacionPiernasAbd />} />
           <Route path="/ejercicios" element={<EjerciciosPage />} />
           <Route path="/ia" element={<IAPage />} />
           <Route path="/chat-ia" element={<ChatIA />} />

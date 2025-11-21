@@ -136,6 +136,145 @@ export default function SeleccionEjercicio() {
     const parteNombre = (breadcrumb.parte || '').toLowerCase();
     const isPectoral = parteNombre.includes('pecho') || parteNombre.includes('pectoral') || parteNombre.includes('pectorales');
     const isAbdominal = parteNombre.includes('abdominal') || parteNombre.includes('abdomen') || parteNombre.includes('abdominales');
+    const isFisioterapia = (breadcrumb.categoria || '').toLowerCase().includes('fisio') || (breadcrumb.categoria || '').toLowerCase().includes('fisioterapia');
+
+    // Ruta específica para fisioterapia (brazos)
+    if (isFisioterapia) {
+      // Abdominales (fisioterapia)
+      if (isAbdominal) {
+        if (nombreNorm.includes('crunch') || nombreNorm.includes('invers')) {
+          navigate('/categoria/fisioterapia/abdominales/crunch-inverso', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if ((nombreNorm.includes('elev') || nombreNorm.includes('elevacion')) && (nombreNorm.includes('pierna') || nombreNorm.includes('piernas'))) {
+          navigate('/categoria/fisioterapia/abdominales/elevacion-piernas', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+      }
+      // Pierna (fisioterapia)
+      if (nombreNorm.includes('piern') || nombreNorm.includes('pierna') || nombreNorm.includes('piernas') || nombreNorm.includes('glute') || nombreNorm.includes('puente') || nombreNorm.includes('sentad') || nombreNorm.includes('talon') || nombreNorm.includes('punta')) {
+        if (nombreNorm.includes('sentad') || nombreNorm.includes('sentadilla')) {
+          navigate('/categoria/fisioterapia/pierna/sentadillas', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if (nombreNorm.includes('glute') || nombreNorm.includes('gluteo') || (nombreNorm.includes('elev') && nombreNorm.includes('glute'))) {
+          navigate('/categoria/fisioterapia/pierna/elevacion-gluteos-suelo', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if (nombreNorm.includes('puente')) {
+          navigate('/categoria/fisioterapia/pierna/puente-gluteos', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if (nombreNorm.includes('corta') && nombreNorm.includes('pierna')) {
+          navigate('/categoria/fisioterapia/pierna/elevacion-corta-piernas', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if ((nombreNorm.includes('elev') || nombreNorm.includes('elevacion')) && (nombreNorm.includes('pierna') || nombreNorm.includes('piernas'))) {
+          navigate('/categoria/fisioterapia/pierna/elevacion-piernas', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if (nombreNorm.includes('punta') || nombreNorm.includes('puntas')) {
+          navigate('/categoria/fisioterapia/pierna/elevacion-puntas-sentado', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if (nombreNorm.includes('talon') || nombreNorm.includes('talones')) {
+          navigate('/categoria/fisioterapia/pierna/elevacion-talones-sentado', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+      }
+      // Rodilla - fisioterapia
+      if (nombreNorm.includes('rodill') || nombreNorm.includes('rodilla')) {
+        // Flexiones cortas / movimientos de flexión
+        if (nombreNorm.includes('flex') && nombreNorm.includes('pierna')) {
+          navigate('/categoria/fisioterapia/rodilla/flexion-corta-pierna', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if (nombreNorm.includes('flex') && nombreNorm.includes('rodill')) {
+          navigate('/categoria/fisioterapia/rodilla/flexion-corta-pierna-rodilla', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if (nombreNorm.includes('sentad') || nombreNorm.includes('sentadilla')) {
+          navigate('/categoria/fisioterapia/rodilla/sentadillas', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if (nombreNorm.includes('elev') && nombreNorm.includes('rodill')) {
+          navigate('/categoria/fisioterapia/rodilla/elevacion-rodillas', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if (nombreNorm.includes('estir') || (nombreNorm.includes('flex') && nombreNorm.includes('rodill'))) {
+          navigate('/categoria/fisioterapia/rodilla/estiramiento-piernas-flexion-rodillas', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if (nombreNorm.includes('extension') || (nombreNorm.includes('exten') && nombreNorm.includes('pierna'))) {
+          navigate('/categoria/fisioterapia/rodilla/extension-piernas-atras', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+      }
+
+      if (nombreNorm.includes('aducc') || nombreNorm.includes('aduccion') || nombreNorm.includes('aducción')) {
+        navigate('/categoria/fisioterapia/brazos/aduccion-hombros', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
+      }
+      // Espalda - fisioterapia
+      if (nombreNorm.includes('espald') || nombreNorm.includes('espalda') || nombreNorm.includes('back')) {
+        if (nombreNorm.includes('recta')) {
+          navigate('/categoria/fisioterapia/espalda/espalda-recta', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if (nombreNorm.includes('band') || nombreNorm.includes('pull') || nombreNorm.includes('apart')) {
+          navigate('/categoria/fisioterapia/espalda/band-pull-apart', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if (nombreNorm.includes('later') || nombreNorm.includes('cintura') || nombreNorm.includes('lateral')) {
+          navigate('/categoria/fisioterapia/espalda/estiramiento-laterales-cintura', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if (nombreNorm.includes('inclin') || nombreNorm.includes('inclinacion') || nombreNorm.includes('inclina')) {
+          navigate('/categoria/fisioterapia/espalda/inclinacion-lateral-tronco', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if (nombreNorm.includes('rot') || nombreNorm.includes('rotacion') || nombreNorm.includes('rotar')) {
+          navigate('/categoria/fisioterapia/espalda/rotacion-tronco-sentado', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if (nombreNorm.includes('yoga') || nombreNorm.includes('estiramiento yoga') || nombreNorm.includes('estiramiento')) {
+          navigate('/categoria/fisioterapia/espalda/estiramiento-yoga', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+        if (nombreNorm.includes('flex') && (nombreNorm.includes('espalda') || nombreNorm.includes('pierna') || nombreNorm.includes('abdomen'))) {
+          navigate('/categoria/fisioterapia/espalda/flexion-espalda-pierna-abdomen', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
+      }
+      if (nombreNorm.includes('curl') && nombreNorm.includes('sentad')) {
+        navigate('/categoria/fisioterapia/brazos/curl-biceps-sentado', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
+      }
+      if (nombreNorm.includes('elev') && nombreNorm.includes('lateral')) {
+        navigate('/categoria/fisioterapia/brazos/elevacion-lateral-brazos', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
+      }
+      if (nombreNorm.includes('elev') && nombreNorm.includes('brazo')) {
+        navigate('/categoria/fisioterapia/brazos/elevacion-brazos', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
+      }
+      if (nombreNorm.includes('press') && nombreNorm.includes('hombro')) {
+        navigate('/categoria/fisioterapia/brazos/press-hombros-mancuernas', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
+      }
+      if (nombreNorm.includes('rotaci') || nombreNorm.includes('rotacion') || nombreNorm.includes('baston') || nombreNorm.includes('bastón')) {
+        navigate('/categoria/fisioterapia/brazos/rotacion-antebrazo-baston', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
+      }
+      if (nombreNorm.includes('estir') && nombreNorm.includes('manos')) {
+        navigate('/categoria/fisioterapia/brazos/estiramiento-manos-juntas', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
+      }
+      if (nombreNorm.includes('flexion') || nombreNorm.includes('flexiones')) {
+        navigate('/categoria/fisioterapia/brazos/flexiones', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
+      }
+    }
 
     if (nombreNorm.includes('bicep') || nombreNorm.includes('curl')) {
       navigate('/categoria/gimnasio/brazos/biceps-curl', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
