@@ -1,4 +1,4 @@
-// src/api/api.js
+// src/api/api.js aqui
 import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://coach-virtual.onrender.com/api";
