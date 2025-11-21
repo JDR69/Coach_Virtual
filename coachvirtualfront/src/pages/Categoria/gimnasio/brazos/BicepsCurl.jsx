@@ -1,4 +1,5 @@
 import { useState, useRef, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import YogaPoseDetector from '../../../Yoga/YogaPoseDetector';
 import { calculateBodyAngles } from '../../../../utils/poseUtils';
 import { useSpeech } from '../../../../utils/useSpeech';
@@ -11,6 +12,9 @@ import { useSpeech } from '../../../../utils/useSpeech';
  */
 export default function BicepsCurl() {
   const [started, setStarted] = useState(false);
+  const location = useLocation();
+  const passedImage = location?.state?.imageUrl || null;
+  const passedNombre = location?.state?.nombre || null;
   const [repCount, setRepCount] = useState(0);
   const [stage, setStage] = useState('down');
   const [feedback, setFeedback] = useState('Comienza el ejercicio');
@@ -193,8 +197,14 @@ export default function BicepsCurl() {
           <h1 className="text-4xl font-bold text-gray-800 mb-4">Curl de Bíceps</h1>
           <p className="text-gray-600 mb-8 text-lg">Rutina asistida por IA para contar tus repeticiones y detectar errores de postura (hombro en movimiento).</p>
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div className="h-56 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <span className="text-6xl">💪</span>
+            <div className="h-56 flex items-center justify-center overflow-hidden bg-gray-100">
+              {passedImage ? (
+                <img src={passedImage} alt={passedNombre || 'Curl de bíceps'} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                  <span className="text-6xl">💪</span>
+                </div>
+              )}
             </div>
             <div className="p-6 space-y-4">
               <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">

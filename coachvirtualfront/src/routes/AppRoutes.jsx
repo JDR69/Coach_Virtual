@@ -12,7 +12,9 @@ import LoginPage from "../pages/Login/LoginPage";
 import PoseTest from "../pages/Detector/PoseTest";
 // Nueva ruta reorganizada de rutina bíceps dentro de categoría gimnasio
 import BicepsCurl from "../pages/Categoria/gimnasio/brazos/BicepsCurl";
-import Flexiones from "../pages/Categoria/gimnasio/pectorales/Flexiones";
+import Flexiones from "../pages/Categoria/gimnasio/brazos/Flexiones";
+import PressBanca from "../pages/Categoria/gimnasio/brazos/PressBanca";
+import PressInclinado from "../pages/Categoria/gimnasio/brazos/PressInclinado";
 import YogaPage from "../pages/Yoga/YogaPage";
 import EjerciciosPage from "../pages/Ejercicios/EjerciciosPage";
 import IAPage from "../pages/IAPage/IAPage";
@@ -142,7 +144,9 @@ export default function AppRoutes() {
           <Route path="/pose-test" element={<PoseTest />} />
           {/* Rutina específica reorganizada */}
           <Route path="/categoria/gimnasio/brazos/biceps-curl" element={<BicepsCurl />} />
-          <Route path="/categoria/gimnasio/pectorales/flexiones" element={<Flexiones />} />
+          <Route path="/categoria/gimnasio/brazos/flexiones" element={<Flexiones />} />
+          <Route path="/categoria/gimnasio/brazos/press-banca" element={<PressBanca />} />
+          <Route path="/categoria/gimnasio/brazos/press-inclinado" element={<PressInclinado />} />
           <Route path="/yoga" element={<YogaPage />} />
           <Route path="/ejercicios" element={<EjerciciosPage />} />
           <Route path="/ia" element={<IAPage />} />

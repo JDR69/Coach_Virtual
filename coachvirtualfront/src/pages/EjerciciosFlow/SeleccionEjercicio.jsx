@@ -134,12 +134,22 @@ export default function SeleccionEjercicio() {
       .replace(/ú/g, 'u');
 
     if (nombreNorm.includes('bicep') || nombreNorm.includes('curl')) {
-      navigate('/categoria/gimnasio/brazos/biceps-curl');
+      navigate('/categoria/gimnasio/brazos/biceps-curl', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
       return;
     }
 
-    if (nombreNorm.includes('flexion')) {
-      navigate('/categoria/gimnasio/pectorales/flexiones');
+    if (nombreNorm.includes('flexion') || nombreNorm.includes('flexiones')) {
+      navigate('/categoria/gimnasio/brazos/flexiones', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+      return;
+    }
+
+    if (nombreNorm.includes('press') && nombreNorm.includes('banca')) {
+      navigate('/categoria/gimnasio/brazos/press-banca', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+      return;
+    }
+
+    if (nombreNorm.includes('inclinado') || nombreNorm.includes('incline')) {
+      navigate('/categoria/gimnasio/brazos/press-inclinado', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
       return;
     }
 
