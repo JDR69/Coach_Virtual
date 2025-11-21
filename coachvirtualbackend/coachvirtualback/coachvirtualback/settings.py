@@ -176,29 +176,20 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # CORS configuration
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:5173",  # Puerto por defecto de Vite
-    "http://127.0.0.1:5173",
-    "http://192.168.1.2:3000",
-    "http://192.168.1.2:5173",
-    "http://192.168.1.5:3000",  # tu IP actual
-    "http://192.168.1.5:5173",  # tu IP actual
-]
-
+CORS_ALLOW_ALL_ORIGINS = True  # Permite cualquier origen (solo para desarrollo/pruebas)
 CORS_ALLOW_CREDENTIALS = True
 
-# Para desarrollo - permite todos los orígenes (NO usar en producción)
-# CORS_ALLOW_ALL_ORIGINS = True
-# --- CSRF (relevante si usas cookies/CSRF desde navegador) ---
+# Si quieres restringir solo a ciertos dominios, descomenta esto y agrega tu dominio de frontend:
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:5173",
+#     "https://tu-frontend.vercel.app",
+# ]
+
+# CSRF
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://192.168.1.2:3000",
-    "http://192.168.1.2:5173",
-    "http://192.168.1.5:3000",  # tu IP
-    "http://192.168.1.5:5173",  # tu IP
+    "https://*.vercel.app",  # Permitir todos los subdominios de Vercel
+    "https://*.netlify.app",  # Permitir todos los subdominios de Netlify
+    "https://*.onrender.com",  # Permitir todos los subdominios de Render
 ]
