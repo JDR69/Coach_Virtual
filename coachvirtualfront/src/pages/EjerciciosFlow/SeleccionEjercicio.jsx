@@ -153,6 +153,30 @@ export default function SeleccionEjercicio() {
       return;
     }
 
+    // Espalda - mapeo a nuevas rutas
+    if (nombreNorm.includes('remo')) {
+      if (nombreNorm.includes('maquina') || nombreNorm.includes('maquína')) {
+        navigate('/categoria/gimnasio/espalda/remo-sentado-maquina', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
+      }
+      if (nombreNorm.includes('mancuernas') || nombreNorm.includes('mancuerna')) {
+        navigate('/categoria/gimnasio/espalda/remo-con-mancuernas', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
+      }
+      if (nombreNorm.includes('polea') && nombreNorm.includes('baja')) {
+        navigate('/categoria/gimnasio/espalda/remo-sentado-polea-baja', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
+      }
+      if (nombreNorm.includes('unilateral') || nombreNorm.includes('unilater')) {
+        navigate('/categoria/gimnasio/espalda/remo-unilateral-pie-polea', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
+      }
+      if (nombreNorm.includes('inclinado') || nombreNorm.includes('incline')) {
+        navigate('/categoria/gimnasio/espalda/remo-inclinado-mancuernas', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+        return;
+      }
+    }
+
     alert('Ruta de rutina no implementada para: ' + ejercicio.nombre);
   };
 

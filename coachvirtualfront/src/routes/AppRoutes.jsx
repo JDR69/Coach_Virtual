@@ -15,6 +15,11 @@ import BicepsCurl from "../pages/Categoria/gimnasio/brazos/BicepsCurl";
 import Flexiones from "../pages/Categoria/gimnasio/brazos/Flexiones";
 import PressBanca from "../pages/Categoria/gimnasio/brazos/PressBanca";
 import PressInclinado from "../pages/Categoria/gimnasio/brazos/PressInclinado";
+import RemoSentadoMaquina from "../pages/Categoria/gimnasio/espalda/RemoSentadoMaquina";
+import RemoConMancuernas from "../pages/Categoria/gimnasio/espalda/RemoConMancuernas";
+import RemoSentadoPoleaBaja from "../pages/Categoria/gimnasio/espalda/RemoSentadoPoleaBaja";
+import RemoUnilateralPiePolea from "../pages/Categoria/gimnasio/espalda/RemoUnilateralPiePolea";
+import RemoInclinadoMancuernas from "../pages/Categoria/gimnasio/espalda/RemoInclinadoMancuernas";
 import YogaPage from "../pages/Yoga/YogaPage";
 import EjerciciosPage from "../pages/Ejercicios/EjerciciosPage";
 import IAPage from "../pages/IAPage/IAPage";
@@ -147,6 +152,12 @@ export default function AppRoutes() {
           <Route path="/categoria/gimnasio/brazos/flexiones" element={<Flexiones />} />
           <Route path="/categoria/gimnasio/brazos/press-banca" element={<PressBanca />} />
           <Route path="/categoria/gimnasio/brazos/press-inclinado" element={<PressInclinado />} />
+          {/* Espalda */}
+          <Route path="/categoria/gimnasio/espalda/remo-sentado-maquina" element={<RemoSentadoMaquina />} />
+          <Route path="/categoria/gimnasio/espalda/remo-con-mancuernas" element={<RemoConMancuernas />} />
+          <Route path="/categoria/gimnasio/espalda/remo-sentado-polea-baja" element={<RemoSentadoPoleaBaja />} />
+          <Route path="/categoria/gimnasio/espalda/remo-unilateral-pie-polea" element={<RemoUnilateralPiePolea />} />
+          <Route path="/categoria/gimnasio/espalda/remo-inclinado-mancuernas" element={<RemoInclinadoMancuernas />} />
           <Route path="/yoga" element={<YogaPage />} />
           <Route path="/ejercicios" element={<EjerciciosPage />} />
           <Route path="/ia" element={<IAPage />} />
