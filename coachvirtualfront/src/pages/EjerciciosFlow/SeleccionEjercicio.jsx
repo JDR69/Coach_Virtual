@@ -153,6 +153,11 @@ export default function SeleccionEjercicio() {
       }
       // Pierna (fisioterapia)
       if (nombreNorm.includes('piern') || nombreNorm.includes('pierna') || nombreNorm.includes('piernas') || nombreNorm.includes('glute') || nombreNorm.includes('puente') || nombreNorm.includes('sentad') || nombreNorm.includes('talon') || nombreNorm.includes('punta')) {
+        // Extensión de piernas hacia atrás (fisioterapia)
+        if (nombreNorm.includes('extension') || nombreNorm.includes('exten') || nombreNorm.includes('extensión')) {
+          navigate('/categoria/fisioterapia/rodilla/extension-piernas-atras', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
+          return;
+        }
         if (nombreNorm.includes('sentad') || nombreNorm.includes('sentadilla')) {
           navigate('/categoria/fisioterapia/pierna/sentadillas', { state: { imageUrl: ejercicio.url, nombre: ejercicio.nombre } });
           return;
