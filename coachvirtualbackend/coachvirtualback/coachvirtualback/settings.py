@@ -21,13 +21,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-rn-ljf$%9a8^1+dsn&_^7_@5w-rajoub0h$m2q18g=glhw^blu"
+# SECURITY: read secret key from environment in production
+SECRET_KEY = config("SECRET_KEY", default="django-insecure-rn-ljf$%9a8^1+dsn&_^7_@5w-rajoub0h$m2q18g=glhw^blu")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+# DEBUG from env (default False)
+try:
+    DEBUG = config("DEBUG", default=False, cast=bool)
+except Exception:
+    DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
-ALLOWED_HOSTS = ["*"]
+# ALLOWED_HOSTS can be set via comma-separated env var, fallback to all for now
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="*")
+if isinstance(ALLOWED_HOSTS, str):
+    if ALLOWED_HOSTS.strip() == "*":
+        ALLOWED_HOSTS = ["*"]
+    else:
+        ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS.split(",") if h.strip()]
 
 
 # Application definition
